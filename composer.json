@@ -1,0 +1,44 @@
+{
+  "name": "jcbowen/jcbase-yii2",
+  "description": "自用yii2基础扩展库，提供一些常用的封装，方便开发。",
+  "keywords": [
+    "yii2",
+    "jcbowen",
+    "jcsoft",
+    "jiuchet"
+  ],
+  "type": "yii2-extension",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Jcbowen\\JcbaseYii2\\": "src/",
+      "Jcbowen\\JcbaseYii2\\console\\": "console/"
+    }
+  },
+  "authors": [
+    {
+      "name": "jcbowne",
+      "email": "bowen@jiuchet.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=7.2.0",
+    "yiisoft/yii2": "^2.0",
+    "ext-openssl": "*",
+    "ext-curl": "*",
+    "ext-json": "*"
+  },
+  "repositories": {
+    "packagist": {
+      "type": "composer",
+      "url": "https://mirrors.aliyun.com/composer/"
+    }
+  },
+  "config": {
+    "process-timeout": 1800,
+    "allow-plugins": {
+      "yiisoft/yii2-composer": true
+    }
+  }
+}
