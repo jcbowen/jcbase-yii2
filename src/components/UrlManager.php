@@ -21,6 +21,7 @@ class UrlManager extends BaseObject implements UrlRuleInterface
     public $moduleName = '';
     public $currentAppInfo = [];
 
+    /** @noinspection PhpInconsistentReturnPointsInspection */
     public function init()
     {
         parent::init();
@@ -48,7 +49,7 @@ class UrlManager extends BaseObject implements UrlRuleInterface
 
         // 客户端应用采用history模式，此处拦截所有非客户端的请求
         if (defined('IN_CLIENT')) {
-            if (empty(Yii::$app->request->headers->get('JcsiteClient'))) {
+            if (empty(Yii::$app->request->headers->get('JcClient'))) {
                 return ['index/index', $_GPC];
             }
         }
