@@ -27,7 +27,8 @@
     "yiisoft/yii2": "^2.0",
     "ext-openssl": "*",
     "ext-curl": "*",
-    "ext-json": "*"
+    "ext-json": "*",
+    "qcloud/cos-sdk-v5": "^2.5"
   },
   "repositories": {
     "packagist": {
