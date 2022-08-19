@@ -28,9 +28,10 @@
     "ext-openssl": "*",
     "ext-curl": "*",
     "ext-json": "*",
-    "qcloud/cos-sdk-v5": "^2.5",
     "ext-mbstring": "*",
-    "ext-gd": "*"
+    "ext-gd": "*",
+    "qcloud/cos-sdk-v5": "^2.5",
+    "aliyuncs/oss-sdk-php": "~2.4"
   },
   "repositories": {
     "packagist": {
