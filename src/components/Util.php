@@ -29,7 +29,7 @@ class Util
     public static function getSiteRoot(): ?string
     {
         global $_B;
-        $_B['siteRoot'] = $_B['siteRoot'] ? $_B['siteRoot'] : self::getHostInfo();
+        $_B['siteRoot'] = $_B['siteRoot'] ?: self::getHostInfo();
         if (substr($_B['siteRoot'], -1) != '/') $_B['siteRoot'] .= '/';
         return $_B['siteRoot'];
     }
@@ -54,21 +54,18 @@ class Util
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param false $local_path
-     * @param false $is_cahce
+     * @param bool $local_path
+     * @param bool $is_cache
      * @param $src
      * @return string
      * @lasttime: 2022/3/19 5:45 下午
      */
-    public static function toMedia($src, $local_path = false, $is_cahce = false): string
+    public static function toMedia($src, bool $local_path = false, bool $is_cache = true): string
     {
         $src = trim($src);
-        if (empty($src)) {
-            return '';
-        }
-        if ($is_cahce) {
-            $src .= "?v=" . time();
-        }
+
+        if (empty($src)) return '';
+        if (!$is_cache) $src .= "?v=" . time();
 
         if (substr($src, 0, 2) == '//') {
             return 'http:' . $src;
@@ -77,18 +74,22 @@ class Util
             return $src;
         }
 
+        // 如果存在资源目录，转换为本地资源目录
         if (self::strExists($src, 'static/')) {
-            return Yii::$app->params['upload']['attachDomain'] . substr($src, strpos($src, 'static/'));
+            return Yii::$app->params['domain']['attachment_local'] . substr($src, strpos($src, 'static/'));
         }
-        if (self::strExists($src, Yii::$app->params['domain']['client']) && !self::strExists($src, '/static/')) {
+
+        // 移除资源链接中的本地附件域名
+        if (self::startsWith($src, Yii::$app->params['domain']['attachment_local']) && !self::strExists($src, '/static/')) {
             $urls = parse_url($src);
             $src  = $t = substr($urls['path'], strpos($urls['path'], 'images'));
         }
 
-        if ($local_path || empty(Yii::$app->params['upload']['isRemote'])) {
-            $src = Yii::$app->params['upload']['attachDomain'] . Yii::$app->params['upload']['attachDir'] . '/' . $src;
+        // 输出本地附件链接
+        if ($local_path || empty(Yii::$app->params['attachment']['isRemote'])) {
+            $src = Yii::$app->params['domain']['attachment_local'] . Yii::$app->params['attachment']['dir'] . '/' . $src;
         } else {
-            $src = Yii::$app->params['upload']['attachDomainRemote'] . $src;
+            $src = Yii::$app->params['domain']['attachment'] . $src;
         }
         return $src;
     }
@@ -685,7 +686,7 @@ class Util
      * @lastTime 2021/12/18 12:22 上午
      * @param null $response
      *
-     * @param int $status
+     * @param string|int $status
      */
     private function _end($status = 0, $response = null)
     {
@@ -701,7 +702,7 @@ class Util
      * @param array $imageInfo
      * @return array|false
      */
-    public function getImageSize($filename, $imageInfo = [])
+    public function getImageSize(string $filename, array $imageInfo = [])
     {
         $result = @getimagesize($filename, $imageInfo);
         if (empty($result)) {

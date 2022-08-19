@@ -1,5 +1,7 @@
 <?php
 
+use Jcbowen\JcbaseYii2\components\Util;
+
 const REGULAR_EMAIL    = '/\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/i';
 const REGULAR_MOBILE   = '/^\d{6,15}$/';
 const REGULAR_USERNAME = '/^[\x{4e00}-\x{9fa5}a-z\d_\.]{3,30}$/iu';
@@ -26,3 +28,12 @@ const ATTACH_TYPE_ZIP    = 6;
 const NO_TIME = '0000-00-00 00:00:00';
 
 define('MAGIC_QUOTES_GPC', (bool)ini_set("magic_quotes_runtime", 0));
+
+//----- 初始化附件域名配置 -----/
+if (empty(Yii::$app->params['domain']['attachment_local'])) {
+    Yii::$app->params['domain']['attachment_local'] = Util::getSiteRoot();
+}
+if (empty(Yii::$app->params['domain']['attachment'])) {
+    Yii::$app->params['domain']['attachment'] = Yii::$app->params['domain']['attachment_local'];
+}
+

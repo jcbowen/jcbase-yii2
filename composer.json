@@ -23,12 +23,14 @@
   ],
   "minimum-stability": "dev",
   "require": {
-    "php": ">=7.2.0",
+    "php": ">=7.2.0 <8.0.0",
     "yiisoft/yii2": "^2.0",
     "ext-openssl": "*",
     "ext-curl": "*",
     "ext-json": "*",
-    "qcloud/cos-sdk-v5": "^2.5"
+    "qcloud/cos-sdk-v5": "^2.5",
+    "ext-mbstring": "*",
+    "ext-gd": "*"
   },
   "repositories": {
     "packagist": {
