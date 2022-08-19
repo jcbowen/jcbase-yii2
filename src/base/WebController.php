@@ -29,6 +29,8 @@ class WebController extends Controller
         global $_B;
 
         parent::init();
+
+        define('MTIME', microtime());
         define('TIMESTAMP', time());
         define('TIME', date('Y-m-d H:i:s', TIMESTAMP));
 
@@ -45,16 +47,16 @@ class WebController extends Controller
     /**
      * 输出json结构数据
      *
-     * @param string|int $errCode 错误码，其中0为正确
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @lastTime 2021/12/18 12:18 上午
      * @param string $errmsg 错误信息
      * @param mixed $data 返回内容
      * @param array $params 补充参数
      * @param string $returnType
      *
+     * @param string|int $errCode 错误码，其中0为正确
      * @return string|Response
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @lastTime 2021/12/18 12:18 上午
      */
     public function result($errCode = '0', $errmsg = '', $data = [], $params = [], $returnType = 'exit')
     {

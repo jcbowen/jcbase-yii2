@@ -3,8 +3,6 @@
 use Jcbowen\JcbaseYii2\components\Agent;
 use Jcbowen\JcbaseYii2\components\Util;
 
-define('STARTTIME', microtime());
-
 $_B = $_GPC = [];
 
 // 设备类型
