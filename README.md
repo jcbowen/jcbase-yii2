@@ -68,6 +68,12 @@ composer require jcbowen/jcbase-yii2
                     'region'    => '', // 腾讯云cos region
                     'url'       => '' // 腾讯云cos url
                 ],
+                'oss' => [
+                    'AccessKeyId'     => '', // 阿里云oss AccessKeyId
+                    'AccessKeySecret' => '', // 阿里云oss AccessKeySecret
+                    'endpoint'        => '', // 阿里云oss Server
+                    'bucket'          => '', // 阿里云oss Bucket
+                ],
             ]
         ]
     ]
