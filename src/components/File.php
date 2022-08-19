@@ -7,6 +7,8 @@ use yii\base\Exception;
 use yii\base\Model;
 use yii\helpers\FileHelper;
 use Qcloud\Cos\Client;
+use OSS\OssClient;
+use OSS\Core\OssException;
 
 // 提供魔术方法
 use Jcbowen\JcbaseYii2\models\Attachment;
@@ -556,8 +558,12 @@ class File extends Model
     {
         if (empty(Yii::$app->params['attachment']['isRemote']) || empty(Yii::$app->params['attachment']['remoteType'])) return false;
 
-        // 腾讯云
-        if (Yii::$app->params['attachment']['remoteType'] === 'cos') {
+        $fullPath = $this->attachmentRoot . '/' . $filename;
+        $fullPath = FileHelper::normalizePath($fullPath);
+
+        $run = false;
+
+        if (Yii::$app->params['attachment']['remoteType'] === 'cos') { // 腾讯云cos
             try {
                 $bucket = $this->remoteConfig['cos']['bucket'];
 
@@ -568,18 +574,24 @@ class File extends Model
                         'secretKey' => $this->remoteConfig['cos']['secretKey'],
                     ],
                 ]);
-
-                $fullPath = $this->attachmentRoot . '/' . $filename;
-                $fullPath = FileHelper::normalizePath($fullPath);
                 $cosClient->Upload($bucket, $filename, fopen($fullPath, 'rb'));
-                if ($auto_delete_local) {
-                    if (file_exists($fullPath)) {
-                        @FileHelper::unlink($fullPath);
-                    }
-                }
+                $run = true;
             } catch (\Exception $e) {
-                return Util::error(ErrCode::UNKNOWN, $e->getMessage());
+                return Util::error(ErrCode::UNKNOWN, 'FAILED', $e->getMessage());
             }
+        } else if (Yii::$app->params['attachment']['remoteType'] === 'oss') { // 阿里云oss
+            try {
+                $ossClient = new OssClient($this->remoteConfig['oss']['AccessKeyId'], $this->remoteConfig['oss']['AccessKeySecret'], $this->remoteConfig['oss']['endpoint']);
+                $ossClient->uploadFile($this->remoteConfig['oss']['bucket'], $filename, $fullPath);
+                $run = true;
+            } catch (OssException $e) {
+                return Util::error(ErrCode::UNKNOWN, 'FAILED', $e->getMessage());
+            }
+        }
+
+        // 如果上传成功，且打开了自动删除本地文件，则删除本地文件
+        if ($run && $auto_delete_local && file_exists($fullPath)) {
+            @FileHelper::unlink($fullPath);
         }
 
         return true;
