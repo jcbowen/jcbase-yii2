@@ -28,12 +28,3 @@ const ATTACH_TYPE_ZIP    = 6;
 const NO_TIME = '0000-00-00 00:00:00';
 
 define('MAGIC_QUOTES_GPC', (bool)ini_set("magic_quotes_runtime", 0));
-
-//----- 初始化附件域名配置 -----/
-if (empty(Yii::$app->params['domain']['attachment_local'])) {
-    Yii::$app->params['domain']['attachment_local'] = Util::getSiteRoot();
-}
-if (empty(Yii::$app->params['domain']['attachment'])) {
-    Yii::$app->params['domain']['attachment'] = Yii::$app->params['domain']['attachment_local'];
-}
-

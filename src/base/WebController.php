@@ -34,8 +34,16 @@ class WebController extends Controller
         define('TIMESTAMP', time());
         define('TIME', date('Y-m-d H:i:s', TIMESTAMP));
 
-        $_B['page'] = ['title' => 'jcsoft'];
+        //----- 初始化附件域名配置 -----/
+        if (empty(Yii::$app->params['domain']['attachment_local'])) {
+            Yii::$app->params['domain']['attachment_local'] = Util::getSiteRoot();
+        }
+        if (empty(Yii::$app->params['domain']['attachment'])) {
+            Yii::$app->params['domain']['attachment'] = Yii::$app->params['domain']['attachment_local'];
+        }
 
+        //----- 默认参数，及将参数配置写到全局变量中 -----/
+        $_B['page'] = ['title' => 'jcsoft'];
         $_B['params'] = ArrayHelper::merge((array)$_B['params'], Yii::$app->params);
     }
 
