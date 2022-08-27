@@ -729,7 +729,7 @@ class Util
         if (empty($type)) {
             return $this->result(9001002, '验证码类型不能为空');
         }
-        $c            = Yii::createObject('common\components\captcha\CaptchaAction', ['__' . $type, $controller]);
+        $c            = Yii::createObject('Jcbowen\JcbaseYii2\components\captcha\CaptchaAction', ['__' . $type, $controller]);
         $c->maxLength = $_GPC['maxLength'] ? intval($_GPC['maxLength']) : 5;
         $c->minLength = $_GPC['minLength'] ? intval($_GPC['minLength']) : 5;;
         $c->height = $_GPC['height'] ? intval($_GPC['height']) : 40;
