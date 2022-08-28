@@ -4,18 +4,17 @@ namespace Jcbowen\JcbaseYii2\components;
 
 use Yii;
 use yii\db\ActiveQuery;
+use yii\db\Exception;
 use yii\web\Response;
 use yii\helpers\ArrayHelper;
 use RuntimeException;
-use InvalidArgumentException;
 
 /**
- * 基本增删改查操作
- * Trait Curd
- * @package admin\modules
+ * 增删改查
  */
 trait CurdActionTrait
 {
+    use ModelHelper;
 
     /**
      * @var string 数据表主键ID
@@ -51,7 +50,7 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @return mixed
+     * @return Response|string
      * @lasttime: 2022/3/13 9:55 上午
      */
     public function actionList()
@@ -196,7 +195,7 @@ trait CurdActionTrait
      * @param $page
      * @param $pageSize
      * @param $list
-     * @return mixed
+     * @return Response|string
      * @lasttime: 2022/3/13 10:34 上午
      */
     public function listReturn($list, $total, $page, $pageSize)
@@ -353,7 +352,7 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @return mixed
+     * @return Response|string
      * @lasttime: 2022/3/13 3:26 下午
      */
     public function actionDetail()
@@ -443,7 +442,7 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
-     * @throws \yii\db\Exception
+     * @throws Exception
      * @lasttime: 2022/3/13 10:33 下午
      */
     public function actionCreate()
@@ -518,7 +517,7 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param string|int $id
-     * @return int|array
+     * @return string|int
      * @lasttime: 2022/3/13 10:02 下午
      */
     public function createAfter($id)
@@ -534,7 +533,7 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
-     * @throws \yii\db\Exception
+     * @throws Exception
      * @lasttime: 2022/3/13 10:20 下午
      */
     public function actionUpdate()
@@ -621,10 +620,10 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @return bool|array
+     * @return bool
      * @lasttime: 2022/3/13 10:09 下午
      */
-    public function updateBefore()
+    public function updateBefore(): bool
     {
         return true;
     }
@@ -634,10 +633,10 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @return bool|array
+     * @return bool
      * @lasttime: 2022/3/13 10:09 下午
      */
-    public function updateAfter()
+    public function updateAfter(): bool
     {
         return true;
     }
@@ -687,7 +686,7 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
-     * @throws \yii\db\Exception
+     * @throws Exception
      * @lasttime: 2022/3/13 10:31 下午
      */
     public function actionSave()
@@ -723,7 +722,7 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
-     * @throws \yii\db\Exception
+     * @throws Exception
      * @lasttime: 2022/3/13 10:53 上午
      */
     public function actionDelete()
@@ -760,7 +759,7 @@ trait CurdActionTrait
 
         $transaction = Yii::$app->db->beginTransaction();
 
-        if (!call_user_func("{$this->modelClass}::updateAll", ['deleted_at' => TIME], $where)) {
+        if (!call_user_func("$this->modelClass::updateAll", ['deleted_at' => TIME], $where)) {
             $transaction->rollBack();
             return (new Util)->result(1, '删除失败，未知错误');
         }
@@ -810,200 +809,9 @@ trait CurdActionTrait
      * @return bool
      * @lasttime: 2021/5/9 3:04 下午
      */
-    public function deleteAfter($ids = []): bool
+    public function deleteAfter(array $ids = []): bool
     {
         return true;
-    }
-
-    //---------- 其他方法 ----------/
-
-    public $_attributes = [];
-    public $model;
-
-    /**
-     * 通用save方法，方便输出报错
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @param array $data
-     * @param string $formName
-     * @param ActiveRecord $model
-     * @return array|bool|ActiveRecord
-     * @lasttime: 2021/5/9 3:04 下午
-     */
-    protected function toSave($model, $data = [], $formName = '')
-    {
-        $this->model = $model;
-        if (!empty($data)) {
-            $data = $this->filterData($data, $model);
-            if ($model->load($data, $formName) && $model->save()) {
-                return true;
-            }
-        } else {
-            if ($model->save()) {
-                return $model;
-            }
-        }
-
-        $errors = $model->errors;
-        if (!empty($errors)) {
-            $errmsg = 'errmsg:';
-            foreach ($errors as $item) {
-                $errmsg .= "【";
-                foreach ($item as $v) $errmsg .= $v;
-                $errmsg .= "】 ";
-            }
-            return Util::error(1, $errmsg, $model->errors);
-        }
-
-        return Util::error(1, '未知错误');
-    }
-
-    /**
-     * 新增/更新过滤数据(强制数据转换为数组格式)
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @param mixed $model
-     * @param mixed $data
-     * @return array
-     * @lasttime: 2022/3/14 10:16 下午
-     */
-    protected function filterData($data, $model = ''): array
-    {
-        // 如果数据为空返回空数组
-        if (empty($data)) return [];
-
-        // 数据为对象时
-        if (is_object($data)) {
-            // 如果data为对象时且实现toArray方法把对象转换为数组
-            if (method_exists($data, 'toArray')) $data = $data->toArray();
-
-            // 如果数据为空返回空数组
-            if (empty($data)) return [];
-        }
-
-        if (!is_array($data)) {
-            throw new InvalidArgumentException('更新参数必须是数组');
-        }
-
-        // 把不存在的字段放入扩展字段extend中
-        if ($this->filedExist('_extend')) {
-            $data['_extend'] = [];
-            foreach ($data as $field => $value) {
-                // 如果字段不存在放入extend中
-                if (!$this->filedExist($field)) {
-                    $data['_extend'][$field] = $value;
-                    unset($data[$field]);
-                }
-            }
-        }
-
-        // 获取数据模型的命名空间
-        if (!empty($model)) {
-            $modelClass = '';
-            if (is_object($model)) {
-                $modelClass = get_class($model);
-                if (empty($this->model) && method_exists($model, 'rules')) $this->model = $model;
-            } elseif (is_string($model)) {
-                $modelClass = $model;
-                if (empty($this->model)) $this->model = new $modelClass();
-            }
-        }
-
-        // 从模型验证规则中获取数字类型的字段
-        $integerFiles = [];
-        if (!empty($this->model)) {
-            foreach ($this->model->rules() as $rules) {
-                if (in_array(array_pop($rules), ['integer', 'number'])) {
-                    $integerFiles = array_merge($rules[0], $integerFiles);
-                }
-            }
-        }
-
-        // 转换字段值类型
-        foreach ($data as $field => $value) {
-            $data[$field] = $this->translateData($field, $value, $integerFiles, $modelClass);
-        }
-
-        return $data;
-    }
-
-    // 数据结构转化处理
-    private function translateData($field, $value, $integerFiles, $modelClass)
-    {
-        if (!empty($modelClass) && !empty(Yii::$app->params['model_filter_field'][$modelClass][$field])) {
-            return $this->translateData_rules($field, $value, $modelClass);
-        } else {
-            return $this->translateData_noRules($field, $value, $integerFiles);
-        }
-    }
-
-    // 定义有规则的情况下，数据结构转化处理
-    private function translateData_rules($field, $value, $modelClass): string
-    {
-        switch (Yii::$app->params['model_filter_field'][$modelClass][$field]) {
-            case 'json':
-                $value = json_encode($value);
-                break;
-            case 'json&base64':
-                $value = json_encode($value);
-                $value = !empty($value) ? base64_encode($value) : '';
-                break;
-            case 'serialize':
-                $value = serialize($value);
-                break;
-        }
-        return (string)$value;
-    }
-
-    // 未定义规则的情况下，数据结构处理
-    private function translateData_noRules($field, $value, $integerFiles)
-    {
-        // 如果值是数组类型时json_encode处理
-        if (is_array($value)) {
-            return json_encode($value, JSON_UNESCAPED_UNICODE);
-        }
-        // 如果字段布尔类型强制转换成数字
-        if (is_bool($value)) {
-            return intval($value);
-        }
-        // 如果字段是整数或小数
-        if (in_array($field, $integerFiles, true)) {
-            return floatval($value);
-        }
-        // 其它类型全部转换成字符串
-        return (string)$value;
-    }
-
-    /**
-     * 判断字段是否存在
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @param string $field
-     * @return bool
-     * @lasttime: 2022/3/14 10:16 下午
-     */
-    public function filedExist(string $field): bool
-    {
-        return in_array($field, $this->getAttributes(), true);
-    }
-
-    /**
-     * 获取模型字段
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @return array
-     * @lasttime: 2022/3/14 10:16 下午
-     */
-    public function getAttributes(): array
-    {
-        if (!$this->_attributes) {
-            $this->_attributes = array_keys($this->model->attributeLabels());
-        }
-        return $this->_attributes;
     }
 }
 
