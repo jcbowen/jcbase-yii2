@@ -4,6 +4,7 @@ namespace Jcbowen\JcbaseYii2\components;
 
 use Yii;
 use yii\base\ExitException;
+use Yii\redis\Connection;
 use yii\web\Response;
 
 /**
@@ -481,11 +482,11 @@ class Util
      * 获取redis
      *
      * @author Bowen
-     * @email 3308725087@qq.com
+     * @email bowen@jiuchet.com
      * @lastTime 2021/5/24 8:53 下午
-     * @return \Yii\redis\Connection
+     * @return Connection
      */
-    public static function getRedis(): Yii\redis\Connection
+    public static function getRedis(): Connection
     {
         return Yii::$app->redis;
     }
@@ -494,7 +495,7 @@ class Util
      * redis设置数据
      *
      * @author Bowen
-     * @email 3308725087@qq.com
+     * @email bowen@jiuchet.com
      * @param $value
      * @param int $expire
      * @param mixed ...$options
@@ -516,7 +517,7 @@ class Util
      * redis根据key获取数据
      *
      * @author Bowen
-     * @email 3308725087@qq.com
+     * @email bowen@jiuchet.com
      * @param $key
      * @return string|array|mixed
      */
@@ -532,7 +533,7 @@ class Util
      * redis根据key获取数据
      *
      * @author Bowen
-     * @email 3308725087@qq.com
+     * @email bowen@jiuchet.com
      * @param mixed ...$key
      * @return array
      */
@@ -567,7 +568,7 @@ class Util
      * @param string|int $errCode 错误码，其中0为正确
      * @return string|Response
      */
-    public function result($errCode = '0', $errmsg = '', $data = [], $params = [], $returnType = 'exit')
+    public function result($errCode = '0', string $errmsg = '', $data = [], array $params = [], string $returnType = 'exit')
     {
         global $_GPC;
         $req   = Yii::$app->request;
@@ -575,7 +576,7 @@ class Util
         $count = count($data);
 
         $errCode = (int)$this->getResponseCode($errCode);
-        $errmsg  = (string)$this->getResponseMsg($errmsg);
+        $errmsg  = $this->getResponseMsg($errmsg);
         $data    = $this->getResponseData($data);
 
         $result = [
