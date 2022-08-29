@@ -5,8 +5,8 @@ namespace Jcbowen\JcbaseYii2\base;
 use Jcbowen\JcbaseYii2\components\BaseControllerTrait;
 use Jcbowen\JcbaseYii2\components\ModelHelper;
 use Yii;
+use yii\console\Controller;
 use yii\helpers\ArrayHelper;
-use yii\web\Controller;
 
 /**
  * Class ConsoleController
