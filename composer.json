@@ -21,10 +21,11 @@
       "email": "bowen@jiuchet.com"
     }
   ],
-  "minimum-stability": "dev",
+  "minimum-stability": "stable",
   "require": {
     "php": ">=7.2.0 <8.0.0",
-    "yiisoft/yii2": "^2.0",
+    "yiisoft/yii2": "^2.0.11",
+    "yiisoft/yii2-redis": "^2.0.6",
     "ext-openssl": "*",
     "ext-curl": "*",
     "ext-json": "*",
@@ -33,16 +34,19 @@
     "qcloud/cos-sdk-v5": "^2.5",
     "aliyuncs/oss-sdk-php": "~2.4"
   },
-  "repositories": {
-    "packagist": {
-      "type": "composer",
-      "url": "https://mirrors.aliyun.com/composer/"
-    }
-  },
   "config": {
     "process-timeout": 1800,
+    "fxp-asset": {
+      "enabled": false
+    },
     "allow-plugins": {
       "yiisoft/yii2-composer": true
     }
-  }
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://asset-packagist.org"
+    }
+  ]
 }
