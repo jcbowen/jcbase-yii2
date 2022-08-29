@@ -3,7 +3,7 @@
 use Jcbowen\JcbaseYii2\components\Agent;
 use Jcbowen\JcbaseYii2\components\Util;
 
-$_B = $_GPC = [];
+global $_B, $_GPC;
 
 // 设备类型
 $_B['os'] = Agent::deviceType();
