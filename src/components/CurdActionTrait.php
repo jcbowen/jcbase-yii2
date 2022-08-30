@@ -557,7 +557,7 @@ trait CurdActionTrait
             return (new Util())->result(ErrCode::NOT_EXIST, '更新数据不存在');
         }
         // 更新前
-        $result_before = $this->updateBefore();
+        $result_before = $this->updateBefore($model);
         if (Util::isError($result_before)) {
             return (new Util())->result(1, $result_before['errmsg'] ?: '更新前发现错误，请稍后再试');
         }
@@ -620,10 +620,11 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
+     * @param $model
      * @return bool
      * @lasttime: 2022/3/13 10:09 下午
      */
-    public function updateBefore(): bool
+    public function updateBefore($model): bool
     {
         return true;
     }
@@ -753,7 +754,7 @@ trait CurdActionTrait
 
         if (empty($delIds)) return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
         // 删除前
-        if ($this->deleteBefore() === false) {
+        if ($this->deleteBefore($dels, $delIds) === false) {
             return (new Util)->result(1, '删除数据失败，请稍后再试');
         }
 
@@ -792,10 +793,12 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
+     * @param array $dels 所有要被删除的数据
+     * @param array $delIds 所有要被删除的数据的ids
      * @return bool
      * @lasttime: 2021/5/9 3:04 下午
      */
-    public function deleteBefore(): bool
+    public function deleteBefore(array $dels, array $delIds): bool
     {
         return true;
     }
