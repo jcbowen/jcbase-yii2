@@ -621,10 +621,10 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param $model
-     * @return bool
+     * @return array|bool
      * @lasttime: 2022/3/13 10:09 下午
      */
-    public function updateBefore($model): bool
+    public function updateBefore($model)
     {
         return true;
     }
@@ -754,8 +754,9 @@ trait CurdActionTrait
 
         if (empty($delIds)) return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
         // 删除前
-        if ($this->deleteBefore($dels, $delIds) === false) {
-            return (new Util)->result(1, '删除数据失败，请稍后再试');
+        $result_before = $this->deleteBefore($dels, $delIds);
+        if (Util::isError($result_before)) {
+            return (new Util)->result(1, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
         }
 
         $transaction = Yii::$app->db->beginTransaction();
@@ -795,10 +796,10 @@ trait CurdActionTrait
      * @email bowen@jiuchet.com
      * @param array $dels 所有要被删除的数据
      * @param array $delIds 所有要被删除的数据的ids
-     * @return bool
+     * @return array|bool
      * @lasttime: 2021/5/9 3:04 下午
      */
-    public function deleteBefore(array $dels, array $delIds): bool
+    public function deleteBefore(array $dels, array $delIds)
     {
         return true;
     }
