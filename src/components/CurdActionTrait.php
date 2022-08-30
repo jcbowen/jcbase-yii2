@@ -453,8 +453,9 @@ trait CurdActionTrait
             return (new Util())->result(1, '数据不能为空');
         }
         // 新增前
-        if ($this->createBefore() === false) {
-            return (new Util())->result(1, '添加失败，请稍后再试');
+        $result_before = $this->createBefore();
+        if (Util::isError($result_before)) {
+            return (new Util())->result(1, $result_before['errmsg'] ?: '添加失败，请稍后再试');
         }
         // 开启事务
         $tr = Yii::$app->db->beginTransaction();
@@ -503,10 +504,10 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @return bool
+     * @return array|bool
      * @lasttime: 2022/3/13 10:01 下午
      */
-    public function createBefore(): bool
+    public function createBefore()
     {
         return true;
     }
@@ -634,10 +635,10 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @return bool
+     * @return array|bool
      * @lasttime: 2022/3/13 10:09 下午
      */
-    public function updateAfter(): bool
+    public function updateAfter()
     {
         return true;
     }
@@ -767,9 +768,10 @@ trait CurdActionTrait
         }
 
         // 删除后
-        if ($this->deleteAfter($delIds) === false) {
+        $result_after = $this->deleteAfter($delIds);
+        if (Util::isError($result_after)) {
             $transaction->rollBack();
-            return (new Util)->result(1, '删除数据失败，请稍后再试');
+            return (new Util)->result(1, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
         }
 
         $transaction->commit();
@@ -810,10 +812,10 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param array $ids
-     * @return bool
+     * @return array|bool
      * @lasttime: 2021/5/9 3:04 下午
      */
-    public function deleteAfter(array $ids = []): bool
+    public function deleteAfter(array $ids = [])
     {
         return true;
     }
