@@ -2,6 +2,8 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
+use InvalidArgumentException;
+
 /**
  * Class AES
  *
@@ -59,7 +61,7 @@ class AES
      * @author Bowen
      * @email bowen@jiuchet.com
      */
-    public static function getMode($key)
+    public static function getMode($key): string
     {
         return 'aes-' . (8 * strlen($key)) . '-cbc';
     }
@@ -74,7 +76,7 @@ class AES
     public static function validateKey(string $key)
     {
         if (!in_array(strlen($key), [16, 24, 32], true)) {
-            throw new \InvalidArgumentException(sprintf('Key length must be 16, 24, or 32 bytes; got key len (%s).', strlen($key)));
+            throw new InvalidArgumentException(sprintf('Key length must be 16, 24, or 32 bytes; got key len (%s).', strlen($key)));
         }
     }
 
@@ -88,7 +90,7 @@ class AES
     public static function validateIv(string $iv)
     {
         if (!empty($iv) && 16 !== strlen($iv)) {
-            throw new \InvalidArgumentException('IV length must be 16 bytes.');
+            throw new InvalidArgumentException('IV length must be 16 bytes.');
         }
     }
 }

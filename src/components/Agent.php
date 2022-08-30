@@ -47,19 +47,19 @@ class Agent
     const APP_INSTALLED_NOT = 0;
 
     // 得到agent完整类型信息
-    public static function getDeviceInfo()
+    public static function getDeviceInfo(): array
     {
-        return array(
+        return [
             'deviceType'  => self::deviceType(),
             'browserType' => self::browserType(),
             'isRetina'    => self::isRetina(),
             'osType'      => self::osType(),
             'isIos6'      => self::isIos6(),
-        );
+        ];
     }
 
     // 浏览器类型
-    public static function browserType($agent = '')
+    public static function browserType($agent = ''): int
     {
         $agent = self::getAgent($agent);
         if (stripos($agent, 'baiduboxapp') !== false) {
@@ -86,7 +86,7 @@ class Agent
     }
 
     // 系统类型
-    public static function osType($agent = '')
+    public static function osType($agent = ''): int
     {
         $agent       = self::getAgent($agent);
         $browserType = self::browserType($agent);
@@ -108,7 +108,7 @@ class Agent
     }
 
     // 设备类型
-    public static function deviceType()
+    public static function deviceType(): int
     {
         if (self::isMobile()) {
             return self::DEVICE_MOBILE;
@@ -118,7 +118,7 @@ class Agent
     }
 
     // retina屏
-    public static function isRetina($agent = '')
+    public static function isRetina($agent = ''): int
     {
         $agent  = self::getAgent($agent);
         $osType = self::osType($agent);
@@ -131,7 +131,7 @@ class Agent
     }
 
     // ios6系统的手机(iphone4, iphone4s)
-    public static function isIos6($agent = '')
+    public static function isIos6($agent = ''): int
     {
         $agent = self::getAgent($agent);
 
@@ -143,7 +143,7 @@ class Agent
     }
 
     // 检查是否在微信中打开
-    public static function isMicroMessage($agent = '')
+    public static function isMicroMessage($agent = ''): int
     {
         $agent = self::getAgent($agent);
 
@@ -155,7 +155,7 @@ class Agent
     }
 
     // 已安装APP
-    public static function isAppInstalled()
+    public static function isAppInstalled(): int
     {
         if (isset($_GET['isappinstalled']) && ($_GET['isappinstalled'] == 1)) {
             return self::APP_INSTALLED_YES;
@@ -165,7 +165,7 @@ class Agent
     }
 
     // 是移动设备访问
-    public static function isMobile()
+    public static function isMobile(): bool
     {
         // 如果有HTTP_X_WAP_PROFILE则一定是移动设备
         if (isset($_SERVER['HTTP_X_WAP_PROFILE'])) {
@@ -178,10 +178,39 @@ class Agent
         // 脑残法，判断手机发送的客户端标志,兼容性有待提高
         if (isset ($_SERVER['HTTP_USER_AGENT'])) {
             $clientkeywords = array(
-                'nokia', 'sony', 'ericsson', 'mot', 'samsung', 'htc', 'sgh', 'lg', 'sharp',
-                'sie-', 'philips', 'panasonic', 'alcatel', 'lenovo', 'iphone', 'ipod', 'blackberry', 'meizu',
-                'android', 'netfront', 'symbian', 'ucweb', 'windowsce', 'palm', 'operamini', 'operamobi', 'openwave',
-                'nexusone', 'cldc', 'midp', 'wap', 'mobile', 'WindowsWechat'
+                'nokia',
+                'sony',
+                'ericsson',
+                'mot',
+                'samsung',
+                'htc',
+                'sgh',
+                'lg',
+                'sharp',
+                'sie-',
+                'philips',
+                'panasonic',
+                'alcatel',
+                'lenovo',
+                'iphone',
+                'ipod',
+                'blackberry',
+                'meizu',
+                'android',
+                'netfront',
+                'symbian',
+                'ucweb',
+                'windowsce',
+                'palm',
+                'operamini',
+                'operamobi',
+                'openwave',
+                'nexusone',
+                'cldc',
+                'midp',
+                'wap',
+                'mobile',
+                'WindowsWechat'
             );
             // 从HTTP_USER_AGENT中查找手机浏览器的关键字
             if (preg_match("/(" . implode('|', $clientkeywords) . ")/i", strtolower($_SERVER['HTTP_USER_AGENT']))) {
@@ -200,7 +229,6 @@ class Agent
 
     public static function getAgent($agent = '')
     {
-        $agent = empty($agent) ? $_SERVER['HTTP_USER_AGENT'] : $agent;
-        return $agent;
+        return empty($agent) ? $_SERVER['HTTP_USER_AGENT'] : $agent;
     }
 }
