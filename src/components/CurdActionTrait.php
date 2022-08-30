@@ -357,8 +357,10 @@ trait CurdActionTrait
      */
     public function actionDetail()
     {
+        global $_GPC;
+
         $fields = $this->getDetailFields();
-        $where  = $this->getDetailWhere();
+        $where  = $this->getDetailWhere($_GPC);
 
         /** @var ActiveQuery $row */
         $row    = call_user_func($this->modelClass . '::find');
@@ -374,7 +376,7 @@ trait CurdActionTrait
     }
 
     /**
-     * 获取数据详情回的字段
+     * 获取数据详情的返回字段
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -405,13 +407,13 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
+     * @param array $data 通过$_GPC接收的数据
      * @return string|array|Response
      * @lasttime: 2022/3/13 3:25 下午
      */
-    public function getDetailWhere()
+    public function getDetailWhere(array $data)
     {
-        global $_GPC;
-        $pkId = intval($_GPC[$this->pkId]);
+        $pkId = intval($data[$this->pkId]);
         if (empty($pkId)) {
             return (new Util)->result(1, "{$this->pkId}不能为空");
         }
@@ -453,7 +455,7 @@ trait CurdActionTrait
             return (new Util())->result(1, '数据不能为空');
         }
         // 新增前
-        $result_before = $this->createBefore();
+        $result_before = $this->createBefore($data);
         if (Util::isError($result_before)) {
             return (new Util())->result(1, $result_before['errmsg'] ?: '添加失败，请稍后再试');
         }
@@ -504,10 +506,11 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
+     * @param array $data
      * @return array|bool
      * @lasttime: 2022/3/13 10:01 下午
      */
-    public function createBefore()
+    public function createBefore(array $data)
     {
         return true;
     }
@@ -553,12 +556,12 @@ trait CurdActionTrait
             return $data;
         }
         // 查询数据是否存在
-        $where = $this->getUpdateWhere();
+        $where = $this->getUpdateWhere($data);
         if (!$model = call_user_func($this->modelClass . '::findOne', $where)) {
             return (new Util())->result(ErrCode::NOT_EXIST, '更新数据不存在');
         }
         // 更新前
-        $result_before = $this->updateBefore($model);
+        $result_before = $this->updateBefore($model, $data);
         if (Util::isError($result_before)) {
             return (new Util())->result(1, $result_before['errmsg'] ?: '更新前发现错误，请稍后再试');
         }
@@ -588,13 +591,13 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
+     * @param array $data 通过$_GPC接收的数据
      * @return string|array|Response
      * @lasttime: 2022/3/13 10:09 下午
      */
-    public function getUpdateWhere()
+    public function getUpdateWhere(array $data)
     {
-        global $_GPC;
-        $pkId = intval($_GPC[$this->pkId]);
+        $pkId = intval($data[$this->pkId]);
         if (empty($pkId)) {
             return (new Util)->result(1, "{$this->pkId}不能为空");
         }
@@ -622,10 +625,11 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param $model
+     * @param array $data
      * @return array|bool
      * @lasttime: 2022/3/13 10:09 下午
      */
-    public function updateBefore($model)
+    public function updateBefore($model, array $data)
     {
         return true;
     }
@@ -739,12 +743,14 @@ trait CurdActionTrait
         }
         if (empty($ids)) return (new Util)->result(9001002, '参数缺失，请重试');
 
+        $fileds = $this->getDeleteFields();
+
         // 获取删除条件
         $where = $this->getDeleteWhere();
         if (empty($where)) $where = ['in', $this->pkId, $ids];
 
         $dels   = call_user_func($this->modelClass . '::find')
-            ->select([$this->pkId])
+            ->select($fileds)
             ->where([
                 'deleted_at' => NO_TIME
             ])
@@ -779,10 +785,25 @@ trait CurdActionTrait
     }
 
     /**
+     * 设置被删除数据的查询返回字段（重写方法时，务必查询主键！）
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return array|string
+     * @lasttime: 2022/8/30 3:18 PM
+     */
+    public function getDeleteFields()
+    {
+        return [$this->pkId];
+    }
+
+    /**
      * 删除查询条件
      *
      * @author Bowen
      * @email bowen@jiuchet.com
+     *
      * @return array|string
      * @lasttime: 2021/5/9 3:00 下午
      */
