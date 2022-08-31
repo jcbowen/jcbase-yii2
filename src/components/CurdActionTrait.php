@@ -411,7 +411,7 @@ trait CurdActionTrait
      * @return string|array|Response
      * @lasttime: 2022/3/13 3:25 下午
      */
-    public function getDetailWhere(array $data)
+    public function getDetailWhere(array &$data)
     {
         $pkId = intval($data[$this->pkId]);
         if (empty($pkId)) {
@@ -510,7 +510,7 @@ trait CurdActionTrait
      * @return array|bool
      * @lasttime: 2022/3/13 10:01 下午
      */
-    public function createBefore(array $data)
+    public function createBefore(array &$data)
     {
         return true;
     }
@@ -595,7 +595,7 @@ trait CurdActionTrait
      * @return string|array|Response
      * @lasttime: 2022/3/13 10:09 下午
      */
-    public function getUpdateWhere(array $data)
+    public function getUpdateWhere(array &$data)
     {
         $pkId = intval($data[$this->pkId]);
         if (empty($pkId)) {
@@ -629,7 +629,7 @@ trait CurdActionTrait
      * @return array|bool
      * @lasttime: 2022/3/13 10:09 下午
      */
-    public function updateBefore($model, array $data)
+    public function updateBefore($model, array &$data)
     {
         return true;
     }
