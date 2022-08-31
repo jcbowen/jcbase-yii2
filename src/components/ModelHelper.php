@@ -44,12 +44,12 @@ trait ModelHelper
         if (!empty($errors)) {
             $errmsg = 'errmsg:';
             foreach ($errors as $item) {
-                $errmsg = "【" . implode('', $item) . "】 ";
+                $errmsg .= "【" . implode(',', $item) . "】 ";
             }
-            return Util::error(1, $errmsg, $model->errors);
+            return Util::error(ErrCode::UNKNOWN, $errmsg, $model->errors);
         }
 
-        return Util::error(1, '未知错误');
+        return Util::error(ErrCode::UNKNOWN, '未知错误');
     }
 
     /**
