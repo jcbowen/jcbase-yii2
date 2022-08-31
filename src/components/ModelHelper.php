@@ -42,9 +42,9 @@ trait ModelHelper
 
         $errors = $model->errors;
         if (!empty($errors)) {
-            $errmsg = 'errmsg:';
+            $errmsg = '';
             foreach ($errors as $item) {
-                $errmsg .= "【" . implode(',', $item) . "】 ";
+                $errmsg .= "【" . implode(',', $item) . "】";
             }
             return Util::error(ErrCode::UNKNOWN, $errmsg, $model->errors);
         }
