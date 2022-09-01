@@ -2,6 +2,7 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
+use Exception;
 use Yii;
 use yii\caching\FileDependency;
 use yii\helpers\FileHelper;
@@ -18,7 +19,7 @@ use yii\helpers\FileHelper;
 class ModelCacheDependency
 {
 
-    private static array $_filenames = [];
+    private static $_filenames = [];
 
     /**
      * 创建缓存依赖
@@ -56,7 +57,7 @@ class ModelCacheDependency
                     FileHelper::createDirectory($path);
                     file_put_contents($filename, date('Y-m-d H:i:s'));
                 }
-            } catch (\Exception $exception) {
+            } catch (Exception $exception) {
             }
             static::$_filenames[$modelClass] = $filename;
         }
@@ -89,7 +90,7 @@ class ModelCacheDependency
     {
         try {
             FileHelper::removeDirectory(Yii::$app->runtimePath . '/model-dependency/');
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
         }
     }
 }
