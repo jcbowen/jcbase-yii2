@@ -2,6 +2,7 @@
 
 namespace Jcbowen\JcbaseYii2\components\captcha;
 
+use Imagick;
 use yii\base\InvalidConfigException;
 
 /**
@@ -28,10 +29,10 @@ class Captcha
      * @return string the name of the graphic extension, either "imagick" or "gd".
      * @throws InvalidConfigException if neither ImageMagick nor GD is installed.
      */
-    public static function checkRequirements()
+    public static function checkRequirements(): string
     {
         if (extension_loaded('imagick')) {
-            $imagickFormats = (new \Imagick())->queryFormats('PNG');
+            $imagickFormats = (new Imagick())->queryFormats('PNG');
             if (in_array('PNG', $imagickFormats, true)) {
                 return 'imagick';
             }
