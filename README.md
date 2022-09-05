@@ -34,52 +34,6 @@ composer require jcbowen/jcbase-yii2
 
 ### 配置说明
 
-加入到main.php或者main-local.php中
-
-```php
-[
-    'components' => [
-        // 如果需要魔术方法，可以在\yii\web\Application文件的类名前的注释加入@property File $jcFile The file component.
-        'jcFile' => [
-            'class'               => 'Jcbowen\JcbaseYii2\components\File',
-            'attachmentRoot'      => '@frontend/web', // 附件本地存储根目录(不包含附件目录名，默认为：@webroot)
-            'attachmentModel'     => 'Jcbowen\JcbaseYii2\models\Attachment', // 附件表模型，表中字段与默认字段名称不一致时需配置attachmentFieldsMap
-            'attachmentFieldsMap' => [ // 附件表字段映射，默认为空，表示使用默认字段名称
-                'id'         => 'id', // 主键，递增ID
-                'group_id'   => 'group_id', // 分组ID
-                'uid'        => 'uid', // 上传用户
-                'type'       => 'type', // 附件类型
-                'size'       => 'size', // 附件尺寸
-                'width'      => 'width', // 图片宽度(像素)
-                'height'     => 'height', // 图片高度(像素)
-                'md5'        => 'md5', // 文件md5
-                'filename'   => 'filename', // 附件上传时的文件名
-                'attachment' => 'attachment', // 附件相对路径
-                'is_display' => 'is_display', // 是否在选择器中显示
-                'deleted_at' => 'deleted_at', // 删除时间
-                'updated_at' => 'updated_at', // 更新时间
-                'created_at' => 'created_at', // 上传时间
-            ],
-            'remoteConfig'        => [
-                'cos' => [
-                    'secretId'  => '', // 腾讯云cos secretId
-                    'secretKey' => '', // 腾讯云cos secretKey
-                    'bucket'    => '', // 腾讯云cos bucket
-                    'region'    => '', // 腾讯云cos region
-                    'url'       => '' // 腾讯云cos url
-                ],
-                'oss' => [
-                    'AccessKeyId'     => '', // 阿里云oss AccessKeyId
-                    'AccessKeySecret' => '', // 阿里云oss AccessKeySecret
-                    'endpoint'        => '', // 阿里云oss Server
-                    'bucket'          => '', // 阿里云oss Bucket
-                ],
-            ]
-        ]
-    ]
-]
-```
-
 加入到params.php或者params-local.php中
 
 ```php
@@ -93,6 +47,41 @@ return [
         'attachment_local' => 'https://frontend.domain.cn/', // 本地附件访问域名，一般推荐为业务端域名
         'attachment'       => 'https://frontend.domain.cn/', // 远程附件访问域名，为空时等于本地附件访问域名
     ],
+    'jcFile' => [
+        'attachmentRoot'      => '@frontend/web', // 附件本地存储根目录(不包含附件目录名，默认为：@webroot)
+        'attachmentModel'     => 'Jcbowen\JcbaseYii2\models\Attachment', // 附件表模型，表中字段与默认字段名称不一致时需配置attachmentFieldsMap
+        'attachmentFieldsMap' => [ // 附件表字段映射，默认为空，表示使用默认字段名称
+            'id'         => 'id', // 主键，递增ID
+            'group_id'   => 'group_id', // 分组ID
+            'uid'        => 'uid', // 上传用户
+            'type'       => 'type', // 附件类型
+            'size'       => 'size', // 附件尺寸
+            'width'      => 'width', // 图片宽度(像素)
+            'height'     => 'height', // 图片高度(像素)
+            'md5'        => 'md5', // 文件md5
+            'filename'   => 'filename', // 附件上传时的文件名
+            'attachment' => 'attachment', // 附件相对路径
+            'is_display' => 'is_display', // 是否在选择器中显示
+            'deleted_at' => 'deleted_at', // 删除时间
+            'updated_at' => 'updated_at', // 更新时间
+            'created_at' => 'created_at', // 上传时间
+        ],
+        'remoteConfig'        => [
+            'cos' => [
+                'secretId'  => '', // 腾讯云cos secretId
+                'secretKey' => '', // 腾讯云cos secretKey
+                'bucket'    => '', // 腾讯云cos bucket
+                'region'    => '', // 腾讯云cos region
+                'url'       => '' // 腾讯云cos url
+            ],
+            'oss' => [
+                'AccessKeyId'     => '', // 阿里云oss AccessKeyId
+                'AccessKeySecret' => '', // 阿里云oss AccessKeySecret
+                'endpoint'        => '', // 阿里云oss Server
+                'bucket'          => '', // 阿里云oss Bucket
+            ],
+        ]
+    ]
     // 附件配置
     'attachment' => [
         'dir'        => 'attachment', // 本地附件目录名，默认为attachment
