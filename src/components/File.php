@@ -112,13 +112,18 @@ class File extends Model
     public function init()
     {
         parent::init();
+
+        $this->attachmentModel = Yii::$app->params['jcFile']['attachmentModel'];
+
         // 初始化配置
-        $this->attachmentFieldsMap = array_merge($this->attachmentFieldsMapDefault, $this->attachmentFieldsMap);
+        $this->attachmentFieldsMap = array_merge($this->attachmentFieldsMapDefault, Yii::$app->params['jcFile']['attachmentFieldsMap']);
 
         // 初始化附件本地根目录
         $attachmentRoot       = rtrim($this->attachmentRoot ?: '@webroot', '/') . '/';
         $attachmentRoot       .= Yii::$app->params['attachment']['dir'] ?: 'attachment';
         $this->attachmentRoot = rtrim(Yii::getAlias($attachmentRoot), '/');
+
+        $this->remoteConfig = Yii::$app->params['jcFile']['remoteConfig'];
     }
 
     /**
