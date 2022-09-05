@@ -113,9 +113,10 @@ class File extends Model
     {
         parent::init();
 
+        // 初始化远程附件数据模型类
         $this->attachmentModel = Yii::$app->params['jcFile']['attachmentModel'];
 
-        // 初始化配置
+        // 初始化远程附件表数据模型字段变更模型
         $this->attachmentFieldsMap = array_merge($this->attachmentFieldsMapDefault, (array)Yii::$app->params['jcFile']['attachmentFieldsMap']);
 
         // 初始化附件本地根目录
@@ -123,6 +124,7 @@ class File extends Model
         $attachmentRoot       .= Yii::$app->params['attachment']['dir'] ?: 'attachment';
         $this->attachmentRoot = rtrim(Yii::getAlias($attachmentRoot), '/');
 
+        // 初始化远程附件配置
         $this->remoteConfig = Yii::$app->params['jcFile']['remoteConfig'];
     }
 
@@ -544,7 +546,7 @@ class File extends Model
         }
 
         // 开启远程附件，并配置了远程附件类型的情况下才执行远程附件上传
-        if (!empty(Yii::$app->params['upload']['isRemote']) && !empty(Yii::$app->params['upload']['remoteType'])) {
+        if (!empty(Yii::$app->params['attachment']['isRemote']) && !empty(Yii::$app->params['attachment']['remoteType'])) {
             $remoteResult = $this->file_remote_upload($path);
             if (Util::isError($remoteResult)) {
                 $result['message'] = '远程附件上传失败，请检查配置并重新上传';
