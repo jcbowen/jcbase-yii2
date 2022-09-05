@@ -116,10 +116,10 @@ class File extends Model
         $this->attachmentModel = Yii::$app->params['jcFile']['attachmentModel'];
 
         // 初始化配置
-        $this->attachmentFieldsMap = array_merge($this->attachmentFieldsMapDefault, Yii::$app->params['jcFile']['attachmentFieldsMap']);
+        $this->attachmentFieldsMap = array_merge($this->attachmentFieldsMapDefault, (array)Yii::$app->params['jcFile']['attachmentFieldsMap']);
 
         // 初始化附件本地根目录
-        $attachmentRoot       = rtrim($this->attachmentRoot ?: '@webroot', '/') . '/';
+        $attachmentRoot       = rtrim(Yii::$app->params['jcFile']['attachmentRoot'] ?: '@webroot', '/') . '/';
         $attachmentRoot       .= Yii::$app->params['attachment']['dir'] ?: 'attachment';
         $this->attachmentRoot = rtrim(Yii::getAlias($attachmentRoot), '/');
 
@@ -134,7 +134,17 @@ class File extends Model
     public static function getInstanceByName(string $name): ?File
     {
         $files = self::loadFiles();
-        return isset($files[$name]) ? new static($files[$name]) : null;
+        return isset($files[$name]) ? new static([
+            'name'                => $files[$name]['name'],
+            'type'                => $files[$name]['type'],
+            'tmp_name'            => $files[$name]['tmp_name'],
+            'error'               => $files[$name]['error'],
+            'size'                => $files[$name]['size'],
+            'attachmentModel'     => Yii::$app->params['jcFile']['attachmentModel'],
+            'attachmentFieldsMap' => (array)Yii::$app->params['jcFile']['attachmentFieldsMap'],
+            'attachmentRoot'      => Yii::$app->params['jcFile']['attachmentRoot'],
+            'remoteConfig'        => Yii::$app->params['jcFile']['remoteConfig'],
+        ]) : null;
     }
 
     /**
@@ -151,12 +161,16 @@ class File extends Model
         $tempFile = tempnam(sys_get_temp_dir(), 'php');
         $size     = file_put_contents($tempFile, base64_decode($matches[2]));
         return new static([
-            'name'     => basename($tempFile) . str_replace('/', '.', $matches[1]),
-            'type'     => $matches[1],
-            'tmp_name' => $tempFile,
-            'error'    => 0,
-            'size'     => $size,
-            'base64'   => $base64
+            'name'                => basename($tempFile) . str_replace('/', '.', $matches[1]),
+            'type'                => $matches[1],
+            'tmp_name'            => $tempFile,
+            'error'               => 0,
+            'size'                => $size,
+            'base64'              => $base64,
+            'attachmentModel'     => Yii::$app->params['jcFile']['attachmentModel'],
+            'attachmentFieldsMap' => (array)Yii::$app->params['jcFile']['attachmentFieldsMap'],
+            'attachmentRoot'      => Yii::$app->params['jcFile']['attachmentRoot'],
+            'remoteConfig'        => Yii::$app->params['jcFile']['remoteConfig'],
         ]);
     }
 
