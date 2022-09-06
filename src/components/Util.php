@@ -791,11 +791,11 @@ class Util
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param $tag
+     * @param int $tag
      * @return float
      * @lasttime: 2022/9/6 11:37 AM
      */
-    public function test_code_time($tag = 0)
+    public static function test_code_time(int $tag = 0): float
     {
         static $logs = [];
         $time = microtime(true);
