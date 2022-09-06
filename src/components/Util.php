@@ -12,7 +12,7 @@ use yii\web\Response;
  *
  * @author Bowen
  * @email bowen@jiuchet.com
- * @lasttime: 2022/7/18 9:14 AM
+ * @lasttime: 2022/9/6 11:38 AM
  * @package Jcbowen\JcbaseYii2\components
  */
 class Util
@@ -730,7 +730,10 @@ class Util
         if (empty($type)) {
             return $this->result(9001002, '验证码类型不能为空');
         }
-        $c            = Yii::createObject('Jcbowen\JcbaseYii2\components\captcha\CaptchaAction', ['__' . $type, $controller]);
+        $c            = Yii::createObject('Jcbowen\JcbaseYii2\components\captcha\CaptchaAction', [
+            '__' . $type,
+            $controller
+        ]);
         $c->maxLength = $_GPC['maxLength'] ? intval($_GPC['maxLength']) : 5;
         $c->minLength = $_GPC['minLength'] ? intval($_GPC['minLength']) : 5;;
         $c->height = $_GPC['height'] ? intval($_GPC['height']) : 40;
@@ -780,5 +783,26 @@ class Util
 
         $c = Yii::createObject('yii\captcha\CaptchaAction', ['__' . $type, $controller]);
         return $c->getVerifyCode();
+    }
+
+    /**
+     * 测试大妈运行市场
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $tag
+     * @return float
+     * @lasttime: 2022/9/6 11:37 AM
+     */
+    public function test_code_time($tag = 0)
+    {
+        static $logs = [];
+        $time = microtime(true);
+        if (empty($logs[$tag])) {
+            $logs[$tag] = $time;
+            return $time;
+        }
+        return round($time - $logs[$tag], 3);
     }
 }
