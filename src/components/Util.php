@@ -786,7 +786,7 @@ class Util
     }
 
     /**
-     * 测试大妈运行市场
+     * 测试代码运行时长
      *
      * @author Bowen
      * @email bowen@jiuchet.com
