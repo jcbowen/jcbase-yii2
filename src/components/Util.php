@@ -548,10 +548,37 @@ class Util
         return $list;
     }
 
+    /**
+     * redis根据key删除数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param ...$keys
+     * @return mixed
+     * @lasttime: 2022/9/8 2:04 PM
+     */
     public static function redisDel(...$keys)
     {
         $redis = self::getRedis();
         return $redis->del(...$keys);
+    }
+
+    /**
+     * redis根据key延长过期时间
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $key
+     * @param $expire
+     * @return mixed
+     * @lasttime: 2022/9/8 2:05 PM
+     */
+    public static function redisExpire($key, $expire)
+    {
+        $redis = self::getRedis();
+        return $redis->expire($key, $expire);
     }
 
     /**
