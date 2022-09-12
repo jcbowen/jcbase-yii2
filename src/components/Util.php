@@ -96,6 +96,32 @@ class Util
     }
 
     /**
+     * 去除附件链接中的附件域名
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $src
+     * @return false|mixed|string
+     * @lasttime: 2022/9/12 17:52
+     */
+    public static function removeMediaDomain($src)
+    {
+        if (self::startsWith($src, Yii::$app->params['domain']['attachment_local']) || self::startsWith($src, Yii::$app->params['domain']['attachment'])) {
+            $type = 'images';
+            foreach (File::$fileTypes as $item) {
+                if (self::strExists($src, $item)) {
+                    $type = $item . 's';
+                    break;
+                }
+            }
+            $urls = parse_url($src);
+            $src  = substr($urls['path'], strpos($urls['path'], $type));
+        }
+        return $src;
+    }
+
+    /**
      * 路径安全解析
      *
      * @author Bowen
