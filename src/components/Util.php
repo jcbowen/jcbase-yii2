@@ -83,7 +83,7 @@ class Util
         // 移除资源链接中的本地附件域名
         if (self::startsWith($src, Yii::$app->params['domain']['attachment_local']) && !self::strExists($src, '/static/')) {
             $urls = parse_url($src);
-            $src  = $t = substr($urls['path'], strpos($urls['path'], 'images'));
+            $src  = substr($urls['path'], strpos($urls['path'], 'images'));
         }
 
         // 输出本地附件链接
@@ -127,7 +127,7 @@ class Util
         $return = [];
         $keys   = (array)$keys;
         foreach ($keys as $key) {
-            $return[$key] = isset($arr[$key]) ? $arr[$key] : $default;
+            $return[$key] = $arr[$key] ?? $default;
         }
         return $return;
     }
@@ -139,6 +139,7 @@ class Util
      * @email bowen@jiuchet.com
      * @lastTime 2021/12/17 11:33 下午
      * @return array
+     * @throws ExitException
      */
     public static function getCurrentAppInfo(): array
     {
