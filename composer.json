@@ -32,7 +32,8 @@
     "ext-curl": "*",
     "ext-json": "*",
     "ext-mbstring": "*",
-    "ext-gd": "*"
+    "ext-gd": "*",
+    "ext-simplexml": "*"
   },
   "config": {
     "process-timeout": 1800,
