@@ -15,7 +15,10 @@ use Jcbowen\JcbaseYii2\models\Attachment;
 
 class File extends Model
 {
-    //----------- 配置参数 ---------/
+    // 文件上传支持的类型
+    public static $fileTypes = ['image', 'thumb', 'voice', 'video', 'audio', 'office', 'zip'];
+
+    //----------- 储存配置参数 ---------/
 
     /**
      * @var Attachment 远程附件数据模型类

@@ -28,6 +28,15 @@ trait CurdActionTrait
 
     //---------- 检查 ----------/
 
+    /** @var string 数据表名称 */
+    private $modelTableName;
+
+    /** @var string 操作时间 */
+    private $operateTime;
+
+    /** @var string 空时间字符 */
+    private $noTime = '0000-00-00 00:00:00';
+
     /**
      * 调用前需进行的初始化检查
      *
@@ -40,6 +49,9 @@ trait CurdActionTrait
     {
         if (!$this->modelClass) {
             throw new RuntimeException('未定义调用的数据模型');
+        } else {
+            $this->operateTime    = date('Y-m-d H:i:s');
+            $this->modelTableName = call_user_func($this->modelClass . '::tableName');
         }
     }
 
@@ -57,6 +69,8 @@ trait CurdActionTrait
     {
         global $_GPC;
 
+        $this->checkInit();
+
         $fields      = $this->getListFields();
         $where       = $this->getListWhere();
         $filterWhere = $this->getListFilterWhere();
@@ -73,7 +87,7 @@ trait CurdActionTrait
 
         $row = $this->getListRow($row);
 
-        if (empty($showDeleted)) $row = $row->andWhere(['deleted_at' => NO_TIME]);
+        if (empty($showDeleted)) $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
 
         if (!empty($where)) $row = $row->andWhere($where);
         $row = $row->andFilterWhere($filterWhere);
@@ -143,7 +157,7 @@ trait CurdActionTrait
      */
     public function getListFields()
     {
-        return '*';
+        return $this->modelTableName . '.*';
     }
 
     /**
@@ -217,6 +231,8 @@ trait CurdActionTrait
     {
         global $_GPC;
 
+        $this->checkInit();
+
         $fields      = $this->getSelectorFields();
         $where       = $this->getSelectorWhere();
         $filterWhere = $this->getSelectorFilterWhere();
@@ -233,7 +249,7 @@ trait CurdActionTrait
 
         $row = $this->getSelectorRow($row);
 
-        if (empty($showDeleted)) $row = $row->andWhere(['deleted_at' => NO_TIME]);
+        if (empty($showDeleted)) $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
 
         if (!empty($where)) $row = $row->andWhere($where);
         $row = $row->andFilterWhere($filterWhere);
@@ -302,7 +318,7 @@ trait CurdActionTrait
      */
     public function getSelectorFields()
     {
-        return '*';
+        return $this->modelTableName . '.*';
     }
 
     /**
@@ -359,6 +375,8 @@ trait CurdActionTrait
     {
         global $_GPC;
 
+        $this->checkInit();
+
         $fields = $this->getDetailFields();
         $where  = $this->getDetailWhere($_GPC);
 
@@ -385,7 +403,7 @@ trait CurdActionTrait
      */
     public function getDetailFields()
     {
-        return '*';
+        return $this->modelTableName . '.*';
     }
 
     /**
@@ -449,6 +467,8 @@ trait CurdActionTrait
      */
     public function actionCreate()
     {
+        $this->checkInit();
+
         // 获取新增的表单数据
         $data = $this->getCreateFormData();
         if (empty($data)) {
@@ -542,16 +562,16 @@ trait CurdActionTrait
      */
     public function actionUpdate()
     {
-        global $_GPC;
-        $pkId = intval($_GPC[$this->pkId]);
-        if (empty($pkId)) {
-            return (new Util)->result(1, "{$this->pkId}不能为空");
-        }
+        $this->checkInit();
+
         // 获取更新表单数据
         $data = $this->getUpdateFormData();
-        if (is_string($data)) {
-            return (new Util())->result(1, '非法访问', $data);
+
+        $pkId = intval($data[$this->pkId]);
+        if (empty($pkId)) {
+            return (new Util)->result(ErrCode::UNKNOWN, "{$this->pkId}不能为空");
         }
+
         if ($data instanceof Response) {
             return $data;
         }
@@ -563,7 +583,7 @@ trait CurdActionTrait
         // 更新前
         $result_before = $this->updateBefore($model, $data);
         if (Util::isError($result_before)) {
-            return (new Util())->result(1, $result_before['errmsg'] ?: '更新前发现错误，请稍后再试');
+            return (new Util())->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '更新前发现错误，请稍后再试');
         }
         // 开启事务
         $tr = Yii::$app->db->beginTransaction();
@@ -599,7 +619,7 @@ trait CurdActionTrait
     {
         $pkId = intval($data[$this->pkId]);
         if (empty($pkId)) {
-            return (new Util)->result(1, "{$this->pkId}不能为空");
+            return (new Util)->result(ErrCode::PARAMETER_EMPTY, "{$this->pkId}不能为空");
         }
         $where   = ['and'];
         $where[] = [$this->pkId => $pkId];
@@ -657,13 +677,16 @@ trait CurdActionTrait
      */
     public function actionSetValue()
     {
-        global $_GPC;
-        $pkId = intval($_GPC[$this->pkId]);
-        if (empty($pkId)) return (new Util())->result(1, "{$this->pkId}不能为空");
+        $this->checkInit();
 
-        $field = Safe::gpcString(trim($_GPC['field']));
-        $type  = trim($_GPC['type']);
-        $value = $_GPC['value']; // 字段值的类型
+        $data = $this->getSetValueFormData();
+
+        $pkId = intval($data[$this->pkId]);
+        if (empty($pkId)) return (new Util())->result(1, "{$this->pkId} 不能为空");
+
+        $field = Safe::gpcString(trim($data['field'])); // 字段名
+        $type  = trim($data['type']); // 字段值的类型
+        $value = $data['value']; // 字段值
 
         if ($type === 'number') {
             $value = intval($value);
@@ -682,6 +705,20 @@ trait CurdActionTrait
             return (new Util)->result(0, '设置成功', ['value' => $value]);
         }
         return (new Util)->result(1, '设置失败，请刷新后再试');
+    }
+
+    /**
+     * 获取设置某个字段的值的表单数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return array|Response
+     * @lasttime: 2022/9/10 08:32
+     */
+    public function getSetValueFormData()
+    {
+        return $this->getFormData();
     }
 
     //---------- 变更通用 ----------/
@@ -752,7 +789,7 @@ trait CurdActionTrait
         $dels   = call_user_func($this->modelClass . '::find')
             ->select($fileds)
             ->where([
-                'deleted_at' => NO_TIME
+                $this->modelTableName . '.deleted_at' => $this->noTime,
             ])
             ->andWhere($where)
             ->asArray()
@@ -760,6 +797,7 @@ trait CurdActionTrait
         $delIds = ArrayHelper::getColumn($dels, $this->pkId);
 
         if (empty($delIds)) return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
+
         // 删除前
         $result_before = $this->deleteBefore($dels, $delIds);
         if (Util::isError($result_before)) {
@@ -768,7 +806,7 @@ trait CurdActionTrait
 
         $transaction = Yii::$app->db->beginTransaction();
 
-        if (!call_user_func("$this->modelClass::updateAll", ['deleted_at' => TIME], $where)) {
+        if (!call_user_func("$this->modelClass::updateAll", ['deleted_at' => $this->operateTime], $where)) {
             $transaction->rollBack();
             return (new Util)->result(1, '删除失败，未知错误');
         }
