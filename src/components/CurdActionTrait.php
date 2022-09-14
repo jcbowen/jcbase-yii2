@@ -384,9 +384,8 @@ trait CurdActionTrait
         $row    = call_user_func($this->modelClass . '::find');
         $row    = $row->select($fields);
         $row    = $this->getDetailRow($row);
-        $detail = $row->andWhere($where)->one();
+        $detail = $row->andWhere($where)->asArray()->one();
         if (!empty($detail)) {
-            $detail = $detail->toArray();
             $detail = $this->detail($detail);
             return (new Util())->result(0, 'ok', $detail);
         }
