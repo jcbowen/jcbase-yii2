@@ -77,4 +77,6 @@ class ErrCode
     const EXPIRATION_API = 9002025;
     /** @var int 不可操作的状态 */
     const INOPERABLE_STATE = 9002026;
+    /** @var int 暂不支持 */
+    const NOT_SUPPORTED = 9002027;
 }
