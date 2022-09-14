@@ -2,6 +2,7 @@
 
 namespace Jcbowen\JcbaseYii2\components\sdk;
 
+use Jcbowen\JcbaseYii2\components\ErrCode;
 use Jcbowen\JcbaseYii2\components\Util;
 use stdClass;
 use Yii;
@@ -18,15 +19,15 @@ use yii\helpers\FileHelper;
  */
 class SmsYunTongXun
 {
-    public  $AccountSid;
-    public  $AccountToken;
-    public  $AppId;
-    public  $ServerIP = 'app.cloopen.com';
-    public  $ServerPort = '8883';
-    public  $SoftVersion = '2013-12-26';
-    public  $BodyType = "json"; //包体格式，可填值：json 、xml
-    public  $enableLog = true; //日志开关。可填值：true、
-    public  $Filename = "@runtime/log/sms-ytx.txt"; //日志文件
+    public $AccountSid;
+    public $AccountToken;
+    public $AppId;
+    public $ServerIP = 'app.cloopen.com';
+    public $ServerPort = '8883';
+    public $SoftVersion = '2013-12-26';
+    public $BodyType = "json"; //包体格式，可填值：json 、xml
+    public $enableLog = true; //日志开关。可填值：true、
+    public $logPath = "@runtime/log/sms-ytx.txt"; //日志文件
 
     private $Batch;  // 时间sh
     private $Handle; // 句柄
@@ -34,7 +35,7 @@ class SmsYunTongXun
     public function __construct()
     {
         $this->Batch = date("YmdHis");
-        $fileName    = Yii::getAlias($this->Filename);
+        $fileName    = Yii::getAlias($this->logPath);
         if (!file_exists($fileName)) {
             FileHelper::createDirectory(dirname($fileName));
         }
@@ -161,39 +162,39 @@ class SmsYunTongXun
      */
     private function accAuth()
     {
-        if ($this->ServerIP == "") {
+        if (empty($this->ServerIP)) {
             $data             = new stdClass();
-            $data->statusCode = '172004';
+            $data->statusCode = ErrCode::PARAMETER_EMPTY;
             $data->statusMsg  = 'serverIP为空';
             return $data;
         }
         if ($this->ServerPort <= 0) {
             $data             = new stdClass();
-            $data->statusCode = '172005';
+            $data->statusCode = ErrCode::PARAMETER_ERROR;
             $data->statusMsg  = '端口错误（小于等于0）';
             return $data;
         }
-        if ($this->SoftVersion == "") {
+        if (empty($this->SoftVersion)) {
             $data             = new stdClass();
-            $data->statusCode = '172013';
+            $data->statusCode = ErrCode::PARAMETER_EMPTY;
             $data->statusMsg  = '版本号为空';
             return $data;
         }
-        if ($this->AccountSid == "") {
+        if (empty($this->AccountSid)) {
             $data             = new stdClass();
-            $data->statusCode = '172006';
+            $data->statusCode = ErrCode::PARAMETER_EMPTY;
             $data->statusMsg  = '主帐号为空';
             return $data;
         }
-        if ($this->AccountToken == "") {
+        if (empty($this->AccountToken)) {
             $data             = new stdClass();
-            $data->statusCode = '172007';
+            $data->statusCode = ErrCode::PARAMETER_EMPTY;
             $data->statusMsg  = '主帐号令牌为空';
             return $data;
         }
-        if ($this->AppId == "") {
+        if (empty($this->AppId)) {
             $data             = new stdClass();
-            $data->statusCode = '172012';
+            $data->statusCode = ErrCode::PARAMETER_EMPTY;
             $data->statusMsg  = '应用ID为空';
             return $data;
         }
