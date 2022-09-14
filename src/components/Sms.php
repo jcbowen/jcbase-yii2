@@ -27,7 +27,7 @@ class Sms
         }
     }
 
-    public function send($mobile, $content, $templateId)
+    public static function send($mobile, $content, $templateId)
     {
         switch (self::$type) {
             case 'YunTongXun':
