@@ -25,7 +25,7 @@
 * 安全过滤类封装
 * 模版引擎封装
 * 路由优化封装
-* 短信发送SDK（云通讯）
+* 多平台短信发送（暂时只支持云通讯）
 
 ### 安装
 
@@ -105,24 +105,21 @@ return [
             'thumb'      => 0, // 是否开启图片压缩功能 0不开启 1开启
             'width'      => 150, // 图片压缩后的宽度
         ]
-    ]
+    ],
+    'SmsConfig'  => [
+        'type'       => 'YunTongXun', // 短信类型，aliyun代表阿里云短信，qcloud代表腾讯云短信，YunTongXun代表云通讯短信
+        'YunTongXun' => [
+            'AccountSid'   => '',
+            'AccountToken' => '',
+            'AppId'        => '',
+            'ServerIP'     => 'app.cloopen.com',
+            'ServerPort'   => '8883',
+            'SoftVersion'  => '2013-12-26',
+            'BodyType'     => 'json',
+            'enableLog'    => true,
+            'logPath'      => '@runtime/log/sms-ytx.txt',
+        ]
+    ],
 ]
 ```
 
-加入到main.php或者main-local.php中
-
-```php
-<?php
-
-return [
-    'components' => [
-        'SmsYunTongXun' => [
-            'class'        => 'Jcbowen\JcbaseYii2\components\sdk\SmsYunTongXun',
-            'AccountSid'   => '8a48b5514f06f404014f0c4dd4610548',
-            'AccountToken' => 'e0189f99e5df4faa8f1bb590b9ec1101',
-            'AppId'        => '8a48b5514f3a7d0b014f3edf7dc808dc',
-        ]
-    ],
-];
-
-```
