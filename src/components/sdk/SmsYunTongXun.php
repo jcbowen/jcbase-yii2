@@ -165,37 +165,37 @@ class SmsYunTongXun
         if (empty($this->ServerIP)) {
             $data             = new stdClass();
             $data->statusCode = ErrCode::PARAMETER_EMPTY;
-            $data->statusMsg  = 'serverIP为空';
+            $data->statusMsg  = '服务地址(serverIP)为空';
             return $data;
         }
         if ($this->ServerPort <= 0) {
             $data             = new stdClass();
             $data->statusCode = ErrCode::PARAMETER_ERROR;
-            $data->statusMsg  = '端口错误（小于等于0）';
+            $data->statusMsg  = '端口(ServerPort)错误（小于等于0）';
             return $data;
         }
         if (empty($this->SoftVersion)) {
             $data             = new stdClass();
             $data->statusCode = ErrCode::PARAMETER_EMPTY;
-            $data->statusMsg  = '版本号为空';
+            $data->statusMsg  = '版本号(SoftVersion)为空';
             return $data;
         }
         if (empty($this->AccountSid)) {
             $data             = new stdClass();
             $data->statusCode = ErrCode::PARAMETER_EMPTY;
-            $data->statusMsg  = '主帐号为空';
+            $data->statusMsg  = '主帐号(AccountSid)为空';
             return $data;
         }
         if (empty($this->AccountToken)) {
             $data             = new stdClass();
             $data->statusCode = ErrCode::PARAMETER_EMPTY;
-            $data->statusMsg  = '主帐号令牌为空';
+            $data->statusMsg  = '主帐号令牌(AccountToken)为空';
             return $data;
         }
         if (empty($this->AppId)) {
             $data             = new stdClass();
             $data->statusCode = ErrCode::PARAMETER_EMPTY;
-            $data->statusMsg  = '应用ID为空';
+            $data->statusMsg  = '应用ID(AppId)为空';
             return $data;
         }
         return "";
