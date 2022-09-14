@@ -15,21 +15,21 @@ use Yii;
  */
 class Sms
 {
-    public static $type = '';
+    public $type = '';
 
     public function __construct()
     {
         $smsConfig = Yii::$app->params['SmsConfig'];
-        if (empty(self::$type) && !empty($smsConfig['type'])) {
-            self::$type = $smsConfig['type'];
-        } elseif (empty(self::$type)) {
-            self::$type = 'YunTongXun';
+        if (empty($this->type) && !empty($smsConfig['type'])) {
+            $this->type = $smsConfig['type'];
+        } elseif (empty($this->type)) {
+            $this->type = 'YunTongXun';
         }
     }
 
-    public static function send($mobile, $content, $templateId)
+    public function send($mobile, $content, $templateId)
     {
-        switch (self::$type) {
+        switch ($this->type) {
             case 'YunTongXun':
                 $sms = new SmsYunTongXun();
                 foreach (Yii::$app->params['SmsConfig']['YunTongXun'] as $key => $value) {
