@@ -511,11 +511,16 @@ class Util
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2021/5/24 8:53 下午
+     * @param string $connectionName
      * @return Connection
      */
-    public static function getRedis(): Connection
+    public static function getRedis(string $connectionName = 'redis'): Connection
     {
-        return Yii::$app->redis;
+        static $redis = [];
+        if (empty($redis[$connectionName]))
+            $redis[$connectionName] = Yii::$app->$connectionName;
+
+        return $redis[$connectionName];
     }
 
     /**
