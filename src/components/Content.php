@@ -2,9 +2,14 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
-
-use Yii;
-
+/**
+ * 内容处理器
+ *
+ * @author Bowen
+ * @email bowen@jiuchet.com
+ * @lasttime: 2022/9/19 5:15 PM
+ * @package Jcbowen\JcbaseYii2\components
+ */
 class Content
 {
 
@@ -15,7 +20,8 @@ class Content
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param string $html
+     * @param string $html html内容
+     * @param bool $entities 是否转换html实体
      * @return string
      * @lasttime: 2022/9/19 4:43 PM
      */
@@ -54,7 +60,7 @@ class Content
      * @email bowen@jiuchet.com
      *
      * @param string $html html内容
-     * @param bool $entities 是否对输出内容htmlentities
+     * @param bool $entities 是否转换html实体
      * @return string
      * @lasttime: 2022/9/19 5:06 PM
      */
