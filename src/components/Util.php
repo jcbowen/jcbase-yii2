@@ -12,7 +12,7 @@ use yii\web\Response;
  *
  * @author Bowen
  * @email bowen@jiuchet.com
- * @lasttime: 2022/9/6 11:38 AM
+ * @lasttime: 2022/9/19 2:50 PM
  * @package Jcbowen\JcbaseYii2\components
  */
 class Util
@@ -88,7 +88,8 @@ class Util
 
         // 输出本地附件链接
         if ($local_path || empty(Yii::$app->params['attachment']['isRemote'])) {
-            $src = Yii::$app->params['domain']['attachment_local'] . Yii::$app->params['attachment']['dir'] . '/' . $src;
+            $src =
+                Yii::$app->params['domain']['attachment_local'] . Yii::$app->params['attachment']['dir'] . '/' . $src;
         } else {
             $src = Yii::$app->params['domain']['attachment'] . $src;
         }
@@ -704,12 +705,12 @@ class Util
      * @lastTime 2021/12/18 12:21 上午
      * @param $code
      *
-     * @return int|mixed|string
+     * @return float|int|string
      */
     private function getResponseCode($code)
     {
         if (is_numeric($code)) return $code;
-        if (is_object($code) && $code instanceof Response) {
+        if ($code instanceof Response) {
             $this->_end(0, $code);
             return intval($code);
         }
@@ -863,5 +864,21 @@ class Util
             return $time;
         }
         return round($time - $logs[$tag], 3);
+    }
+
+    /**
+     * 四舍五入金额
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param float $money 金额
+     * @param int $decimals 小数位数
+     * @return float
+     * @lasttime: 2022/9/19 2:48 PM
+     */
+    public static function round_money($money, $decimals = 2)
+    {
+        return round(floatval($money), $decimals);
     }
 }
