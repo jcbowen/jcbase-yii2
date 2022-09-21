@@ -872,12 +872,12 @@ class Util
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param float $money 金额
+     * @param mixed $money 金额
      * @param int $decimals 小数位数
      * @return float
      * @lasttime: 2022/9/19 2:48 PM
      */
-    public static function round_money($money, $decimals = 2)
+    public static function round_money($money, int $decimals = 2): float
     {
         return round(floatval($money), $decimals);
     }
