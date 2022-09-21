@@ -794,16 +794,15 @@ trait CurdActionTrait
         foreach ($ids as $i => $id) {
             if (empty($id)) unset($ids[$i]);
         }
-        if (empty($ids)) return (new Util)->result(9001002, '参数缺失，请重试');
+        if (empty($ids)) return (new Util)->result(ErrCode::PARAMETER_EMPTY, '参数缺失，请重试');
 
-        $fileds = $this->getDeleteFields();
+        $fields = $this->getDeleteFields();
 
         // 获取删除条件
-        $where = $this->getDeleteWhere();
-        if (empty($where)) $where = ['in', $this->pkId, $ids];
+        $where = $this->getDeleteWhere($ids);
 
         $dels   = call_user_func($this->modelClass . '::find')
-            ->select($fileds)
+            ->select($fields)
             ->where([
                 $this->modelTableName . '.deleted_at' => $this->noTime,
             ])
@@ -822,20 +821,23 @@ trait CurdActionTrait
 
         $transaction = Yii::$app->db->beginTransaction();
 
-        if (!call_user_func("$this->modelClass::updateAll", ['deleted_at' => $this->operateTime], $where)) {
+        // 获取删除操作更新的属性值
+        $condition = $this->getDeleteCondition($dels);
+
+        if (!call_user_func("$this->modelClass::updateAll", $condition, $where)) {
             $transaction->rollBack();
-            return (new Util)->result(1, '删除失败，未知错误');
+            return (new Util)->result(ErrCode::UNKNOWN, '删除失败，未知错误');
         }
 
         // 删除后
         $result_after = $this->deleteAfter($delIds);
         if (Util::isError($result_after)) {
             $transaction->rollBack();
-            return (new Util)->result(1, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
+            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
         }
 
         $transaction->commit();
-        return (new Util)->result(0, '删除成功', ['delIds' => $delIds]);
+        return (new Util)->result(ErrCode::SUCCESS, '删除成功', ['delIds' => $delIds]);
     }
 
     /**
@@ -861,9 +863,9 @@ trait CurdActionTrait
      * @return array|string
      * @lasttime: 2021/5/9 3:00 下午
      */
-    public function getDeleteWhere()
+    public function getDeleteWhere($ids)
     {
-        return [];
+        return ['in', $this->pkId, $ids];
     }
 
     /**
@@ -879,6 +881,20 @@ trait CurdActionTrait
     public function deleteBefore(array $dels, array $delIds)
     {
         return true;
+    }
+
+    /**
+     * 删除时需要更新的属性值
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param array $dels 要被删除的数据
+     * @return array|string
+     * @lasttime 2022/9/21 15:15
+     */
+    public function getDeleteCondition(array $dels)
+    {
+        return ['deleted_at' => $this->operateTime];
     }
 
     /**
