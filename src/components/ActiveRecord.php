@@ -149,6 +149,11 @@ class ActiveRecord extends \yii\db\ActiveRecord
                             return $this->$name ? (array)@Util::unserializer($this->$name) : new ArrayObject();
                         };
                         break;
+                    case 'rich_text':
+                        $fields[$name] = function () use ($name) {
+                            return !empty($this->$name) ? Content::toShow($this->$name) : '';
+                        };
+                        break;
                 }
             }
         }
