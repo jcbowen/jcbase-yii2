@@ -26,6 +26,7 @@
 * 模版引擎封装
 * 路由优化封装
 * 多平台短信发送（暂时只支持云通讯）
+* 支持配置字段类型，在toSave以及不asArray的actionDetail中自动转换字段类型（暂时只支持json/json&base64/serialize/round_money/rich_text类型）
 
 ### 安装
 
