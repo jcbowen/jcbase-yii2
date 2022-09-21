@@ -14,13 +14,13 @@ class Safe
 {
     /**
      *
-     * @param $value
-     * @param int $default
-     * @return float|int
-     * @lasttime: 2021/12/19 11:51 下午
      * @author Bowen
      * @email bowen@jiuchet.com
      *
+     * @param int $default
+     * @param $value
+     * @return float|int
+     * @lasttime: 2021/12/19 11:51 下午
      */
     public static function gpcInt($value, $default = 0)
     {
@@ -38,18 +38,19 @@ class Safe
 
     /**
      *
-     * @param mixed $value
-     * @param array $allow
-     * @param string $default
-     * @return mixed|string
-     * @lasttime: 2021/12/19 11:49 下午
      * @author Bowen
      * @email bowen@jiuchet.com
+     * @param mixed $value
+     * @param array $allow 允许的值
+     * @param mixed $default 默认值
+     * @param bool $strict 是否严格模式
+     * @return mixed|string
+     * @lasttime: 2021/12/19 11:49 下午
      */
-    public static function gpcBelong($value, $allow = [], $default = '')
+    public static function gpcBelong($value, array $allow = [], $default = '', bool $strict = true)
     {
         if (empty($allow)) return $default;
-        if (in_array($value, $allow, true)) {
+        if (in_array($value, $allow, $strict)) {
             return $value;
         } else {
             return $default;
