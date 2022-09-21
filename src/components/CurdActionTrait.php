@@ -377,15 +377,19 @@ trait CurdActionTrait
 
         $this->checkInit();
 
-        $fields = $this->getDetailFields();
-        $where  = $this->getDetailWhere($_GPC);
+        $fields  = $this->getDetailFields();
+        $where   = $this->getDetailWhere($_GPC);
+        $asArray = $this->detailAsArray();
 
         /** @var ActiveQuery $row */
-        $row    = call_user_func($this->modelClass . '::find');
-        $row    = $row->select($fields);
-        $row    = $this->getDetailRow($row);
-        $detail = $row->andWhere($where)->asArray()->one();
+        $row = call_user_func($this->modelClass . '::find');
+        $row = $row->select($fields);
+        $row = $this->getDetailRow($row);
+        $row = $row->andWhere($where);
+        if ($asArray) $row = $row->asArray();
+        $detail = $row->one();
         if (!empty($detail)) {
+            if (!$asArray) $detail = $detail->toArray();
             $detail = $this->detail($detail);
             return (new Util())->result(0, 'ok', $detail);
         }
@@ -437,6 +441,19 @@ trait CurdActionTrait
         $where   = ['and'];
         $where[] = [$this->pkId => $pkId];
         return $where;
+    }
+
+    /**
+     * 查询数据详情时是否调用asArray()
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @return bool
+     * @lasttime 2022/9/21 09:58
+     */
+    public function detailAsArray(): bool
+    {
+        return true;
     }
 
     /**
