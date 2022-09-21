@@ -170,6 +170,12 @@ trait ModelHelper
             case 'serialize':
                 $value = serialize($value);
                 break;
+            case 'round_money':
+                $value = Util::round_money($value);
+                break;
+            case 'rich_text':
+                $value = Content::toSave($value);
+                break;
         }
         return (string)$value;
     }
