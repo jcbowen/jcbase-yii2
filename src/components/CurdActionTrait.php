@@ -910,5 +910,139 @@ trait CurdActionTrait
     {
         return true;
     }
+
+    //---------- 恢复删除的数据 ----------/
+
+    /**
+     * 恢复删除的数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @return string|Response
+     * @throws Exception
+     * @lasttime 2022/9/21 14:52
+     */
+    public function actionRestore()
+    {
+        global $_GPC;
+
+        $this->checkInit();
+
+        $ids = Safe::gpcArray($_GPC[$this->pkId . 's']);
+        foreach ($ids as $i => $id) {
+            if (empty($id)) unset($ids[$i]);
+        }
+        if (empty($ids)) return (new Util)->result(ErrCode::PARAMETER_EMPTY, '参数缺失，请重试');
+
+        $fields = $this->getRestoreFields();
+
+        // 获取删除条件
+        $where = $this->getRestoreWhere($ids);
+
+        $items   = call_user_func($this->modelClass . '::find')
+            ->select($fields)
+            ->where(['<>', $this->modelTableName . '.deleted_at', $this->noTime,])
+            ->andWhere($where)
+            ->asArray()
+            ->all();
+        $itemIds = ArrayHelper::getColumn($items, $this->pkId);
+
+        if (empty($itemIds)) return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
+
+        // 删除前
+        $result_before = $this->restoreBefore($items, $itemIds);
+        if (Util::isError($result_before)) {
+            return (new Util)->result(1, $result_before['errmsg'] ?: '恢复数据失败，请稍后再试');
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+
+        $condition = $this->getRestoreCondition($items);
+
+        if (!call_user_func("$this->modelClass::updateAll", $condition, $where)) {
+            $transaction->rollBack();
+            return (new Util)->result(ErrCode::UNKNOWN, '恢复失败，未知错误');
+        }
+
+        // 删除后
+        $result_after = $this->restoreAfter($itemIds);
+        if (Util::isError($result_after)) {
+            $transaction->rollBack();
+            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '恢复数据失败，请稍后再试');
+        }
+
+        $transaction->commit();
+        return (new Util)->result(ErrCode::SUCCESS, '恢复成功', ['itemIds' => $itemIds]);
+    }
+
+    /**
+     * 设置被恢复数据的查询返回字段（重写方法时，务必查询主键！）
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @return array|string
+     * @lasttime 2022/9/21 14:58
+     */
+    public function getRestoreFields()
+    {
+        return [$this->pkId];
+    }
+
+    /**
+     * 恢复查询条件
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param $ids
+     * @return array|string
+     * @lasttime 2022/9/21 15:00
+     */
+    public function getRestoreWhere($ids)
+    {
+        return ['in', $this->pkId, $ids];
+    }
+
+    /**
+     * 恢复前数据调用
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param array $items
+     * @param array $itemIds
+     * @return array|bool
+     * @lasttime 2022/9/21 15:06
+     */
+    public function restoreBefore(array $items, array $itemIds)
+    {
+        return true;
+    }
+
+    /**
+     * 恢复时需要更新的属性值
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param array $items 需要恢复的数据
+     * @return array|string
+     * @lasttime 2022/9/21 15:19
+     */
+    public function getRestoreCondition(array $items)
+    {
+        return ['deleted_at' => $this->noTime];
+    }
+
+    /**
+     * 恢复后调用
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param array $ids
+     * @return array|bool
+     * @lasttime 2022/9/21 15:06
+     */
+    public function restoreAfter(array $ids = [])
+    {
+        return true;
+    }
 }
 
