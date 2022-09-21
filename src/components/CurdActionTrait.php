@@ -31,6 +31,9 @@ trait CurdActionTrait
     /** @var string 数据表名称 */
     private $modelTableName;
 
+    /** @var array 该表拥有的字段 */
+    private $modelAttributes;
+
     /** @var string 操作时间 */
     private $operateTime;
 
@@ -52,6 +55,11 @@ trait CurdActionTrait
         } else {
             $this->operateTime    = date('Y-m-d H:i:s');
             $this->modelTableName = call_user_func($this->modelClass . '::tableName');
+
+            $model = new $this->modelClass();
+            if (method_exists($model, 'getAttributes')) {
+                $this->modelAttributes = $model->getAttributes();
+            }
         }
     }
 
@@ -87,7 +95,8 @@ trait CurdActionTrait
 
         $row = $this->getListRow($row);
 
-        if (empty($showDeleted)) $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
+        if (empty($showDeleted) && !empty($this->modelAttributes['deleted_at']))
+            $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
 
         if (!empty($where)) $row = $row->andWhere($where);
         $row = $row->andFilterWhere($filterWhere);
@@ -249,7 +258,8 @@ trait CurdActionTrait
 
         $row = $this->getSelectorRow($row);
 
-        if (empty($showDeleted)) $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
+        if (empty($showDeleted) && !empty($this->modelAttributes['deleted_at']))
+            $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
 
         if (!empty($where)) $row = $row->andWhere($where);
         $row = $row->andFilterWhere($filterWhere);
