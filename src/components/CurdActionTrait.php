@@ -1054,5 +1054,122 @@ trait CurdActionTrait
     {
         return true;
     }
+
+    //---------- 真实删除数据 ----------/
+
+    /**
+     * 真实删除数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @return string|Response
+     * @throws Exception
+     * @lasttime 2022/9/21 14:52
+     */
+    public function actionRemove()
+    {
+        global $_GPC;
+
+        $this->checkInit();
+
+        $ids = Safe::gpcArray($_GPC[$this->pkId . 's']);
+        foreach ($ids as $i => $id) {
+            if (empty($id)) unset($ids[$i]);
+        }
+        if (empty($ids)) return (new Util)->result(ErrCode::PARAMETER_EMPTY, '参数缺失，请重试');
+
+        $fields = $this->getRemoveFields();
+
+        // 获取删除条件
+        $where = $this->getRemoveWhere($ids);
+
+        $items   = call_user_func($this->modelClass . '::find')
+            ->select($fields)
+            ->andWhere($where)
+            ->asArray()
+            ->all();
+        $itemIds = ArrayHelper::getColumn($items, $this->pkId);
+
+        if (empty($itemIds)) return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
+
+        // 删除前
+        $result_before = $this->removeBefore($items, $itemIds);
+        if (Util::isError($result_before)) {
+            return (new Util)->result(1, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+
+        if (!call_user_func("$this->modelClass::deleteAll", $where)) {
+            $transaction->rollBack();
+            return (new Util)->result(ErrCode::UNKNOWN, '删除失败，未知错误');
+        }
+
+        // 删除后
+        $result_after = $this->removeAfter($itemIds);
+        if (Util::isError($result_after)) {
+            $transaction->rollBack();
+            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
+        }
+
+        $transaction->commit();
+        return (new Util)->result(ErrCode::SUCCESS, '永久删除成功', ['itemIds' => $itemIds]);
+    }
+
+    /**
+     * 设置被永久删除数据的查询返回字段（重写方法时，务必查询主键！）
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @return array|string
+     * @lasttime 2022/9/21 14:58
+     */
+    public function getRemoveFields()
+    {
+        return [$this->pkId];
+    }
+
+    /**
+     * 永久删除查询条件
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param $ids
+     * @return array|string
+     * @lasttime 2022/9/21 15:00
+     */
+    public function getRemoveWhere($ids)
+    {
+        return ['in', $this->pkId, $ids];
+    }
+
+    /**
+     * 永久删除前数据调用
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param array $items
+     * @param array $itemIds
+     * @return array|bool
+     * @lasttime 2022/9/21 15:06
+     */
+    public function removeBefore(array $items, array $itemIds)
+    {
+        return true;
+    }
+
+    /**
+     * 永久删除后调用
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param array $ids
+     * @return array|bool
+     * @lasttime 2022/9/21 15:06
+     */
+    public function removeAfter(array $ids = [])
+    {
+        return true;
+    }
 }
 
