@@ -29,16 +29,16 @@ trait CurdActionTrait
     //---------- 检查 ----------/
 
     /** @var string 数据表名称 */
-    private $modelTableName;
+    public $modelTableName;
 
     /** @var array 该表拥有的字段 */
-    private $modelAttributes;
+    public $modelAttributes;
 
     /** @var string 操作时间 */
-    private $operateTime;
+    public $operateTime;
 
     /** @var string 空时间字符 */
-    private $noTime = '0000-00-00 00:00:00';
+    public $noTime = '0000-00-00 00:00:00';
 
     /**
      * 调用前需进行的初始化检查
