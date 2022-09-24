@@ -20,13 +20,15 @@ class Content
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param string $html html内容
+     * @param string|null $html html内容
      * @param bool $entities 是否转换html实体
      * @return string
      * @lasttime: 2022/9/19 4:43 PM
      */
-    public static function toSave(string $html = '', bool $entities = true): string
+    public static function toSave(?string $html = '', bool $entities = true): string
     {
+        if (empty($html)) return '';
+
         self::html_entity_decode($html);
 
         // 将富文本中的附件链接转换为相对路径
@@ -59,13 +61,15 @@ class Content
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param string $html html内容
+     * @param string|null $html html内容
      * @param bool $entities 是否转换html实体
      * @return string
      * @lasttime: 2022/9/19 5:06 PM
      */
-    public static function toShow(string $html = '', bool $entities = true): string
+    public static function toShow(?string $html = '', bool $entities = true): string
     {
+        if (empty($html)) return '';
+
         self::html_entity_decode($html);
 
         // 将富文本中的附件链接转换为相对路径
