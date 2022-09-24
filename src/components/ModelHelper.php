@@ -176,6 +176,9 @@ trait ModelHelper
             case 'rich_text':
                 $value = Content::toSave($value);
                 break;
+            case 'rich_text2':
+                $value = Content::toSave($value, false);
+                break;
         }
         return (string)$value;
     }

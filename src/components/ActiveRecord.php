@@ -154,6 +154,11 @@ class ActiveRecord extends \yii\db\ActiveRecord
                             return !empty($this->$name) ? Content::toShow($this->$name) : '';
                         };
                         break;
+                    case 'rich_text2':
+                        $fields[$name] = function () use ($name) {
+                            return !empty($this->$name) ? Content::toShow($this->$name, false) : '';
+                        };
+                        break;
                 }
             }
         }
