@@ -530,7 +530,7 @@ class Util
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param $value
-     * @param int $expire
+     * @param int|string $expire
      * @param mixed ...$options
      * @param $key
      * @return mixed
