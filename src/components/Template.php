@@ -2,7 +2,10 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
+use yii\base\Exception;
+use yii\base\ExitException;
 use yii\helpers\FileHelper;
+use yii\web\Response;
 
 /**
  * Class Template
@@ -10,7 +13,7 @@ use yii\helpers\FileHelper;
  *
  * @author Bowen
  * @email bowen@jiuchet.com
- * @lasttime: 2022/7/18 9:38 AM
+ * @lasttime: 2022/9/27 21:23
  * @package Jcbowen\JcbaseYii2\components
  */
 class Template
@@ -20,10 +23,12 @@ class Template
 
     /**
      * Template constructor.
-     * @param null|string $appName
-     * @param null|string $appPath
+     * @param string|null $appName
+     * @param string|null $appPath
+     * @return void|string|Response
+     * @throws ExitException
      */
-    public function __construct($appName = null, $appPath = null)
+    public function __construct(?string $appName = null, ?string $appPath = null)
     {
         if (!(!empty($appName) && !empty($appPath)) && !(empty($appName) && empty($appPath))) return (new Util)->result(1, '实例化Template方法出错');
 
@@ -34,45 +39,55 @@ class Template
         $this->appPath = $appPath ?: $appInfo['path'];
     }
 
-    public function template($filename, $flag = TEMPLATE_DISPLAY)
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $filename
+     * @param int $flag
+     * @return false|string|void
+     * @lasttime: 2022/9/27 21:14
+     */
+    public function template($filename, int $flag = TEMPLATE_DISPLAY)
     {
         global $_B;
 
         $doesNotExist = [];
 
         // 根据当前模版的指定文件名查找
-        $source  = $this->appPath . "/views/{$_B['template']}/{$filename}.html";
-        $compile = $this->appPath . "/runtime/tpl/{$_B['template']}/{$filename}.tpl.php";
+        $source  = $this->appPath . "/views/{$_B['template']}/$filename.html";
+        $compile = $this->appPath . "/runtime/tpl/{$_B['template']}/$filename.tpl.php";
 
         // 根据当前模版的index文件查找
         if (!is_file($source)) {
             $doesNotExist[] = $source;
-            $source         = $this->appPath . "/views/{$_B['template']}/{$filename}/index.html";
-            $compile        = $this->appPath . "/runtime/tpl/{$_B['template']}/{$filename}/index.tpl.php";
+            $source         = $this->appPath . "/views/{$_B['template']}/$filename/index.html";
+            $compile        = $this->appPath . "/runtime/tpl/{$_B['template']}/$filename/index.tpl.php";
         }
 
         // 根据默认模版的指定文件名查找
         if (!is_file($source)) {
             $doesNotExist[] = $source;
-            $source         = $this->appPath . "/views/default/{$filename}.html";
-            $compile        = $this->appPath . "/runtime/tpl/default/{$filename}.tpl.php";
+            $source         = $this->appPath . "/views/default/$filename.html";
+            $compile        = $this->appPath . "/runtime/tpl/default/$filename.tpl.php";
         }
 
         // 根据默认模版的index文件查找
         if (!is_file($source)) {
             $doesNotExist[] = $source;
-            $source         = $this->appPath . "/views/default/{$filename}/index.html";
-            $compile        = $this->appPath . "/runtime/tpl/default/{$filename}/index.tpl.php";
+            $source         = $this->appPath . "/views/default/$filename/index.html";
+            $compile        = $this->appPath . "/runtime/tpl/default/$filename/index.tpl.php";
         }
 
         if (!is_file($source)) {
             $doesNotExist[] = $source;
             if (YII_DEBUG) {
                 echo PHP_EOL;
-                foreach ($doesNotExist as $item) echo "template source '{$item}' is not exist!";
+                foreach ($doesNotExist as $item) echo "template source '$item' is not exist!";
                 die;
             }
-            exit("template source '{$filename}' is not exist!");
+            exit("template source '$filename' is not exist!");
         }
         if (YII_DEBUG || !is_file($compile) || filemtime($source) > filemtime($compile)) {
             $this->template_compile($source, $compile);
@@ -101,22 +116,26 @@ class Template
     /**
      * 渲染前端编译后文件
      *
-     * @param $filename
-     * @param int $flag
-     *
-     * @return false|string
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @lastTime 2021/12/18 7:31 下午
+     *
+     * @param $filename
+     * @param int $flag
+     * @return false|string|void
+     * @lasttime: 2022/9/27 21:10
      */
-    public function vTpl($filename, $flag = TEMPLATE_DISPLAY)
+    public function vTpl($filename, int $flag = TEMPLATE_DISPLAY)
     {
-        $source  = $this->appPath . "/web/dist/{$filename}.html";
-        $compile = $this->appPath . "/runtime/vtpl/{$filename}.tpl.php";
+        $source  = $this->appPath . "/web/dist/$filename.html";
+        $compile = $this->appPath . "/runtime/vtpl/$filename.tpl.php";
+
+        // if (!is_file($source)) $source = $this->appPath . "/web/dist/$filename/index.html";
+        if (!is_file($source)) $source = $this->appPath . "/web/$filename.html";
+        // if (!is_file($source)) $source = $this->appPath . "/web/$filename/index.html";
 
         if (!is_file($source)) {
-            if (YII_DEBUG) exit("template source '{$source}' is not exist!");
-            exit("template source '{$filename}' is not exist!");
+            if (YII_DEBUG) exit("template source '$source' is not exist!");
+            exit("template source '$filename' is not exist!");
         }
         if (YII_DEBUG || !is_file($compile) || filemtime($source) > filemtime($compile)) {
             $this->template_compile($source, $compile);
@@ -145,7 +164,10 @@ class Template
     {
         $path = dirname($to);
         if (!is_dir($path)) {
-            FileHelper::createDirectory($path);
+            try {
+                FileHelper::createDirectory($path);
+            } catch (Exception $e) {
+            }
         }
         $content = $this->template_parse(file_get_contents($from));
         file_put_contents($to, $content);
@@ -167,13 +189,12 @@ class Template
         $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)}/', '<?php echo $1;?>', $str);
         $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff\[\]\'\"\$]*)}/', '<?php echo $1;?>', $str);
         $str = preg_replace('/{media\s+(\S+)}/', '<?php echo tomedia($1);?>', $str);
-        $str = preg_replace_callback('/<\?php([^\?]+)\?>/s', "\common\components\Template::templateAddQuote", $str);
+        $str = preg_replace_callback('/<\?php([^\?]+)\?>/s', "\Jcbowen\JcbaseYii2\components\Template::templateAddQuote", $str);
         $str = preg_replace('/{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)}/s', '<?php echo $1;?>', $str);
         $str = str_replace('{##', '{', $str);
         $str = str_replace('##}', '}', $str);
 
-        $str = "<?php defined('IN_JC') or exit('Access Denied');?>" . $str;
-        return $str;
+        return /*"<?php defined('IN_JC') or exit('Access Denied');?>" .*/ $str;
     }
 
     public static function templateAddQuote($matchs)
