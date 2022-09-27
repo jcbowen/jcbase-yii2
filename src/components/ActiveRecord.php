@@ -6,7 +6,6 @@ use ArrayObject;
 use Yii;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveQuery;
-use yii\helpers\ArrayHelper;
 
 /**
  * Class ActiveRecord
@@ -20,9 +19,6 @@ class ActiveRecord extends \yii\db\ActiveRecord
 {
     /** @var int|bool 缓存时间，不开启缓存应该为false|-1 */
     public static $cacheTime = false;
-
-    /** @var array 扩展字段 */
-    public static $extendFields = [];
 
     /**
      * 注册事件: 新增,更新,删除时清理清理缓存
@@ -49,15 +45,11 @@ class ActiveRecord extends \yii\db\ActiveRecord
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param array|null $fields
      * @return ActiveQuery
      * @lasttime: 2022/1/5 3:20 下午
      */
-    public static function find(?array $fields = []): ActiveQuery
+    public static function find(): ActiveQuery
     {
-        if (!empty($fields) && is_array($fields))
-            static::$extendFields = ArrayHelper::merge(static::$extendFields, $fields);
-
         $query = parent::find();
 
         if (static::$cacheTime !== false) {
@@ -118,13 +110,8 @@ class ActiveRecord extends \yii\db\ActiveRecord
     public function fields()
     {
         $fields = parent::fields();
-
         // 删除无用字段
         unset($fields['deleted_at']);
-
-        if (!empty(static::$extendFields))
-            $fields = ArrayHelper::merge($fields, static::$extendFields);
-
         // 过滤返回的字段
         return $this->filterFields($fields);
     }
