@@ -396,10 +396,18 @@ trait CurdActionTrait
         $row = $row->select($fields);
         $row = $this->getDetailRow($row);
         $row = $row->andWhere($where);
-        if ($asArray) $row = $row->asArray();
-        $detail = $row->one();
+
+        if (!$asArray && !empty($row->joinWith)) {
+            $row2    = clone $row;
+            $detail2 = $row2->one();
+        }
+
+        $detail = $row->asArray()->one();
+
         if (!empty($detail)) {
-            if (!$asArray) $detail = $detail->toArray();
+            if (!$asArray && !empty($detail2) && !empty($row->joinWith))
+                $detail = ArrayHelper::merge($detail2->toArray(), $detail);
+
             $detail = $this->detail($detail);
             return (new Util())->result(0, 'ok', $detail);
         }
@@ -463,7 +471,7 @@ trait CurdActionTrait
      */
     public function detailAsArray(): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -1172,4 +1180,3 @@ trait CurdActionTrait
         return true;
     }
 }
-
