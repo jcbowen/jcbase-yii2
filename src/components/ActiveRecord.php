@@ -60,6 +60,10 @@ class ActiveRecord extends \yii\db\ActiveRecord
         return $query;
     }
 
+    public static function clearCache()
+    {
+        return ModelCacheDependency::clear(static::class);
+    }
 
     /**
      * 自动更新时间
