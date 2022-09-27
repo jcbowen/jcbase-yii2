@@ -24,11 +24,11 @@ class ModelCacheDependency
     /**
      * 创建缓存依赖
      *
+     * @author Bowen
+     * @email bowen@jiuchet.com
      * @param $modelClass
      * @return FileDependency
      * @lasttime: 2022/1/5 3:28 下午
-     * @author Bowen
-     * @email bowen@jiuchet.com
      */
     public static function create($modelClass): FileDependency
     {
@@ -41,16 +41,16 @@ class ModelCacheDependency
     /**
      * 生成缓存依赖的文件名
      *
+     * @author Bowen
+     * @email bowen@jiuchet.com
      * @param $modelClass
      * @return mixed
      * @lasttime: 2022/1/5 3:28 下午
-     * @author Bowen
-     * @email bowen@jiuchet.com
      */
     public static function buildDependencyFilename($modelClass)
     {
         if (empty(static::$_filenames[$modelClass])) {
-                $path     = Yii::$app->runtimePath . '/model-dependency/';
+            $path     = Yii::$app->runtimePath . '/model-dependency/';
             $filename = $path . basename($modelClass) . '.log';
             try {
                 if (!is_file($filename)) {
@@ -67,11 +67,11 @@ class ModelCacheDependency
     /**
      * 清理缓存依赖(修改依赖文件)
      *
+     * @author Bowen
+     * @email bowen@jiuchet.com
      * @param $modelClass
      * @return false|int
      * @lasttime: 2022/1/5 3:28 下午
-     * @author Bowen
-     * @email bowen@jiuchet.com
      */
     public static function clear($modelClass)
     {
