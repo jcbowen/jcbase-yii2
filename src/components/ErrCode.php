@@ -79,4 +79,10 @@ class ErrCode
     const INOPERABLE_STATE = 9002026;
     /** @var int 暂不支持 */
     const NOT_SUPPORTED = 9002027;
+
+    /** @var int 数据存储错误 */
+    const STORAGE_ERROR = 9003001;
+
+    /** @var int 其他错误 */
+    const OTHER = 9999999;
 }
