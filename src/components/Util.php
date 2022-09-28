@@ -615,6 +615,22 @@ class Util
     }
 
     /**
+     * 将self::error的数据转换为result输出
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param array $error
+     * @return string|Response
+     * @lasttime 2022/9/28 15:49
+     */
+    public function resultError(array $error = [])
+    {
+        if (empty($error))
+            return (new self())->result(ErrCode::UNKNOWN, '传入数据为空');
+        return (new self())->result($error['errcode'], $error['errmsg'], $error['data']);
+    }
+
+    /**
      * 输出json结构数据
      *
      * @author Bowen
