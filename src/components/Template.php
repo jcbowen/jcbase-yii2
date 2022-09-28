@@ -192,16 +192,13 @@ class Template
         $str = preg_replace_callback('/<\?php([^?]+)?>/', "\Jcbowen\JcbaseYii2\components\Template::templateAddQuote", $str);
         $str = preg_replace('/{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)}/', '<?php echo $1;?>', $str);
         $str = str_replace('{##', '{', $str);
-        $str = str_replace('##}', '}', $str);
-
-        return /*"<?php defined('IN_JC') or exit('Access Denied');?>" .*/ $str;
+        return /*"<?php defined('IN_JC') or exit('Access Denied');?>" .*/ str_replace('##}', '}', $str);
     }
 
-    public static function templateAddQuote($matchs)
+    public static function templateAddQuote($matches)
     {
-        $code = "<?php {$matchs[1]}?>";
+        $code = "<?php $matches[1] ?>";
         $code = preg_replace('/\[([a-zA-Z0-9_\-.\x7f-\xff]+)](?![a-zA-Z0-9_\-.\x7f-\xff\[\]]*[\'"])/', "['$1']", $code);
         return str_replace('\\\"', '\"', $code);
     }
-
 }
