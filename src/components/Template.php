@@ -189,8 +189,8 @@ class Template
         $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)}/', '<?php echo $1;?>', $str);
         $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff\[\]\'\"\$]*)}/', '<?php echo $1;?>', $str);
         $str = preg_replace('/{media\s+(\S+)}/', '<?php echo tomedia($1);?>', $str);
-        $str = preg_replace_callback('/<\?php([^\?]+)\?>/s', "\Jcbowen\JcbaseYii2\components\Template::templateAddQuote", $str);
-        $str = preg_replace('/{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)}/s', '<?php echo $1;?>', $str);
+        $str = preg_replace_callback('/<\?php([^?]+)?>/', "\Jcbowen\JcbaseYii2\components\Template::templateAddQuote", $str);
+        $str = preg_replace('/{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)}/', '<?php echo $1;?>', $str);
         $str = str_replace('{##', '{', $str);
         $str = str_replace('##}', '}', $str);
 
@@ -200,7 +200,7 @@ class Template
     public static function templateAddQuote($matchs)
     {
         $code = "<?php {$matchs[1]}?>";
-        $code = preg_replace('/\[([a-zA-Z0-9_\-\.\x7f-\xff]+)\](?![a-zA-Z0-9_\-\.\x7f-\xff\[\]]*[\'"])/s', "['$1']", $code);
+        $code = preg_replace('/\[([a-zA-Z0-9_\-.\x7f-\xff]+)](?![a-zA-Z0-9_\-.\x7f-\xff\[\]]*[\'"])/', "['$1']", $code);
         return str_replace('\\\"', '\"', $code);
     }
 
