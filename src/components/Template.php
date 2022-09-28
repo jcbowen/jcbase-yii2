@@ -119,12 +119,12 @@ class Template
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param $filename
+     * @param string|null $filename
      * @param int $flag
      * @return false|string|void
      * @lasttime: 2022/9/27 21:10
      */
-    public function vTpl($filename, int $flag = TEMPLATE_DISPLAY)
+    public function vTpl(?string $filename = 'index', int $flag = TEMPLATE_DISPLAY)
     {
         $source  = $this->appPath . "/web/dist/$filename.html";
         $compile = $this->appPath . "/runtime/vtpl/$filename.tpl.php";
