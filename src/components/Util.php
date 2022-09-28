@@ -4,6 +4,7 @@ namespace Jcbowen\JcbaseYii2\components;
 
 use Yii;
 use yii\base\ExitException;
+use yii\helpers\ArrayHelper;
 use Yii\redis\Connection;
 use yii\web\Response;
 
@@ -407,13 +408,25 @@ class Util
         return substr_compare($haystack, $needle, -strlen($needle)) === 0;
     }
 
-    public static function error($errno, $message = '', $data = []): array
+    /**
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param $errno
+     * @param string $message
+     * @param mixed $data
+     * @param array $params
+     * @return array
+     * @lasttime 2022/9/28 16:01
+     */
+    public static function error($errno, string $message = '', $data = [], array $params = []): array
     {
-        return [
+        $error = [
             'errcode' => $errno,
             'errmsg'  => $message,
             'data'    => $data
         ];
+        if (!empty($params)) $error = ArrayHelper::merge($error, $params);
+        return $error;
     }
 
     public static function isError($data): bool
@@ -671,7 +684,7 @@ class Util
             print_r($result);
             $this->_end();
         }
-        if (($req->isAjax && $returnType == 'exit') || $returnType == 'exit') {
+        if ($returnType == 'exit') {
 //            if ($errcode != 0) die(stripslashes(json_encode($result, JSON_UNESCAPED_UNICODE)));
             //  返回封装后的json格式数据
             $response             = Yii::$app->getResponse();
