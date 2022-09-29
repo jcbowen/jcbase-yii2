@@ -95,7 +95,7 @@ trait CurdActionTrait
 
         $row = $this->getListRow($row);
 
-        if (empty($showDeleted) && !empty($this->modelAttributes['deleted_at']))
+        if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
             $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
 
         if (!empty($where)) $row = $row->andWhere($where);
@@ -258,7 +258,7 @@ trait CurdActionTrait
 
         $row = $this->getSelectorRow($row);
 
-        if (empty($showDeleted) && !empty($this->modelAttributes['deleted_at']))
+        if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
             $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
 
         if (!empty($where)) $row = $row->andWhere($where);
