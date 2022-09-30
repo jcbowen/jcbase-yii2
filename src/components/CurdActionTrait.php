@@ -769,13 +769,18 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param $pkId
+     * @param int $pkId
      * @return array|string
      * @lasttime 2022/9/30 09:21
      */
-    public function getSetValueQueryWhere($pkId)
+    public function getSetValueQueryWhere(int $pkId = 0)
     {
-        return [$this->pkId => $pkId];
+        $where   = ['and'];
+        $where[] = [$this->pkId => $pkId];
+        if (array_key_exists('deleted_at', $this->modelAttributes)) {
+            $where[] = ['deleted_at' => NO_TIME];
+        }
+        return $where;
     }
 
     //---------- 变更通用 ----------/
