@@ -46,7 +46,7 @@ trait ModelHelper
             foreach ($errors as $item) {
                 $errmsg .= "【" . implode(',', $item) . "】";
             }
-            return Util::error(ErrCode::UNKNOWN, $errmsg, $model->errors);
+            return Util::error(ErrCode::STORAGE_ERROR, $errmsg, $model->errors);
         }
 
         return Util::error(ErrCode::UNKNOWN, '未知错误');
