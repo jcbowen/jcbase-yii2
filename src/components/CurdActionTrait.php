@@ -716,14 +716,16 @@ trait CurdActionTrait
         $data = $this->getSetValueFormData();
 
         $pkId = intval($data[$this->pkId]);
-        if (empty($pkId)) return (new Util())->result(1, "{$this->pkId} 不能为空");
+        if (empty($pkId)) return (new Util())->result(ErrCode::PARAMETER_EMPTY, "$this->pkId 不能为空");
 
         $field = Safe::gpcString(trim($data['field'])); // 字段名
         $type  = trim($data['type']); // 字段值的类型
         $value = $data['value']; // 字段值
 
-        if ($type === 'number') {
+        if ($type === 'number' || $type === 'int') {
             $value = intval($value);
+        } elseif ($type === 'money') {
+            $value = Util::round_money($value);
         } elseif (is_array($value)) {
             if ($type === 'serialize') {
                 $value = serialize($value);
@@ -734,11 +736,18 @@ trait CurdActionTrait
             $value = Safe::gpcString(trim($value));
         }
 
-        $res = call_user_func($this->modelClass . '::updateAll', [$field => $value], [$this->pkId => $pkId]);
-        if (!empty($res)) {
-            return (new Util)->result(0, '设置成功', ['value' => $value]);
-        }
-        return (new Util)->result(1, '设置失败，请刷新后再试');
+        $model = call_user_func($this->modelClass . '::findOne', $this->getSetValueQueryWhere($pkId));
+        if (!$model)
+            return (new Util())->result(ErrCode::NOT_EXIST, '数据不存在或已被删除');
+
+        if ($model->$field === $value)
+            return (new Util())->result(ErrCode::SUCCESS, '值未发生改变，请确认修改内容');
+
+        $result = $this->toSave($model, [$field => $value]);
+        if (Util::isError($result))
+            return (new Util())->resultError($result);
+
+        return (new Util)->result(ErrCode::SUCCESS, '设置成功', ['value' => $value]);
     }
 
     /**
@@ -753,6 +762,20 @@ trait CurdActionTrait
     public function getSetValueFormData()
     {
         return $this->getFormData();
+    }
+
+    /**
+     * setValue查询条件
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param $pkId
+     * @return array|string
+     * @lasttime 2022/9/30 09:21
+     */
+    public function getSetValueQueryWhere($pkId)
+    {
+        return [$this->pkId => $pkId];
     }
 
     //---------- 变更通用 ----------/
