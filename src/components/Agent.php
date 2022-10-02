@@ -39,8 +39,9 @@ class Agent
     const IOS6_NOT = 0;
 
     // 是否微信打开
-    const MICRO_MESSAGE_YES = 1;
-    const MICRO_MESSAGE_NOT = 0;
+    const MICRO_MESSAGE_YES      = 1;
+    const MICRO_MESSAGE_NOT      = 0;
+    const MICRO_MESSAGE_WORK_YES = 2; // 是否是企业微信打开
 
     // APP已经安装
     const APP_INSTALLED_YES = 1;
@@ -148,6 +149,8 @@ class Agent
         $agent = self::getAgent($agent);
 
         if (stripos($agent, 'MicroMessenger') !== false) {
+            // 是否企业微信打开
+            if (stripos($agent, 'wxwork') !== false) return self::MICRO_MESSAGE_WORK_YES;
             return self::MICRO_MESSAGE_YES;
         } else {
             return self::MICRO_MESSAGE_NOT;
@@ -177,41 +180,12 @@ class Agent
         }
         // 脑残法，判断手机发送的客户端标志,兼容性有待提高
         if (isset ($_SERVER['HTTP_USER_AGENT'])) {
-            $clientkeywords = array(
-                'nokia',
-                'sony',
-                'ericsson',
-                'mot',
-                'samsung',
-                'htc',
-                'sgh',
-                'lg',
-                'sharp',
-                'sie-',
-                'philips',
-                'panasonic',
-                'alcatel',
-                'lenovo',
-                'iphone',
-                'ipod',
-                'blackberry',
-                'meizu',
-                'android',
-                'netfront',
-                'symbian',
-                'ucweb',
-                'windowsce',
-                'palm',
-                'operamini',
-                'operamobi',
-                'openwave',
-                'nexusone',
-                'cldc',
-                'midp',
-                'wap',
-                'mobile',
-                'WindowsWechat'
-            );
+            $clientkeywords = [
+                'nokia', 'sony', 'ericsson', 'mot', 'samsung', 'htc', 'sgh', 'lg', 'sharp',
+                'sie-', 'philips', 'panasonic', 'alcatel', 'lenovo', 'iphone', 'ipod', 'blackberry', 'meizu',
+                'android', 'netfront', 'symbian', 'ucweb', 'windowsce', 'palm', 'operamini', 'operamobi', 'openwave',
+                'nexusone', 'cldc', 'midp', 'wap', 'mobile', 'WindowsWechat'
+            ];
             // 从HTTP_USER_AGENT中查找手机浏览器的关键字
             if (preg_match("/(" . implode('|', $clientkeywords) . ")/i", strtolower($_SERVER['HTTP_USER_AGENT']))) {
                 return true;
