@@ -35,6 +35,11 @@
     "ext-gd": "*",
     "ext-simplexml": "*"
   },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "0.10.x-dev"
+    }
+  },
   "config": {
     "process-timeout": 1800,
     "fxp-asset": {
