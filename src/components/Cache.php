@@ -49,7 +49,7 @@ class Cache extends \yii\base\Component
      *
      * @param string $key
      * @param array|string $value
-     * @param int|string $expire
+     * @param int|string|null $expire
      * @return mixed
      * @lasttime: 2022/10/5 21:25
      */
@@ -120,7 +120,7 @@ class Cache extends \yii\base\Component
         return self::get($key);
     }
 
-    public function setValue($key, $value, $expire = 0)
+    public function setValue($key, $value, $expire = null)
     {
         return self::set($key, $value, $expire);
     }
