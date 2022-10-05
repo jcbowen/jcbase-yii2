@@ -2,7 +2,7 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
-class Component extends \yii\base\Component implements \ArrayAccess
+class Component extends \yii\base\Component implements \ArrayAccess, \IteratorAggregate
 {
     /**
      * 实现ArrayAccess接口offsetExists
@@ -61,5 +61,19 @@ class Component extends \yii\base\Component implements \ArrayAccess
     public function offsetUnset($offset)
     {
         $this->$offset = null;
+    }
+
+    /**
+     * 实现IteratorAggregate接口getIterator
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return \ArrayIterator
+     * @lasttime: 2022/10/5 11:25
+     */
+    public function getIterator(): \ArrayIterator
+    {
+        return new \ArrayIterator($this);
     }
 }
