@@ -11,12 +11,14 @@ namespace Jcbowen\JcbaseYii2\components;
  * @lasttime: 2022/7/18 9:29 AM
  * @package Jcbowen\JcbaseYii2\components
  */
-class Cache
+class Cache extends \yii\base\Component
 {
     // 缓存key的前缀，避免项目冲突，推荐使用项目名
     public static $prefix = 'jcbase';
 
-    // 默认缓存时间，单位秒
+    /**
+     * @var int|string 默认缓存时间，单位秒
+     */
     public static $expire = 0;
 
     /**
@@ -25,14 +27,6 @@ class Cache
      * - expire: int, 默认缓存时间，单位秒
      */
     public $config = [];
-
-    public function __construct()
-    {
-        if (!empty($this->config)) {
-            if (!empty($this->config['prefix'])) self::$prefix = $this->config['prefix'];
-            if (!empty($this->config['expire'])) self::$expire = $this->config['expire'];
-        }
-    }
 
     /**
      *
@@ -94,6 +88,13 @@ class Cache
     }
 
     // ----- 动态调用 ----- /
+    public function init()
+    {
+        parent::init();
+        self::$prefix = $this->config['prefix'] ?? self::$prefix;
+        self::$expire = $this->config['expire'] ?? self::$expire;
+    }
+
     public function setPrefix(string $prefix)
     {
         self::$prefix = $prefix;
@@ -102,6 +103,16 @@ class Cache
     public function getPrefix(): string
     {
         return self::$prefix;
+    }
+
+    public function setExpire(int $expire)
+    {
+        self::$expire = $expire;
+    }
+
+    public function getExpire()
+    {
+        return self::$expire;
     }
 
     public function getValue($key)
@@ -119,4 +130,3 @@ class Cache
         return self::del($key);
     }
 }
-
