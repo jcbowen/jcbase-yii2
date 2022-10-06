@@ -706,15 +706,15 @@ class Util
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param string $html
+     * @param string|null $html
      * @return Response
      * @lasttime: 2022/10/6 13:05
      */
-    public function resultHtml(string $html = ''): Response
+    public function resultHtml(?string $html = ''): Response
     {
-        $response             = Yii::$app->getResponse();
-        $response->format     = Response::FORMAT_HTML;
-        $response->data       = $html;
+        $response         = Yii::$app->getResponse();
+        $response->format = Response::FORMAT_HTML;
+        if (!empty($html)) $response->data = $html;
         $response->statusCode = 200;
         return $response;
     }

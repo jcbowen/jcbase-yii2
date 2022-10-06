@@ -49,14 +49,14 @@ class WebController extends Controller
 
     public function vTpl(?string $filename = 'index'): Response
     {
-        $html = (new Template)->vTpl($filename);
-        return (new Util)->resultHtml(require $html);
+        (new Template)->vTpl($filename);
+        return (new Util)->resultHtml();
     }
 
     public function template(?string $filename = null): Response
     {
-        $html = (new Template)->template($filename);
-        return (new Util)->resultHtml(require $html);
+        (new Template)->template($filename);
+        return (new Util)->resultHtml();
     }
 
     /**

@@ -37,7 +37,7 @@ class Template
      * @return false|string|void
      * @lasttime: 2022/9/27 21:14
      */
-    public function template(?string $filename = null, int $flag = TEMPLATE_INCLUDEPATH)
+    public function template(?string $filename = null, int $flag = TEMPLATE_DISPLAY)
     {
         global $_B;
 
@@ -114,7 +114,7 @@ class Template
      * @return false|string|void
      * @lasttime: 2022/9/27 21:10
      */
-    public function vTpl(?string $filename = 'index', int $flag = TEMPLATE_INCLUDEPATH)
+    public function vTpl(?string $filename = 'index', int $flag = TEMPLATE_DISPLAY)
     {
         $filename = $filename ?: 'index';
 
