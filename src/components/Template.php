@@ -4,9 +4,7 @@ namespace Jcbowen\JcbaseYii2\components;
 
 use Yii;
 use yii\base\Exception;
-use yii\base\ExitException;
 use yii\helpers\FileHelper;
-use yii\web\Response;
 
 /**
  * Class Template
@@ -19,25 +17,14 @@ use yii\web\Response;
  */
 class Template
 {
-    public $appName = '';
     public $appPath = '';
 
     /**
      * Template constructor.
-     * @param string|null $appName
-     * @param string|null $appPath
-     * @return void|string|Response
-     * @throws ExitException
      */
-    public function __construct(?string $appName = null, ?string $appPath = null)
+    public function __construct()
     {
-        if (!(!empty($appName) && !empty($appPath)) && !(empty($appName) && empty($appPath))) return (new Util)->result(1, '实例化Template方法出错');
-
-        $appInfo = Util::getCurrentAppInfo();
-        if (empty($appInfo)) return (new Util)->result(1, '非法访问');
-
-        $this->appName = $appName ?: $appInfo['name'];
-        $this->appPath = $appPath ?: $appInfo['path'];
+        $this->appPath = Yii::getAlias('@app');
     }
 
     /**
