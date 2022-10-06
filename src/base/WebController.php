@@ -47,12 +47,12 @@ class WebController extends Controller
         $_B['params'] = ArrayHelper::merge((array)$_B['params'], Yii::$app->params);
     }
 
-    public function vTpl($filename, $flag = TEMPLATE_INCLUDEPATH)
+    public function vTpl(?string $filename = 'index', int $flag = TEMPLATE_INCLUDEPATH)
     {
         return (new Template)->vTpl($filename, $flag);
     }
 
-    public function template($filename, $flag = TEMPLATE_INCLUDEPATH)
+    public function template(?string $filename = null, int $flag = TEMPLATE_INCLUDEPATH)
     {
         return (new Template)->template($filename, $flag);
     }
