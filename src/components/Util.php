@@ -611,6 +611,22 @@ class Util
     }
 
     /**
+     * redis确定key是否存在
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param ...$keys
+     * @return mixed
+     * @lasttime: 2022/10/6 18:54
+     */
+    public static function redisExists(...$keys)
+    {
+        $redis = self::getRedis();
+        return $redis->exists(...$keys);
+    }
+
+    /**
      * redis根据key延长过期时间
      *
      * @author Bowen

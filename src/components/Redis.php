@@ -29,7 +29,7 @@ class Redis
      */
     public function __construct(string $name = '')
     {
-        if (!empty($name)) $this->componentName = $name;
+        $this->componentName = $name ?: $this->componentName;
 
         $componentName    = $this->componentName;
         $this->connection = Yii::$app->$componentName;
@@ -155,6 +155,12 @@ class Redis
     {
         $redis = $this->getConnection();
         return $redis->del(...$keys);
+    }
+
+    public function exists(...$keys)
+    {
+        $redis = $this->getConnection();
+        return $redis->exists(...$keys);
     }
 
     /**
