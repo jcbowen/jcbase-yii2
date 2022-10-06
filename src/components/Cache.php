@@ -74,6 +74,21 @@ class Cache extends \yii\base\Component
     }
 
     /**
+     * 判断缓存是否存在
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $key
+     * @return mixed
+     * @lasttime: 2022/10/6 20:51
+     */
+    public static function exists(string $key)
+    {
+        return Util::redisExists(self::getKey($key));
+    }
+
+    /**
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -128,5 +143,10 @@ class Cache extends \yii\base\Component
     public function delValue($key)
     {
         return self::del($key);
+    }
+
+    public function existsValue($key)
+    {
+        return self::exists($key);
     }
 }
