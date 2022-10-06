@@ -124,14 +124,16 @@ class Template
      * @return false|string|void
      * @lasttime: 2022/9/27 21:10
      */
-    public function vTpl(?string $filename = 'index', int $flag = TEMPLATE_DISPLAY)
+    public function vTpl(?string $filename = 'index', int $flag = TEMPLATE_INCLUDEPATH)
     {
-        $source  = $this->appPath . "/web/dist/$filename.html";
+        $filename = $filename ?: 'index';
+
+        $source  = $this->appPath . "/web/$filename.html";
         $compile = $this->appPath . "/runtime/vtpl/$filename.tpl.php";
 
-        // if (!is_file($source)) $source = $this->appPath . "/web/dist/$filename/index.html";
-        if (!is_file($source)) $source = $this->appPath . "/web/$filename.html";
         // if (!is_file($source)) $source = $this->appPath . "/web/$filename/index.html";
+        // if (!is_file($source)) $source = $this->appPath . "/web/dist/$filename/index.html";
+        if (!is_file($source)) $source = $this->appPath . "/web/dist/$filename.html";
 
         if (!is_file($source)) {
             if (YII_DEBUG) exit("template source '$source' is not exist!");
@@ -176,9 +178,7 @@ class Template
     public function template_parse($str): string
     {
         $str = preg_replace('/<!--{(.+?)}-->/s', '{$1}', $str);
-        $str = preg_replace('/<jc_tpl_php>(.+?)<\/jc_tpl_php>/', '<?php include $this->template($1, TEMPLATE_INCLUDEPATH);?>', $str);
-        $str = preg_replace('/{template\s+(.+?)}/', '<?php include $this->template($1, TEMPLATE_INCLUDEPATH);?>', $str);
-        $str = preg_replace('/{php\s+(.+?)}/', '<?php $1?>', $str);
+        $str = preg_replace('/{php\s+(.+?)}/', '<?php $1 ?>', $str);
         $str = preg_replace('/{if\s+(.+?)}/', '<?php if($1) { ?>', $str);
         $str = preg_replace('/{else}/', '<?php } else { ?>', $str);
         $str = preg_replace('/{else ?if\s+(.+?)}/', '<?php } else if($1) { ?>', $str);
@@ -186,11 +186,13 @@ class Template
         $str = preg_replace('/{loop\s+(\S+)\s+(\S+)}/', '<?php if(is_array($1)) { foreach($1 as $2) { ?>', $str);
         $str = preg_replace('/{loop\s+(\S+)\s+(\S+)\s+(\S+)}/', '<?php if(is_array($1)) { foreach($1 as $2 => $3) { ?>', $str);
         $str = preg_replace('/{\/loop}/', '<?php } } ?>', $str);
-        $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)}/', '<?php echo $1;?>', $str);
-        $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff\[\]\'\"\$]*)}/', '<?php echo $1;?>', $str);
-        $str = preg_replace('/{media\s+(\S+)}/', '<?php echo tomedia($1);?>', $str);
+        $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)}/', '<?php echo $1; ?>', $str);
+        $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff\[\]\'\"\$]*)}/', '<?php echo $1; ?>', $str);
+        $str = preg_replace('/{media\s+(\S+)}/', '<?php echo tomedia($1); ?>', $str);
         $str = preg_replace_callback('/<\?php([^?]+)?>/', "\Jcbowen\JcbaseYii2\components\Template::templateAddQuote", $str);
-        $str = preg_replace('/{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)}/', '<?php echo $1;?>', $str);
+        $str = preg_replace('/<jc_tpl_php>(.+?)<\/jc_tpl_php>/', '<?php include $this->template($1, TEMPLATE_INCLUDEPATH); ?>', $str);
+        $str = preg_replace('/{template\s+(.+?)}/', '<?php include $this->template($1, TEMPLATE_INCLUDEPATH); ?>', $str);
+        $str = preg_replace('/{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)}/', '<?php echo $1; ?>', $str);
         $str = str_replace('{##', '{', $str);
         return /*"<?php defined('IN_JC') or exit('Access Denied');?>" .*/ str_replace('##}', '}', $str);
     }
