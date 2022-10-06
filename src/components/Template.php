@@ -2,6 +2,7 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
+use Yii;
 use yii\base\Exception;
 use yii\base\ExitException;
 use yii\helpers\FileHelper;
@@ -44,16 +45,18 @@ class Template
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param $filename
+     * @param string|null $filename
      * @param int $flag
      * @return false|string|void
      * @lasttime: 2022/9/27 21:14
      */
-    public function template($filename, int $flag = TEMPLATE_DISPLAY)
+    public function template(?string $filename = null, int $flag = TEMPLATE_INCLUDEPATH)
     {
         global $_B;
 
-        $doesNotExist = [];
+        $filename       = $filename ?? Yii::$app->controller->route;
+        $_B['template'] = $_B['template'] ?: 'default';
+        $doesNotExist   = [];
 
         // 根据当前模版的指定文件名查找
         $source  = $this->appPath . "/views/{$_B['template']}/$filename.html";
@@ -84,7 +87,7 @@ class Template
             $doesNotExist[] = $source;
             if (YII_DEBUG) {
                 echo PHP_EOL;
-                foreach ($doesNotExist as $item) echo "template source '$item' is not exist!";
+                foreach ($doesNotExist as $item) echo "template source '$item' is not exist!" . PHP_EOL;
                 die;
             }
             exit("template source '$filename' is not exist!");
