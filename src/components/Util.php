@@ -660,7 +660,6 @@ class Util
     public function result($errCode = '0', string $errmsg = '', $data = [], array $params = [], string $returnType = 'exit')
     {
         global $_GPC;
-        $req   = Yii::$app->request;
         $data  = (array)$data;
         $count = count($data);
 
@@ -685,7 +684,6 @@ class Util
             $this->_end();
         }
         if ($returnType == 'exit') {
-//            if ($errcode != 0) die(stripslashes(json_encode($result, JSON_UNESCAPED_UNICODE)));
             //  返回封装后的json格式数据
             $response             = Yii::$app->getResponse();
             $response->format     = Response::FORMAT_JSON;
@@ -701,6 +699,24 @@ class Util
         } else {
             return stripslashes(json_encode($result, JSON_UNESCAPED_UNICODE));
         }
+    }
+
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $html
+     * @return Response
+     * @lasttime: 2022/10/6 13:05
+     */
+    public function resultHtml(string $html = ''): Response
+    {
+        $response             = Yii::$app->getResponse();
+        $response->format     = Response::FORMAT_HTML;
+        $response->data       = $html;
+        $response->statusCode = 200;
+        return $response;
     }
 
     /**
