@@ -19,7 +19,7 @@ class Communication
      *
      * @param $url
      *
-     * @return array|\CurlHandle|false|int|resource|string|null
+     * @return array|false|int|resource|string|null
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2022/1/14 11:21 下午
@@ -35,7 +35,7 @@ class Communication
      * @param $url
      * @param $data
      *
-     * @return array|\CurlHandle|false|int|resource|string|null
+     * @return array|false|int|resource|string|null
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2022/1/14 11:21 下午
@@ -50,11 +50,11 @@ class Communication
      * 发起请求
      *
      * @param $url
-     * @param $post
+     * @param string|array $post
      * @param array $extra
      * @param int $timeout
      *
-     * @return array|\CurlHandle|false|int|resource|string|null
+     * @return array|false|int|resource|string|null
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2022/1/14 11:21 下午
@@ -339,11 +339,11 @@ class Communication
     /**
      *
      * @param $url
-     * @param $post
+     * @param string|array $post
      * @param $extra
      * @param $timeout
      *
-     * @return array|\CurlHandle|false|int|resource|string|null
+     * @return array|false|int|resource|string|null
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2022/1/14 11:22 下午
