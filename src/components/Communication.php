@@ -3,6 +3,7 @@
 namespace Jcbowen\JcbaseYii2\components;
 
 use CURLFile;
+use Yii;
 
 /**
  * Class Communication
@@ -17,12 +18,12 @@ class Communication
     /**
      * 发起get请求
      *
-     * @param $url
-     *
-     * @return array|false|int|resource|string|null
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2022/1/14 11:21 下午
+     * @param $url
+     *
+     * @return array|false|int|resource|string|null
      */
     public static function get($url)
     {
@@ -32,13 +33,13 @@ class Communication
     /**
      * 发起post请求
      *
-     * @param $url
-     * @param $data
-     *
-     * @return array|false|int|resource|string|null
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2022/1/14 11:21 下午
+     * @param $data
+     *
+     * @param $url
+     * @return array|false|int|resource|string|null
      */
     public static function post($url, $data)
     {
@@ -49,17 +50,17 @@ class Communication
     /**
      * 发起请求
      *
-     * @param $url
-     * @param string|array $post
-     * @param array $extra
-     * @param int $timeout
-     *
-     * @return array|false|int|resource|string|null
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2022/1/14 11:21 下午
+     * @param string|array $post 数组格式，要POST请求的数据，上传文件时，传入 ‘@’ 符号 + 文件路径，比如 ‘file’ ⇒ ‘@/root/1.jpg’
+     * @param array $extra 请求附加值
+     * @param int $timeout 超时时间
+     *
+     * @param $url
+     * @return array|false|int|resource|string|null
      */
-    public static function request($url, $post = [], $extra = [], $timeout = 60)
+    public static function request($url, $post = [], array $extra = [], int $timeout = 60)
     {
         if (function_exists('curl_init') && function_exists('curl_exec') && $timeout > 0) {
             $ch = self::buildCurl($url, $post, $extra, $timeout);
@@ -110,21 +111,17 @@ class Communication
     /**
      * 发起批量请求
      *
-     * @param $urls
-     * @param array $posts
-     * @param array $extra
-     * @param int $timeout
-     *
-     * @return array
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2022/1/14 11:21 下午
+     * @param array $urls
+     * @param array $posts
+     * @param array $extra
+     * @param int $timeout
+     * @return array
      */
-    public static function multiRequest($urls, $posts = [], $extra = [], $timeout = 60): array
+    public static function multiRequest(array $urls, array $posts = [], array $extra = [], int $timeout = 60): array
     {
-        if (!is_array($urls)) {
-            return Util::error(1, '请使用ihttp_request函数');
-        }
         $curl_multi  = curl_multi_init();
         $curl_client = $response = [];
 
@@ -165,18 +162,18 @@ class Communication
 
     /**
      *
-     * @param $hostname
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @lastTime 2022/1/14 11:21 下午
      * @param int $port
      * @param null $error_code
      * @param null $error_message
      * @param int $timeout
      *
+     * @param $hostname
      * @return false|resource|string
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @lastTime 2022/1/14 11:21 下午
      */
-    public static function socketOpen($hostname, $port = 80, &$error_code = null, &$error_message = null, $timeout = 15)
+    public static function socketOpen($hostname, int $port = 80, &$error_code = null, &$error_message = null, int $timeout = 15)
     {
         $fp = '';
         if (function_exists('fsockopen')) {
@@ -192,15 +189,14 @@ class Communication
 
     /**
      *
-     * @param $data
-     * @param false $chunked
-     *
-     * @return array
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2022/1/14 11:21 下午
+     * @param $data
+     * @param bool $chunked
+     * @return array
      */
-    public static function responseParse($data, $chunked = false): array
+    public static function responseParse($data, bool $chunked = false): array
     {
         $rlt = [];
 
@@ -256,12 +252,12 @@ class Communication
 
     /**
      *
-     * @param null $str
-     *
-     * @return false|string
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2022/1/14 11:22 下午
+     * @param null $str
+     *
+     * @return false|string
      */
     public static function responseParseUnChunk($str = null)
     {
@@ -293,60 +289,57 @@ class Communication
 
     /**
      *
-     * @param $url
-     * @param false $set_default_port
-     *
-     * @return array|false|int|string|null
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2022/1/14 11:22 下午
+     * @param bool $set_default_port
+     * @param $url
+     * @return array|int|string
      */
-    public static function parseUrl($url, $set_default_port = false)
+    public static function parseUrl($url, bool $set_default_port = false)
     {
         if (empty($url)) {
             return Util::error(1);
         }
-        $urlset = parse_url($url);
-        if (!empty($urlset['scheme']) && !in_array($urlset['scheme'], array('http', 'https'))) {
+        $urlSet = parse_url($url);
+        if (!empty($urlSet['scheme']) && !in_array($urlSet['scheme'], array('http', 'https'))) {
             return Util::error(1, '只能使用 http 及 https 协议');
         }
-        if (empty($urlset['path'])) {
-            $urlset['path'] = '/';
+        if (empty($urlSet['path'])) {
+            $urlSet['path'] = '/';
         }
-        if (!empty($urlset['query'])) {
-            $urlset['query'] = "?{$urlset['query']}";
+        if (!empty($urlSet['query'])) {
+            $urlSet['query'] = "?{$urlSet['query']}";
         }
         if (Util::strExists($url, 'https://') && !extension_loaded('openssl')) {
-            if (!extension_loaded('openssl')) {
-                return Util::error(1, '请开启您PHP环境的openssl', '');
-            }
+            return Util::error(1, '请开启您PHP环境的openssl', '');
         }
-        if (empty($urlset['host'])) {
+        if (empty($urlSet['host'])) {
             $current_url      = parse_url($GLOBALS['_B']['siteRoot']);
-            $urlset['host']   = $current_url['host'];
-            $urlset['scheme'] = $current_url['scheme'];
-            $urlset['path']   = $current_url['path'] . '/' . str_replace('./', '', $urlset['path']);
-            $urlset['ip']     = '127.0.0.1';
+            $urlSet['host']   = $current_url['host'];
+            $urlSet['scheme'] = $current_url['scheme'];
+            $urlSet['path']   = $current_url['path'] . '/' . str_replace('./', '', $urlSet['path']);
+            $urlSet['ip']     = '127.0.0.1';
         }
 
-        if ($set_default_port && empty($urlset['port'])) {
-            $urlset['port'] = 'https' == $urlset['scheme'] ? '443' : '80';
+        if ($set_default_port && empty($urlSet['port'])) {
+            $urlSet['port'] = 'https' == $urlSet['scheme'] ? '443' : '80';
         }
 
-        return $urlset;
+        return $urlSet;
     }
 
     /**
      *
-     * @param $url
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @lastTime 2022/1/14 11:22 下午
      * @param string|array $post
      * @param $extra
      * @param $timeout
      *
+     * @param $url
      * @return array|false|int|resource|string|null
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @lastTime 2022/1/14 11:22 下午
      */
     public static function buildCurl($url, $post, $extra, $timeout)
     {
@@ -376,16 +369,16 @@ class Communication
         @curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
         if ($post) {
             if (is_array($post)) {
-                $filepost = false;
+                $filePost = false;
                 foreach ($post as $name => &$value) {
                     if (version_compare(phpversion(), '5.5') >= 0 && is_string($value) && '@' == substr($value, 0, 1)) {
                         $post[$name] = new CURLFile(ltrim($value, '@'));
                     }
                     if ((is_string($value) && '@' == substr($value, 0, 1)) || (class_exists('CURLFile') && $value instanceof CURLFile)) {
-                        $filepost = true;
+                        $filePost = true;
                     }
                 }
-                if (!$filepost) {
+                if (!$filePost) {
                     $post = http_build_query($post);
                 }
             }
@@ -420,13 +413,14 @@ class Communication
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:9.0.1) Gecko/20100101 Firefox/9.0.1');
         if (!empty($extra) && is_array($extra)) {
             $headers = [];
+            unset($value);
             foreach ($extra as $opt => $value) {
                 if (Util::strExists($opt, 'CURLOPT_')) {
                     curl_setopt($ch, constant($opt), $value);
                 } elseif (is_numeric($opt)) {
                     curl_setopt($ch, $opt, $value);
                 } else {
-                    $headers[] = "{$opt}: {$value}";
+                    $headers[] = "$opt: $value";
                 }
             }
             if (!empty($headers)) {
@@ -439,14 +433,14 @@ class Communication
 
     /**
      *
-     * @param $url
-     * @param $post
-     * @param $extra
-     *
-     * @return array|false|int|string|null
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2022/1/14 11:22 下午
+     * @param $post
+     * @param $extra
+     *
+     * @param $url
+     * @return array|int|string
      */
     public static function buildHttpBody($url, $post, $extra)
     {
@@ -459,13 +453,13 @@ class Communication
             $extra['ip'] = $urlset['ip'];
         }
 
-        $body = '';
+        $body     = '';
+        $boundary = Util::random(40);
         if (!empty($post) && is_array($post)) {
-            $filepost = false;
-            $boundary = Util::random(40);
-            foreach ($post as $name => &$value) {
-                if ((is_string($value) && '@' == substr($value, 0, 1)) && file_exists(ltrim($value, '@'))) {
-                    $filepost = true;
+            $filePost = false;
+            foreach ($post as $name => $value) {
+                if ((is_string($value) && '@' == substr($value, 0, 1)) && file_exists(Yii::getAlias($value))) {
+                    $filePost = true;
                     $file     = ltrim($value, '@');
 
                     $body .= "--$boundary\r\n";
@@ -477,7 +471,7 @@ class Communication
                     $body .= $value . "\r\n";
                 }
             }
-            if (!$filepost) {
+            if (!$filePost) {
                 $body = http_build_query($post);
             } else {
                 $body .= "--$boundary\r\n";
@@ -485,32 +479,33 @@ class Communication
         }
 
         $method = empty($post) ? 'GET' : 'POST';
-        $fdata  = "{$method} {$urlset['path']}{$urlset['query']} HTTP/1.1\r\n";
-        $fdata  .= "Accept: */*\r\n";
-        $fdata  .= "Accept-Language: zh-cn\r\n";
+        $fData  = "$method {$urlset['path']}{$urlset['query']} HTTP/1.1\r\n";
+        $fData  .= "Accept: */*\r\n";
+        $fData  .= "Accept-Language: zh-cn\r\n";
         if ('POST' == $method) {
-            $fdata .= empty($filepost) ? "Content-Type: application/x-www-form-urlencoded\r\n" : "Content-Type: multipart/form-data; boundary=$boundary\r\n";
+            $fData .= empty($filePost) ? "Content-Type: application/x-www-form-urlencoded\r\n" : "Content-Type: multipart/form-data; boundary=$boundary\r\n";
         }
-        $fdata .= "Host: {$urlset['host']}\r\n";
-        $fdata .= "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:9.0.1) Gecko/20100101 Firefox/9.0.1\r\n";
+        $fData .= "Host: {$urlset['host']}\r\n";
+        $fData .= "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:9.0.1) Gecko/20100101 Firefox/9.0.1\r\n";
         if (function_exists('gzdecode')) {
-            $fdata .= "Accept-Encoding: gzip, deflate\r\n";
+            $fData .= "Accept-Encoding: gzip, deflate\r\n";
         }
-        $fdata .= "Connection: close\r\n";
+        $fData .= "Connection: close\r\n";
         if (!empty($extra) && is_array($extra)) {
+            unset($value);
             foreach ($extra as $opt => $value) {
                 if (!Util::strExists($opt, 'CURLOPT_')) {
-                    $fdata .= "{$opt}: {$value}\r\n";
+                    $fData .= "$opt: $value\r\n";
                 }
             }
         }
         if ($body) {
-            $fdata .= 'Content-Length: ' . strlen($body) . "\r\n\r\n{$body}";
+            $fData .= 'Content-Length: ' . strlen($body) . "\r\n\r\n$body";
         } else {
-            $fdata .= "\r\n";
+            $fData .= "\r\n";
         }
 
-        return $fdata;
+        return $fData;
     }
 }
 
