@@ -82,4 +82,9 @@ class WebController extends Controller
     {
         return $this->result($errcode, $errmsg, $data, $params, 'return');
     }
+
+    public function resultError($error = [])
+    {
+        return (new Util)->resultError($error);
+    }
 }
