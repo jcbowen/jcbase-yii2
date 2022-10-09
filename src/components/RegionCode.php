@@ -4829,7 +4829,7 @@ class RegionCode
      * @return int|string
      * @lasttime: 2022/9/1 4:05 PM
      */
-    public function getCityCodeByAreaCode(string $area_code = '')
+    public static function getCityCodeByAreaCode(string $area_code = '')
     {
         $parent_city_code = 0;
         if (empty($area_code)) return $parent_city_code;
@@ -4853,7 +4853,7 @@ class RegionCode
      * @return int|string
      * @lasttime: 2022/9/1 4:05 PM
      */
-    public function getProvinceCodeByCityCode(string $city_code = '')
+    public static function getProvinceCodeByCityCode(string $city_code = '')
     {
         $parent_province_code = 0;
         if (empty($city_code)) return $parent_province_code;
