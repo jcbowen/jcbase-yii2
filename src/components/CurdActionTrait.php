@@ -57,9 +57,8 @@ trait CurdActionTrait
             $this->modelTableName = call_user_func($this->modelClass . '::tableName');
 
             $model = new $this->modelClass();
-            if (method_exists($model, 'getAttributes')) {
+            if (method_exists($model, 'getAttributes'))
                 $this->modelAttributes = $model->getAttributes();
-            }
         }
     }
 
@@ -107,11 +106,8 @@ trait CurdActionTrait
         $list  = $row->asArray()->all();
         $total = $row->count();
 
-        if ($this->runListEach() && !empty($list)) {
-            foreach ($list as &$item) {
-                $item = $this->listEach($item);
-            }
-        }
+        if ($this->runListEach() && !empty($list))
+            foreach ($list as &$item) $item = $this->listEach($item);
 
         return $this->listReturn($list, $total, $page, $pageSize);
     }
@@ -223,7 +219,7 @@ trait CurdActionTrait
      */
     public function listReturn($list, $total, $page, $pageSize)
     {
-        return (new Util)->result(0, 'ok', $list, ['count' => $total, 'page' => $page, 'page_size' => $pageSize]);
+        return (new Util)->result(ErrCode::SUCCESS, 'ok', $list, ['count' => $total, 'page' => $page, 'page_size' => $pageSize]);
     }
 
     //---------- 无分页列表查询(适用于选择器) ----------/
@@ -269,13 +265,10 @@ trait CurdActionTrait
 
         $list = $row->asArray()->all();
 
-        if ($this->runSelectorEach() && !empty($list)) {
-            foreach ($list as &$item) {
-                $item = $this->selectorEach($item);
-            }
-        }
+        if ($this->runSelectorEach() && !empty($list))
+            foreach ($list as &$item) $item = $this->selectorEach($item);
 
-        return (new Util)->result(0, 'ok', $list);
+        return (new Util)->result(ErrCode::SUCCESS, 'ok', $list);
     }
 
     /**
@@ -409,9 +402,9 @@ trait CurdActionTrait
                 $detail = ArrayHelper::merge($detail2->toArray(), $detail);
 
             $detail = $this->detail($detail);
-            return (new Util())->result(0, 'ok', $detail);
+            return (new Util)->result(ErrCode::SUCCESS, 'ok', $detail);
         }
-        return (new Util())->result(ErrCode::NOT_EXIST, '查询数据不存在或已被删除');
+        return (new Util)->result(ErrCode::NOT_EXIST, '查询数据不存在或已被删除');
     }
 
     /**
@@ -453,9 +446,9 @@ trait CurdActionTrait
     public function getDetailWhere(array &$data)
     {
         $pkId = intval($data[$this->pkId]);
-        if (empty($pkId)) {
-            return (new Util)->result(1, "{$this->pkId}不能为空");
-        }
+        if (empty($pkId))
+            return (new Util)->result(ErrCode::PARAMETER_EMPTY, "{$this->pkId}不能为空");
+
         $where   = ['and'];
         $where[] = [$this->pkId => $pkId];
         return $where;
@@ -503,23 +496,28 @@ trait CurdActionTrait
     {
         $this->checkInit();
 
-        // 获取新增的表单数据
+        // 获取新增数据
         $data = $this->getCreateFormData();
-        if (empty($data)) {
-            return (new Util())->result(1, '数据不能为空');
-        }
+        if (empty($data))
+            return (new Util)->result(ErrCode::PARAMETER_EMPTY, '数据不能为空');
+
+        if ($data instanceof Response) return $data;
+
         // 新增前
         $result_before = $this->createBefore($data);
-        if (Util::isError($result_before)) {
-            return (new Util())->result(1, $result_before['errmsg'] ?: '添加失败，请稍后再试');
-        }
+        if (Util::isError($result_before))
+            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '添加失败，请稍后再试');
+
+        // 如果在createBefore中补充了主键值，则转给更新方法来处理
+        if (!empty($data[$this->pkId])) return $this->actionUpdate($data);
+
         // 开启事务
         $tr = Yii::$app->db->beginTransaction();
 
         $result = $this->toSave(new $this->modelClass(), $data);
         if (Util::isError($result)) {
             $tr->rollBack();
-            return (new Util())->result($result['errcode'], $result['errmsg'], $result['data']);
+            return (new Util)->result($result['errcode'], $result['errmsg'], $result['data']);
         }
 
         $id = Yii::$app->db->getLastInsertID();
@@ -528,18 +526,17 @@ trait CurdActionTrait
         $result = $this->createAfter($id);
         if (Util::isError($result)) {
             $tr->rollBack();
-            return (new Util())->result($result['errcode'], $result['errmsg'], $result['data']);
+            return (new Util)->result(ErrCode::UNKNOWN, $result['errmsg'], $result['data']);
         }
 
         // 提交
         $tr->commit();
 
         // 如果是通过result函数输出的成功信息，则应该根据成功信息进行输出
-        if (!empty($result) && is_array($result) && $result['errcode'] == 0) {
-            return (new Util())->result(0, $result['errmsg'], $result['data']);
-        }
+        if (!empty($result) && is_array($result) && $result['errcode'] == ErrCode::SUCCESS)
+            return (new Util)->result(ErrCode::SUCCESS, $result['errmsg'], $result['data']);
 
-        return (new Util())->result(0, '添加成功', [$this->pkId => $id]);
+        return (new Util)->result(ErrCode::SUCCESS, '添加成功', [$this->pkId => $id]);
     }
 
     /**
@@ -596,54 +593,53 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
+     * @param array|null $data
      * @return string|Response
      * @throws Exception
      * @lasttime: 2022/3/13 10:20 下午
      */
-    public function actionUpdate()
+    public function actionUpdate(?array $data = null)
     {
         $this->checkInit();
 
-        // 获取更新表单数据
-        $data = $this->getUpdateFormData();
+        // 获取更新数据
+        $data = $data ?? $this->getUpdateFormData();
+
+        if ($data instanceof Response) return $data;
 
         $pkId = intval($data[$this->pkId]);
-        if (empty($pkId)) {
+        if (empty($pkId))
             return (new Util)->result(ErrCode::UNKNOWN, "{$this->pkId}不能为空");
-        }
 
-        if ($data instanceof Response) {
-            return $data;
-        }
         // 查询数据是否存在
         $where = $this->getUpdateWhere($data);
-        if (!$model = call_user_func($this->modelClass . '::findOne', $where)) {
-            return (new Util())->result(ErrCode::NOT_EXIST, '更新数据不存在');
-        }
+        if (!$model = call_user_func($this->modelClass . '::findOne', $where))
+            return (new Util)->result(ErrCode::NOT_EXIST, '更新数据不存在');
+
         // 更新前
         $result_before = $this->updateBefore($model, $data);
-        if (Util::isError($result_before)) {
-            return (new Util())->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '更新前发现错误，请稍后再试');
-        }
+        if (Util::isError($result_before))
+            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '更新前发现错误，请稍后再试');
+
         // 开启事务
         $tr = Yii::$app->db->beginTransaction();
 
         $result = $this->toSave($model, $data);
         if (Util::isError($result)) {
             $tr->rollBack();
-            return (new Util())->result($result['errcode'], $result['errmsg'], $result['data']);
+            return (new Util)->result($result['errcode'], $result['errmsg'], $result['data']);
         }
 
         // 更新后
         $result_after = $this->updateAfter($pkId);
         if (Util::isError($result_after)) {
             $tr->rollBack();
-            return (new Util())->result(1, $result_before['errmsg'] ?: '更新失败，请稍后再试');
+            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '更新失败，请稍后再试');
         }
 
         $tr->commit();
 
-        return (new Util())->result(0, '更新成功');
+        return (new Util)->result(ErrCode::SUCCESS, '更新成功');
     }
 
     /**
@@ -658,9 +654,9 @@ trait CurdActionTrait
     public function getUpdateWhere(array &$data)
     {
         $pkId = intval($data[$this->pkId]);
-        if (empty($pkId)) {
+        if (empty($pkId))
             return (new Util)->result(ErrCode::PARAMETER_EMPTY, "{$this->pkId}不能为空");
-        }
+
         $where   = ['and'];
         $where[] = [$this->pkId => $pkId];
         return $where;
@@ -729,42 +725,41 @@ trait CurdActionTrait
         $data = $this->getSetValueFormData();
 
         $pkId = intval($data[$this->pkId]);
-        if (empty($pkId)) return (new Util())->result(ErrCode::PARAMETER_EMPTY, "$this->pkId 不能为空");
+        if (empty($pkId))
+            return (new Util)->result(ErrCode::PARAMETER_EMPTY, "$this->pkId 不能为空");
 
         $field = Safe::gpcString(trim($data['field'])); // 字段名
         $type  = trim($data['type']); // 字段值的类型
         $value = $data['value']; // 字段值
 
-        if ($type === 'number' || $type === 'int') {
+        if ($type === 'number' || $type === 'int')
             $value = intval($value);
-        } elseif ($type === 'money') {
+        elseif ($type === 'money')
             $value = Util::round_money($value);
-        } elseif (is_array($value)) {
-            if ($type === 'serialize') {
+        elseif (is_array($value)) {
+            if ($type === 'serialize')
                 $value = serialize($value);
-            } else {
+            else
                 $value = json_encode($value);
-            }
-        } else {
+        } else
             $value = Safe::gpcString(trim($value));
-        }
 
         $model = call_user_func($this->modelClass . '::findOne', $this->getSetValueQueryWhere($pkId));
         if (!$model)
-            return (new Util())->result(ErrCode::NOT_EXIST, '数据不存在或已被删除');
+            return (new Util)->result(ErrCode::NOT_EXIST, '数据不存在或已被删除');
 
         if ($model->$field === $value)
-            return (new Util())->result(ErrCode::SUCCESS, '值未发生改变，请确认修改内容');
+            return (new Util)->result(ErrCode::SUCCESS, '值未发生改变，请确认修改内容');
 
         $result = $this->toSave($model, [$field => $value]);
         if (Util::isError($result))
-            return (new Util())->resultError($result);
+            return (new Util)->resultError($result);
 
         return (new Util)->result(ErrCode::SUCCESS, '设置成功', ['value' => $value]);
     }
 
     /**
-     * 获取设置某个字段的值的表单数据
+     * 获取设置某个字段的值的数据
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -790,9 +785,9 @@ trait CurdActionTrait
     {
         $where   = ['and'];
         $where[] = [$this->pkId => $pkId];
-        if (array_key_exists('deleted_at', $this->modelAttributes)) {
+        if (array_key_exists('deleted_at', $this->modelAttributes))
             $where[] = ['deleted_at' => NO_TIME];
-        }
+
         return $where;
     }
 
@@ -811,9 +806,9 @@ trait CurdActionTrait
     {
         global $_GPC;
         // 更新操作
-        if (!empty($_GPC[$this->pkId])) {
+        if (!empty($_GPC[$this->pkId]))
             return $this->actionUpdate();
-        }
+
         // 新增操作
         return $this->actionCreate();
     }
@@ -881,10 +876,11 @@ trait CurdActionTrait
         $this->checkInit();
 
         $ids = Safe::gpcArray($_GPC[$this->pkId . 's']);
-        foreach ($ids as $i => $id) {
+        foreach ($ids as $i => $id)
             if (empty($id)) unset($ids[$i]);
-        }
-        if (empty($ids)) return (new Util)->result(ErrCode::PARAMETER_EMPTY, '参数缺失，请重试');
+
+        if (empty($ids))
+            return (new Util)->result(ErrCode::PARAMETER_EMPTY, '参数缺失，请重试');
 
         $fields = $this->getDeleteFields();
 
@@ -901,13 +897,13 @@ trait CurdActionTrait
             ->all();
         $delIds = ArrayHelper::getColumn($dels, $this->pkId);
 
-        if (empty($delIds)) return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
+        if (empty($delIds))
+            return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
 
         // 删除前
         $result_before = $this->deleteBefore($dels, $delIds);
-        if (Util::isError($result_before)) {
-            return (new Util)->result(1, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
-        }
+        if (Util::isError($result_before))
+            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
 
         $transaction = Yii::$app->db->beginTransaction();
 
@@ -916,7 +912,7 @@ trait CurdActionTrait
 
         if (!call_user_func("$this->modelClass::updateAll", $condition, $where)) {
             $transaction->rollBack();
-            return (new Util)->result(ErrCode::UNKNOWN, '删除失败，未知错误');
+            return (new Util)->result(ErrCode::STORAGE_ERROR, '删除失败，未知错误');
         }
 
         // 删除后
@@ -1019,10 +1015,11 @@ trait CurdActionTrait
         $this->checkInit();
 
         $ids = Safe::gpcArray($_GPC[$this->pkId . 's']);
-        foreach ($ids as $i => $id) {
+        foreach ($ids as $i => $id)
             if (empty($id)) unset($ids[$i]);
-        }
-        if (empty($ids)) return (new Util)->result(ErrCode::PARAMETER_EMPTY, '参数缺失，请重试');
+
+        if (empty($ids))
+            return (new Util)->result(ErrCode::PARAMETER_EMPTY, '参数缺失，请重试');
 
         $fields = $this->getRestoreFields();
 
@@ -1037,13 +1034,14 @@ trait CurdActionTrait
             ->all();
         $itemIds = ArrayHelper::getColumn($items, $this->pkId);
 
-        if (empty($itemIds)) return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
+        if (empty($itemIds))
+            return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
 
         // 删除前
         $result_before = $this->restoreBefore($items, $itemIds);
-        if (Util::isError($result_before)) {
-            return (new Util)->result(1, $result_before['errmsg'] ?: '恢复数据失败，请稍后再试');
-        }
+        if (Util::isError($result_before))
+            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '恢复数据失败，请稍后再试');
+
 
         $transaction = Yii::$app->db->beginTransaction();
 
@@ -1153,10 +1151,11 @@ trait CurdActionTrait
         $this->checkInit();
 
         $ids = Safe::gpcArray($_GPC[$this->pkId . 's']);
-        foreach ($ids as $i => $id) {
+        foreach ($ids as $i => $id)
             if (empty($id)) unset($ids[$i]);
-        }
-        if (empty($ids)) return (new Util)->result(ErrCode::PARAMETER_EMPTY, '参数缺失，请重试');
+
+        if (empty($ids))
+            return (new Util)->result(ErrCode::PARAMETER_EMPTY, '参数缺失，请重试');
 
         $fields = $this->getRemoveFields();
 
@@ -1170,13 +1169,13 @@ trait CurdActionTrait
             ->all();
         $itemIds = ArrayHelper::getColumn($items, $this->pkId);
 
-        if (empty($itemIds)) return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
+        if (empty($itemIds))
+            return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
 
         // 删除前
         $result_before = $this->removeBefore($items, $itemIds);
-        if (Util::isError($result_before)) {
-            return (new Util)->result(1, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
-        }
+        if (Util::isError($result_before))
+            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
 
         $transaction = Yii::$app->db->beginTransaction();
 
