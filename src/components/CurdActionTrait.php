@@ -219,7 +219,10 @@ trait CurdActionTrait
      */
     public function listReturn($list, $total, $page, $pageSize)
     {
-        return (new Util)->result(ErrCode::SUCCESS, 'ok', $list, ['count' => $total, 'page' => $page, 'page_size' => $pageSize]);
+        return (new Util)->result(ErrCode::SUCCESS, 'ok', $list, [
+            'count'     => $total, 'page' => $page,
+            'page_size' => $pageSize
+        ]);
     }
 
     //---------- 无分页列表查询(适用于选择器) ----------/
@@ -639,7 +642,7 @@ trait CurdActionTrait
 
         $tr->commit();
 
-        return (new Util)->result(ErrCode::SUCCESS, '更新成功');
+        return (new Util)->result(ErrCode::SUCCESS, '更新成功', [$this->pkId => $pkId]);
     }
 
     /**
