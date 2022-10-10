@@ -32,16 +32,7 @@ class UrlManager extends BaseObject implements UrlRuleInterface
     }
 
     /**
-     * 路由解析
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @lastTime 2021/12/17 11:44 下午
-     * @param \yii\web\Request $request
-     *
-     * @param \yii\web\UrlManager $manager
-     * @return array|false
-     * @throws \yii\base\InvalidConfigException
+     * {@inheritdoc}
      */
     public function parseRequest($manager, $request)
     {
@@ -91,13 +82,7 @@ class UrlManager extends BaseObject implements UrlRuleInterface
     }
 
     /**
-     * Function createUrl
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @param string $route 路径
-     * @param array $params 参数
-     * @param \yii\web\UrlManager $manager
-     * @return bool|mixed|string
+     * {@inheritdoc}
      */
     public function createUrl($manager, $route, $params)
     {
@@ -110,12 +95,12 @@ class UrlManager extends BaseObject implements UrlRuleInterface
      * @author Bowen
      * @email bowen@jiuchet.com
      * @TIMESTAMP: 2021/4/16 11:37 下午
-     * @param false $hasIndex
+     * @param bool $hasIndex
      * @param string $pathInfo
      * @param $path
      * @return string
      */
-    private function makeController($path, $hasIndex = false, &$pathInfo = ''): string
+    private function makeController($path, bool $hasIndex = false, string &$pathInfo = ''): string
     {
         $defaultRoute = self::getDefaultRoute();
         $nameSpace    = $this->currentAppInfo['name'] . '\controllers\\';
