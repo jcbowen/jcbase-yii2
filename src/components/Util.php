@@ -673,13 +673,13 @@ class Util
      * @param string|int $errCode 错误码，其中0为正确
      * @return string|Response
      */
-    public function result($errCode = '0', string $errmsg = '', $data = [], array $params = [], string $returnType = 'exit')
+    public function result($errCode = ErrCode::UNKNOWN, string $errmsg = '', $data = [], array $params = [], string $returnType = 'exit')
     {
         global $_GPC;
         $data  = (array)$data;
         $count = count($data);
 
-        $errCode = (int)$this->getResponseCode($errCode);
+        $errCode = isset($errCode) ? (int)$this->getResponseCode($errCode) : ErrCode::UNKNOWN;
         $errmsg  = $this->getResponseMsg($errmsg);
         $data    = $this->getResponseData($data);
 
