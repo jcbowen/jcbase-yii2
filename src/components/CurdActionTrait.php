@@ -566,6 +566,9 @@ trait CurdActionTrait
      */
     public function createBefore(array &$data)
     {
+        $result = $this->beforeSave($data);
+        if (Util::isError($result))
+            return $result;
         return true;
     }
 
@@ -580,6 +583,9 @@ trait CurdActionTrait
      */
     public function createAfter($id)
     {
+        $result = $this->afterSave($id);
+        if (Util::isError($result))
+            return $result;
         return $id;
     }
 
@@ -629,7 +635,7 @@ trait CurdActionTrait
         }
 
         // 更新后
-        $result_after = $this->updateAfter();
+        $result_after = $this->updateAfter($pkId);
         if (Util::isError($result_after)) {
             $tr->rollBack();
             return (new Util())->result(1, $result_before['errmsg'] ?: '更新失败，请稍后再试');
@@ -685,6 +691,9 @@ trait CurdActionTrait
      */
     public function updateBefore($model, array &$data)
     {
+        $result = $this->beforeSave($data, $model);
+        if (Util::isError($result))
+            return $result;
         return true;
     }
 
@@ -693,11 +702,15 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
+     * @param $id
      * @return array|bool
      * @lasttime: 2022/3/13 10:09 下午
      */
-    public function updateAfter()
+    public function updateAfter($id)
     {
+        $result = $this->afterSave($id);
+        if (Util::isError($result))
+            return $result;
         return true;
     }
 
@@ -803,6 +816,37 @@ trait CurdActionTrait
         }
         // 新增操作
         return $this->actionCreate();
+    }
+
+    /**
+     * 新增/更新前调用(接口合并)
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array $data
+     * @param $model
+     * @return bool|array
+     * @lasttime: 2022/10/10 15:04
+     */
+    public function beforeSave(array &$data, $model = null)
+    {
+        return true;
+    }
+
+    /**
+     * 新增/更新后调用(接口合并)
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param int|null $id
+     * @return bool|array
+     * @lasttime: 2022/10/10 15:05
+     */
+    public function afterSave(?int $id = 0)
+    {
+        return true;
     }
 
     /**
