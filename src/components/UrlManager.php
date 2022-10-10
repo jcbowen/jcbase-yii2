@@ -50,7 +50,11 @@ class UrlManager extends BaseObject implements UrlRuleInterface
         // 客户端应用采用history模式，此处拦截所有非客户端的请求
         if (defined('IN_CLIENT')) {
             if (empty(Yii::$app->request->headers->get('JcClient'))) {
-                return ['index/index', $_GPC];
+                if (!YII_DEBUG)
+                    return ['index/index', $_GPC];
+                elseif (empty($_GPC['JcClient']))
+                    return ['index/index', $_GPC];
+
             }
         }
 
