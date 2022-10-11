@@ -898,10 +898,11 @@ trait CurdActionTrait
             ->andWhere($where)
             ->asArray()
             ->all();
-        $delIds = ArrayHelper::getColumn($dels, $this->pkId);
 
-        if (empty($delIds))
+        if (empty($dels))
             return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
+
+        $delIds = ArrayHelper::getColumn($dels, $this->pkId);
 
         // 删除前
         $result_before = $this->deleteBefore($dels, $delIds);
