@@ -74,7 +74,8 @@ class UrlManager extends BaseObject implements UrlRuleInterface
         $controller = $this->makeController($path, true, $pathInfo);
         if (method_exists($controller, $method)) {
             $pathInfo_arr[] = $action;
-            $route          = $this->isModule ? $this->moduleName . '/' . implode('/', $pathInfo_arr) : $pathInfo;
+            $route          = $pathInfo;
+//            $route          = $this->isModule ? $this->moduleName . '/' . implode('/', $pathInfo_arr) : $pathInfo;
             return [$route, $_GPC];
         }
 
