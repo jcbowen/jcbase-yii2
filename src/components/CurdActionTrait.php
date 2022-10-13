@@ -228,50 +228,53 @@ trait CurdActionTrait
     //---------- 无分页列表查询(适用于选择器) ----------/
 
     /**
-     * 无分页列表查询(最大输出100条数据)
+     * 滚动分页数据加载(最大输出100条数据)
      *
      * @author Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
      * @lasttime: 2022/3/19 10:39 上午
      */
-    public function actionSelector()
+    public function actionLoader()
     {
         global $_GPC;
 
         $this->checkInit();
 
-        $fields      = $this->getSelectorFields();
-        $where       = $this->getSelectorWhere();
-        $filterWhere = $this->getSelectorFilterWhere();
-        $order       = $this->getSelectorOrder();
+        $fields      = $this->getLoaderFields();
+        $where       = $this->getLoaderWhere();
+        $filterWhere = $this->getLoaderFilterWhere();
+        $order       = $this->getLoaderOrder();
 
-        $limit = intval($_GPC['limit']);
-        if (empty($limit)) $limit = 5;
-        $limit       = min(100, $limit);
+        $pageSize    = intval($_GPC['page_size']);
+        $pageSize    = max(1, $pageSize);
+        $pageSize    = min(1000, $pageSize);
         $showDeleted = intval($_GPC['show_deleted']);
 
         /** @var ActiveQuery $row */
         $row = call_user_func($this->modelClass . '::find');
-        $row = $row->select($fields);
+        $row->select($fields);
 
-        $row = $this->getSelectorRow($row);
+        // 传给子类便于扩展
+        $this->getLoaderRow($row);
 
         if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
-            $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
+            $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
 
-        if (!empty($where)) $row = $row->andWhere($where);
-        $row = $row->andFilterWhere($filterWhere);
+        if (!empty($where)) $row->andWhere($where);
+        $row->andFilterWhere($filterWhere);
 
-        $row = $row->limit($limit);
-        if (!empty($order)) $row = $row->orderBy($order);
+        $row->limit($pageSize);
+        if (!empty($order)) $row->orderBy($order);
 
         $list = $row->asArray()->all();
 
-        if ($this->runSelectorEach() && !empty($list))
-            foreach ($list as &$item) $item = $this->selectorEach($item);
+        $minTime = '';
+        $maxTime = '';
+        if ($this->runLoaderEach() && !empty($list))
+            foreach ($list as &$item) $item = $this->loaderEach($item, $minTime, $maxTime);
 
-        return (new Util)->result(ErrCode::SUCCESS, 'ok', $list);
+        return $this->loaderReturn($list, $pageSize, $minTime, $maxTime);
     }
 
     /**
@@ -282,7 +285,7 @@ trait CurdActionTrait
      * @return array|string
      * @lasttime: 2022/3/13 10:53 上午
      */
-    public function getSelectorWhere()
+    public function getLoaderWhere()
     {
         return [];
     }
@@ -292,11 +295,24 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @return array
+     * @return array|string
      * @lasttime: 2022/3/13 10:52 上午
      */
-    public function getSelectorFilterWhere(): array
+    public function getLoaderFilterWhere()
     {
+        global $_GPC;
+
+        $maxTime = Safe::gpcString(trim($_GPC['maxTime'])); // 上次查询数据里的最大时间
+        $minTime = Safe::gpcString(trim($_GPC['minTime'])); // 上次查询数据里的最小时间
+
+        // minTime和maxTime都不为空时，查询时间区间内的数据
+        if (!empty($maxTime) && !empty($minTime))
+            return ['between', $this->modelTableName . '.created_at', $minTime, $maxTime];
+        // 只传minTime意味着时间为倒叙，所以只查询小于minTime的数据
+        if (!empty($minTime)) return ['<', $this->modelTableName . '.created_at', $maxTime];
+        // 只传maxTime意味着时间为正序，所以只查询大于maxTime的数据
+        if (!empty($maxTime)) return ['>', $this->modelTableName . '.created_at', $minTime];
+
         return [];
     }
 
@@ -306,10 +322,10 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param ActiveQuery $row
-     * @return ActiveQuery
+     * @return ActiveQuery|void
      * @lasttime: 2022/3/18 11:11 下午
      */
-    public function getSelectorRow(ActiveQuery $row): ActiveQuery
+    public function getLoaderRow(ActiveQuery &$row): ActiveQuery
     {
         return $row;
     }
@@ -322,7 +338,7 @@ trait CurdActionTrait
      * @return string|array
      * @lasttime: 2022/3/13 10:51 上午
      */
-    public function getSelectorFields()
+    public function getLoaderFields()
     {
         return $this->modelTableName . '.*';
     }
@@ -335,9 +351,19 @@ trait CurdActionTrait
      * @return string|array
      * @lasttime: 2022/3/13 10:51 上午
      */
-    public function getSelectorOrder()
+    public function getLoaderOrder()
     {
-        return '';
+        global $_GPC;
+
+        $minTime = Safe::gpcString(trim($_GPC['minTime']));
+        $maxTime = Safe::gpcString(trim($_GPC['maxTime']));
+
+        // 都不为空的时候，不进行排序
+        if (!empty($minTime) && !empty($maxTime)) return [];
+        // 只传maxTime时，正序
+        if (!empty($maxTime) && empty($minTime)) return $this->modelTableName . '.created_at ASC';
+
+        return [$this->modelTableName . '.created_at' => SORT_DESC];
     }
 
     /**
@@ -348,9 +374,9 @@ trait CurdActionTrait
      * @return boolean
      * @lasttime: 2022/3/13 10:50 上午
      */
-    public function runSelectorEach(): bool
+    public function runLoaderEach(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -359,12 +385,40 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param $item
+     * @param $minTime string 最小的创建时间
+     * @param $maxTime string 最大的创建时间
      * @return mixed
      * @lasttime: 2022/3/13 10:50 上午
      */
-    public function selectorEach($item)
+    public function loaderEach($item, string &$minTime, string &$maxTime)
     {
+        if (empty($maxTime) || $item['created_at'] > $maxTime) $maxTime = $item['created_at'];
+        if (empty($minTime) || $item['created_at'] < $minTime) $minTime = $item['created_at'];
+
         return $item;
+    }
+
+    /**
+     * 滚动分页数据加载返回数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $list
+     * @param $pageSize
+     * @param $minTime
+     * @param $maxTime
+     * @return string|Response
+     * @lasttime: 2022/10/13 17:58
+     */
+    public function loaderReturn($list, $pageSize, $minTime, $maxTime)
+    {
+        return (new Util)->result(ErrCode::SUCCESS, 'ok', [
+            'list'      => $list,
+            'max_time'  => $maxTime,
+            'min_time'  => $minTime,
+            'page_size' => $pageSize
+        ]);
     }
 
     //---------- 详情查询 ----------/
@@ -789,7 +843,7 @@ trait CurdActionTrait
         $where   = ['and'];
         $where[] = [$this->pkId => $pkId];
         if (array_key_exists('deleted_at', $this->modelAttributes))
-            $where[] = ['deleted_at' => NO_TIME];
+            $where[] = ['deleted_at' => $this->noTime];
 
         return $where;
     }
@@ -890,7 +944,7 @@ trait CurdActionTrait
         // 获取删除条件
         $where = $this->getDeleteWhere($ids);
 
-        $dels   = call_user_func($this->modelClass . '::find')
+        $dels = call_user_func($this->modelClass . '::find')
             ->select($fields)
             ->where([
                 $this->modelTableName . '.deleted_at' => $this->noTime,
