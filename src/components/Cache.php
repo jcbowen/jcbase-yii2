@@ -39,7 +39,7 @@ class Cache extends \yii\base\Component
      */
     public static function get(string $key = '')
     {
-        return Util::redisGet(self::getKey($key));
+        return Util::redisGet(self::keygen($key));
     }
 
     /**
@@ -56,7 +56,7 @@ class Cache extends \yii\base\Component
     public static function set(string $key = '', $value = null, $expire = null)
     {
         $expire = $expire ?? self::$expire;
-        return Util::redisSet(self::getKey($key), $value, $expire);
+        return Util::redisSet(self::keygen($key), $value, $expire);
     }
 
     /**
@@ -70,7 +70,7 @@ class Cache extends \yii\base\Component
      */
     public static function del(string $key)
     {
-        return Util::redisDel(self::getKey($key));
+        return Util::redisDel(self::keygen($key));
     }
 
     /**
@@ -85,7 +85,7 @@ class Cache extends \yii\base\Component
      */
     public static function exists(string $key)
     {
-        return Util::redisExists(self::getKey($key));
+        return Util::redisExists(self::keygen($key));
     }
 
     /**
@@ -97,7 +97,7 @@ class Cache extends \yii\base\Component
      * @return string
      * @lasttime: 2022/10/5 21:27
      */
-    private static function getKey(string $key = ''): string
+    public static function keygen(string $key = ''): string
     {
         return 'jcsoft_' . md5(self::$prefix . '_' . $key);
     }
@@ -148,5 +148,10 @@ class Cache extends \yii\base\Component
     public function existsValue($key)
     {
         return self::exists($key);
+    }
+
+    public function getKey($key): string
+    {
+        return self::keygen($key);
     }
 }
