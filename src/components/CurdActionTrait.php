@@ -361,7 +361,7 @@ trait CurdActionTrait
         // 都不为空的时候，不进行排序
         if (!empty($minTime) && !empty($maxTime)) return [];
         // 只传maxTime时，正序
-        if (!empty($maxTime) && empty($minTime)) return $this->modelTableName . '.created_at ASC';
+        if (!empty($maxTime) && empty($minTime)) return [$this->modelTableName . '.created_at' => SORT_ASC];
 
         return [$this->modelTableName . '.created_at' => SORT_DESC];
     }
