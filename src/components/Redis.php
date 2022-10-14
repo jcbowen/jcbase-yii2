@@ -103,15 +103,13 @@ class Redis
      * @email bowen@jiuchet.com
      * @param $key
      * @param $value
-     * @param $expire
+     * @param int $expire
      * @param ...$options
      * @return false|mixed|Yii\redis\Connection|null
      * @lasttime 2022/9/26 12:24
      */
-    public function set($key, $value, $expire = 0, ...$options)
+    public function set($key, $value, int $expire = 0, ...$options)
     {
-        $expire = intval($expire);
-
         $redis = $this->getConnection();
         if (Util::isError($redis)) return $redis;
 
@@ -119,6 +117,26 @@ class Redis
         $result = $redis->set($key, $value, ...$options);
         if (!empty($expire)) $redis->expire($key, $expire);
         return $result;
+    }
+
+    /**
+     * redis->setex
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $key
+     * @param $seconds
+     * @param $value
+     * @return false|mixed|Yii\redis\Connection|null
+     * @lasttime: 2022/10/14 15:21
+     */
+    public function setex($key, $seconds, $value)
+    {
+        $redis = $this->getConnection();
+        if (Util::isError($redis)) return $redis;
+        if (is_array($value)) $value = serialize($value);
+        return $redis->setex($key, $seconds, $value);
     }
 
     /**
