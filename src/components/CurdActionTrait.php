@@ -325,7 +325,7 @@ trait CurdActionTrait
      * @return ActiveQuery|void
      * @lasttime: 2022/3/18 11:11 下午
      */
-    public function getLoaderRow(ActiveQuery &$row): ActiveQuery
+    public function getLoaderRow(ActiveQuery &$row)
     {
         return $row;
     }
