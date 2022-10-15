@@ -3,6 +3,7 @@
 namespace Jcbowen\JcbaseYii2\components;
 
 use Jcbowen\JcbaseYii2\components\sdk\SmsYunTongXun;
+use stdClass;
 use Yii;
 
 /**
@@ -36,7 +37,7 @@ class Sms
      * @param string $mobile
      * @param array $content
      * @param string $templateId
-     * @return array|\stdClass|string
+     * @return array|stdClass|string
      * @lasttime: 2022/10/15 11:31
      */
     public function send(string $mobile,array $content, string $templateId)
