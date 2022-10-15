@@ -27,7 +27,19 @@ class Sms
         }
     }
 
-    public function send($mobile, $content, $templateId)
+    /**
+     * 发送短信
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $mobile
+     * @param array $content
+     * @param string $templateId
+     * @return array|\stdClass|string
+     * @lasttime: 2022/10/15 11:31
+     */
+    public function send(string $mobile,array $content, string $templateId)
     {
         switch ($this->type) {
             case 'YunTongXun':
