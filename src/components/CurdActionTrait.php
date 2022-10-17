@@ -447,20 +447,18 @@ trait CurdActionTrait
         $row = $this->getDetailRow($row);
         $row = $row->andWhere($where);
 
-        if (!$asArray && !empty($row->joinWith)) {
-            $row2    = clone $row;
-            $detail2 = $row2->one();
-        }
-
         $detail = $row->asArray()->one();
 
         if (!empty($detail)) {
-            if (!$asArray && !empty($detail2) && !empty($row->joinWith))
-                $detail = ArrayHelper::merge($detail2->toArray(), $detail);
+            if (!$asArray)
+                (new FieldFilter)->set([
+                    'modelClass' => $this->modelClass,
+                ])->de($detail);
 
             $detail = $this->detail($detail);
             return (new Util)->result(ErrCode::SUCCESS, 'ok', $detail);
         }
+
         return (new Util)->result(ErrCode::NOT_EXIST, '查询数据不存在或已被删除');
     }
 
