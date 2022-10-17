@@ -81,18 +81,6 @@ trait ModelHelper
             throw new InvalidArgumentException('更新参数必须是数组');
         }
 
-        // 把不存在的字段放入扩展字段extend中
-        if ($this->filedExist('_extend')) {
-            $data['_extend'] = [];
-            foreach ($data as $field => $value) {
-                // 如果字段不存在放入extend中
-                if (!$this->filedExist($field)) {
-                    $data['_extend'][$field] = $value;
-                    unset($data[$field]);
-                }
-            }
-        }
-
         // 获取数据模型的命名空间
         $modelClass = '';
         if (!empty($model)) {
@@ -102,6 +90,18 @@ trait ModelHelper
             } elseif (is_string($model)) {
                 $modelClass = $model;
                 if (empty($this->model)) $this->model = new $modelClass();
+            }
+        }
+
+        // 把不存在的字段放入扩展字段extend中
+        if ($this->filedExist('_extend')) {
+            $data['_extend'] = [];
+            foreach ($data as $field => $value) {
+                // 如果字段不存在放入extend中
+                if (!$this->filedExist($field)) {
+                    $data['_extend'][$field] = $value;
+                    unset($data[$field]);
+                }
             }
         }
 
