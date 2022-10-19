@@ -673,8 +673,10 @@ trait CurdActionTrait
 
         // 更新前
         $result_before = $this->updateBefore($model, $data);
-        if (Util::isError($result_before))
-            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '更新前发现错误，请稍后再试');
+        if (Util::isError($result_before)) {
+            $result_before['errmsg'] = $result_before['errmsg'] ?: '更新前发现错误，请稍后再试';
+            return (new Util)->resultError($result_before);
+        }
 
         // 开启事务
         $tr = Yii::$app->db->beginTransaction();
