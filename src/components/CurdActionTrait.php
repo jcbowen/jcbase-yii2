@@ -505,7 +505,7 @@ trait CurdActionTrait
             return (new Util)->result(ErrCode::PARAMETER_EMPTY, "{$this->pkId}不能为空");
 
         $where   = ['and'];
-        $where[] = [$this->pkId => $pkId];
+        $where[] = [$this->modelTableName . '.' . $this->pkId => $pkId];
         return $where;
     }
 
