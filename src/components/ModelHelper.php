@@ -2,17 +2,15 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
-use Yii;
 use InvalidArgumentException;
 
-/**
- *
- */
 trait ModelHelper
 {
     //---------- 其他方法 ----------/
-    public $_attributes = [];
     public $model;
+
+    /** @var FieldFilter  */
+    private $_FieldFilter;
 
     /**
      * 通用save方法，方便输出报错
@@ -29,6 +27,7 @@ trait ModelHelper
     protected function toSave($model, array $data = [], string $formName = '')
     {
         $this->model = $model;
+        $this->_FieldFilter = new FieldFilter($model);
         if (!empty($data)) {
             $data = $this->filterData($data, $model);
             if ($model->load($data, $formName) && $model->save()) {
@@ -81,18 +80,6 @@ trait ModelHelper
             throw new InvalidArgumentException('更新参数必须是数组');
         }
 
-        // 获取数据模型的命名空间
-        $modelClass = '';
-        if (!empty($model)) {
-            if (is_object($model)) {
-                $modelClass = get_class($model);
-                if (empty($this->model) && method_exists($model, 'rules')) $this->model = $model;
-            } elseif (is_string($model)) {
-                $modelClass = $model;
-                if (empty($this->model)) $this->model = new $modelClass();
-            }
-        }
-
         // 把不存在的字段放入扩展字段extend中
         if ($this->filedExist('_extend')) {
             $data['_extend'] = [];
@@ -105,112 +92,12 @@ trait ModelHelper
             }
         }
 
-        // 从模型验证规则中获取数字类型的字段
-        $integerFiles = [];
-        if (!empty($this->model)) {
-            foreach ($this->model->rules() as $rules) {
-                if (in_array(array_pop($rules), ['integer', 'number'])) {
-                    $integerFiles = array_merge($rules[0], $integerFiles);
-                }
-            }
-        }
-
         // 转换字段值类型
         foreach ($data as $field => $value) {
-            $data[$field] = $this->translateData($field, $value, $integerFiles, $modelClass);
+            $data[$field] = $this->_FieldFilter->en($field, $value);
         }
 
         return $data;
-    }
-
-    /**
-     * 数据结构转化处理
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     *
-     * @param $field
-     * @param $value
-     * @param $integerFiles
-     * @param $modelClass
-     * @return false|float|int|string
-     * @lasttime: 2022/8/28 23:03
-     */
-    private function translateData($field, $value, $integerFiles, $modelClass)
-    {
-        if (!empty($modelClass) && !empty(Yii::$app->params['model_filter_field'][$modelClass][$field])) {
-            return $this->translateData_rules($field, $value, $modelClass);
-        } else {
-            return $this->translateData_noRules($field, $value, $integerFiles);
-        }
-    }
-
-    /**
-     * 定义有规则的情况下，数据结构转化处理
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     *
-     * @param $field
-     * @param $value
-     * @param $modelClass
-     * @return string
-     * @lasttime: 2022/8/28 23:03
-     */
-    private function translateData_rules($field, $value, $modelClass): string
-    {
-        switch (Yii::$app->params['model_filter_field'][$modelClass][$field]) {
-            case 'json':
-                $value = json_encode($value);
-                break;
-            case 'json&base64':
-                $value = json_encode($value);
-                $value = !empty($value) ? base64_encode($value) : '';
-                break;
-            case 'serialize':
-                $value = serialize($value);
-                break;
-            case 'round_money':
-                $value = Util::round_money($value);
-                break;
-            case 'rich_text':
-                $value = Content::toSave($value);
-                break;
-            case 'rich_text2':
-                $value = Content::toSave($value, false);
-                break;
-        }
-        return (string)$value;
-    }
-
-    /**
-     * 未定义规则的情况下，数据结构处理
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     *
-     * @param $field
-     * @param $value
-     * @param $integerFiles
-     * @return false|float|int|string
-     * @lasttime: 2022/8/28 23:03
-     */
-    private function translateData_noRules($field, $value, $integerFiles)
-    {
-        // 如果值是数组类型时json_encode处理
-        if (is_array($value)) {
-            return json_encode($value, JSON_UNESCAPED_UNICODE);
-        }
-        // 如果字段布尔类型强制转换成数字
-        if (is_bool($value)) {
-            return intval($value);
-        }
-        // 如果字段是整数或小数
-        if (in_array($field, $integerFiles, true)) {
-            return floatval($value);
-        }
-        // 其它类型全部转换成字符串
-        return (string)$value;
     }
 
     /**
@@ -225,7 +112,7 @@ trait ModelHelper
      */
     public function filedExist(string $field): bool
     {
-        return in_array($field, $this->getAttributes(), true);
+        return $this->_FieldFilter->filedExist($field);
     }
 
     /**
@@ -239,10 +126,7 @@ trait ModelHelper
      */
     public function getAttributes(): array
     {
-        if (!$this->_attributes) {
-            $this->_attributes = array_keys($this->model->attributeLabels());
-        }
-        return $this->_attributes;
+        return $this->_FieldFilter->getAttributes();
     }
 }
 
