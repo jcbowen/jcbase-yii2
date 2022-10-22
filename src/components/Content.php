@@ -104,5 +104,29 @@ class Content
         }
         return $html;
     }
+
+    /**
+     * 分离html中的图片和内容
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param string $html
+     * @return array
+     * @lasttime 2022/10/22 16:16
+     */
+    public static function separationImg(string $html = ''): array
+    {
+        self::html_entity_decode($html);
+
+        /** 提取图片 */
+        $pattern = "/<[img|IMG].*?src=[\'|\"](.*?(?:[\.gif|\.jpg|\.png|\.jpeg|\.bmp]))[\'|\"].*?[\/]?>/";
+        preg_match_all($pattern, $html, $match);
+        $images = array_unique($match[1]);
+
+        /** 去除内容中的图片 */
+        $content = preg_replace("/(<img.*?>)/is", '', $html);
+
+        return ['images' => $images, 'content' => $content, 'html' => $html];
+    }
 }
 
