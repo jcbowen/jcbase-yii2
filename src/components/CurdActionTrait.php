@@ -414,8 +414,8 @@ trait CurdActionTrait
     {
         return (new Util)->result(ErrCode::SUCCESS, 'ok', [
             'list'      => $list,
-            'max_time'  => $maxTime,
-            'min_time'  => $minTime,
+            'maxTime'  => $maxTime,
+            'minTime'  => $minTime,
             'page_size' => $pageSize
         ]);
     }
