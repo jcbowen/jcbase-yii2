@@ -355,8 +355,8 @@ trait CurdActionTrait
     {
         global $_GPC;
 
-        // 都不为空的时候，不进行排序
-        if (isset($_GPC['minTime']) && isset($_GPC['maxTime'])) return [];
+        // 都没传的时候，不进行排序
+        if (!isset($_GPC['minTime']) && !isset($_GPC['maxTime'])) return [];
         // 只传maxTime时，正序
         if (isset($_GPC['maxTime']) && !isset($_GPC['minTime'])) {
             return [$this->modelTableName . '.created_at' => SORT_ASC];
