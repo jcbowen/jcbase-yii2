@@ -578,7 +578,7 @@ trait CurdActionTrait
         $id = Yii::$app->db->getLastInsertID();
 
         // 新增后
-        $result = $this->createAfter($id);
+        $result = $this->createAfter($id, $data);
         if (Util::isError($result)) {
             $tr->rollBack();
             return (new Util)->result(ErrCode::UNKNOWN, $result['errmsg'], $result['data']);
@@ -630,12 +630,13 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param string|int $id
+     * @param array $data
      * @return string|int
      * @lasttime: 2022/3/13 10:02 下午
      */
-    public function createAfter($id)
+    public function createAfter($id, array $data)
     {
-        $result = $this->afterSave($id);
+        $result = $this->afterSave($id, $data);
         if (Util::isError($result))
             return $result;
         return $id;
@@ -755,13 +756,14 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param $id
+     * @param int|string $id
+     * @param array $data
      * @return array|bool
      * @lasttime: 2022/3/13 10:09 下午
      */
-    public function updateAfter($id)
+    public function updateAfter($id, array $data)
     {
-        $result = $this->afterSave($id);
+        $result = $this->afterSave($id, $data);
         if (Util::isError($result))
             return $result;
         return true;
@@ -893,10 +895,11 @@ trait CurdActionTrait
      * @email bowen@jiuchet.com
      *
      * @param int|null $id
+     * @param array|null $data
      * @return bool|array
      * @lasttime: 2022/10/10 15:05
      */
-    public function afterSave(?int $id = 0)
+    public function afterSave(?int $id = 0, ?array $data = [])
     {
         return true;
     }
