@@ -355,13 +355,12 @@ trait CurdActionTrait
     {
         global $_GPC;
 
-        $minTime = Safe::gpcString(trim($_GPC['minTime']));
-        $maxTime = Safe::gpcString(trim($_GPC['maxTime']));
-
         // 都不为空的时候，不进行排序
-        if (!empty($minTime) && !empty($maxTime)) return [];
+        if (isset($_GPC['minTime']) && isset($_GPC['maxTime'])) return [];
         // 只传maxTime时，正序
-        if (!empty($maxTime) && empty($minTime)) return [$this->modelTableName . '.created_at' => SORT_ASC];
+        if (isset($_GPC['maxTime']) && !isset($_GPC['minTime'])) {
+            return [$this->modelTableName . '.created_at' => SORT_ASC];
+        }
 
         return [$this->modelTableName . '.created_at' => SORT_DESC];
     }
