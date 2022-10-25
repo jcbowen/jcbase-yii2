@@ -689,7 +689,7 @@ trait CurdActionTrait
         }
 
         // 更新后
-        $result_after = $this->updateAfter($pkId);
+        $result_after = $this->updateAfter($pkId, $data);
         if (Util::isError($result_after)) {
             $tr->rollBack();
             return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '更新失败，请稍后再试');
