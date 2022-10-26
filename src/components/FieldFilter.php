@@ -101,10 +101,8 @@ class FieldFilter
                 $value = Util::round_money($value);
                 break;
             case 'rich_text':
-                $value = Content::toSave($value);
-                break;
             case 'rich_text2':
-                $value = Content::toSave($value, false);
+                $value = Content::toSave($value);
                 break;
         }
         return (string)$value;
