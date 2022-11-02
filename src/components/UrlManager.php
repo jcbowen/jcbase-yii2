@@ -38,18 +38,30 @@ class UrlManager extends BaseObject implements UrlRuleInterface
     {
         global $_GPC;
 
+        $pathInfo = trim($request->getPathInfo(), '/');
+
         // 客户端应用采用history模式，此处拦截所有非客户端的请求
         if (defined('IN_CLIENT')) {
-            if (empty(Yii::$app->request->headers->get('JcClient'))) {
-                if (!YII_DEBUG)
-                    return ['index/index', $_GPC];
-                elseif (empty($_GPC['JcClient']))
-                    return ['index/index', $_GPC];
+            $clientWhiteRoute = Yii::$app->params['clientWhiteRoute'] ?? [];
+            // 匹配$pathInfo是否在白名单中(白名单为正则表达式)
+            $pass = false;
+            foreach ($clientWhiteRoute as $route) {
+                if (preg_match('/' . $route . '/', $pathInfo)) {
+                    $pass = true;
+                    break;
+                }
+            }
 
+            if (!$pass) {
+                if (empty(Yii::$app->request->headers->get('JcClient'))) {
+                    if (!YII_DEBUG)
+                        return ['index/index', $_GPC];
+                    elseif (empty($_GPC['JcClient']))
+                        return ['index/index', $_GPC];
+
+                }
             }
         }
-
-        $pathInfo = trim($request->getPathInfo(), '/');
 
         $pathInfo_arr = explode('/', $pathInfo);
 
