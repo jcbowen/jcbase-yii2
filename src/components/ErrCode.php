@@ -19,6 +19,8 @@ class ErrCode
     const SUCCESS = 0;
     /** @var int 未知错误 */
     const UNKNOWN = 1;
+    /** @var int 网络错误 */
+    const NETWORK_ERROR = 2;
 
     /** @var int 系统繁忙 */
     const SYSTEM_BUSY = 9001001;
