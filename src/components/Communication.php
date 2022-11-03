@@ -4,6 +4,7 @@ namespace Jcbowen\JcbaseYii2\components;
 
 use CURLFile;
 use Yii;
+use yii\helpers\ArrayHelper;
 
 /**
  * Class Communication
@@ -20,13 +21,24 @@ class Communication
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @lastTime 2022/1/14 11:21 下午
-     * @param $url
      *
+     * @param $url
+     * @param array $params
      * @return array|false|int|resource|string|null
+     * @lasttime: 2022/11/3 17:02
      */
-    public static function get($url)
+    public static function get($url, array $params = [])
     {
+        if (!empty($params)) {
+            // 判断url字符串是否已经携带了参数
+            if (strpos($url, '?') === false) {
+                $url .= '?';
+            } else {
+                $url .= '&';
+            }
+            $url = $url . http_build_query($params);
+        }
+
         return self::request($url);
     }
 
@@ -36,14 +48,53 @@ class Communication
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2022/1/14 11:21 下午
-     * @param $data
+     * @param string $url 请求地址
+     * @param array $data 占位参数以实际情况为准
+     *  - 只有一个参数，那么就是data，如果有更多的参数，那么第一个参数是params，第二个参数是data，第三个参数是header
+     * 如： post($url, $data); post($url, $params, $data); post($url, $params, $data, $header);
      *
-     * @param $url
      * @return array|false|int|resource|string|null
      */
-    public static function post($url, $data)
+    public static function post(string $url, array $data = [])
     {
+        $args = func_get_args();
+        $url  = array_shift($args);
+
+        if (empty($url)) {
+            return false;
+        }
+
+        if (empty($args)) {
+            return self::request($url, [], ['Content-Type' => 'application/x-www-form-urlencoded']);
+        }
+
+        // 判断是否还有args，如果只有一个参数，那么就是data，如果有更多的参数，那么第一个参数是params，第二个参数是data，第三个参数是header
+        $params = [];
+        $header = [];
+
+        if (count($args) == 1) {
+            $data = (array)$args[0];
+        } else {
+            $params = (array)$args[0];
+            $data   = (array)$args[1];
+            $header = (array)$args[2];
+        }
+
+        if (!empty($params)) {
+            // 判断url字符串是否已经携带了参数
+            if (strpos($url, '?') === false) {
+                $url .= '?';
+            } else {
+                $url .= '&';
+            }
+            $url = $url . http_build_query($params);
+        }
+
         $headers = ['Content-Type' => 'application/x-www-form-urlencoded'];
+        if(!empty($header)){
+            $headers = ArrayHelper::merge($headers, $header);
+        }
+
         return self::request($url, $data, $headers);
     }
 
@@ -78,17 +129,17 @@ class Communication
                 return self::responseParse($data);
             }
         }
-        $urlset = self::parseUrl($url, true);
-        if (!empty($urlset['ip'])) {
-            $urlset['host'] = $urlset['ip'];
+        $urlSet = self::parseUrl($url, true);
+        if (!empty($urlSet['ip'])) {
+            $urlSet['host'] = $urlSet['ip'];
         }
 
         $body = self::buildHttpBody($url, $post, $extra);
 
-        if ('https' == $urlset['scheme']) {
-            $fp = self::socketOpen('ssl://' . $urlset['host'], $urlset['port'], $errno, $error);
+        if ('https' == $urlSet['scheme']) {
+            $fp = self::socketOpen('ssl://' . $urlSet['host'], $urlSet['port'], $errno, $error);
         } else {
-            $fp = self::socketOpen($urlset['host'], $urlset['port'], $errno, $error);
+            $fp = self::socketOpen($urlSet['host'], $urlSet['port'], $errno, $error);
         }
         stream_set_blocking($fp, $timeout > 0);
         stream_set_timeout($fp, ini_get('default_socket_timeout'));
@@ -299,7 +350,7 @@ class Communication
     public static function parseUrl($url, bool $set_default_port = false)
     {
         if (empty($url)) {
-            return Util::error(1);
+            return Util::error(1, 'url为空');
         }
         $urlSet = parse_url($url);
         if (!empty($urlSet['scheme']) && !in_array($urlSet['scheme'], array('http', 'https'))) {
@@ -347,22 +398,22 @@ class Communication
             return Util::error(1, 'curl扩展未开启');
         }
 
-        $urlset = self::parseUrl($url);
-        if (Util::isError($urlset)) {
-            return $urlset;
+        $urlSet = self::parseUrl($url);
+        if (Util::isError($urlSet)) {
+            return $urlSet;
         }
 
-        if (!empty($urlset['ip'])) {
-            $extra['ip'] = $urlset['ip'];
+        if (!empty($urlSet['ip'])) {
+            $extra['ip'] = $urlSet['ip'];
         }
 
         $ch = curl_init();
         if (!empty($extra['ip'])) {
-            $extra['Host']  = $urlset['host'];
-            $urlset['host'] = $extra['ip'];
+            $extra['Host']  = $urlSet['host'];
+            $urlSet['host'] = $extra['ip'];
             unset($extra['ip']);
         }
-        curl_setopt($ch, CURLOPT_URL, $urlset['scheme'] . '://' . $urlset['host'] . (empty($urlset['port']) || '80' == $urlset['port'] ? '' : ':' . $urlset['port']) . $urlset['path'] . (!empty($urlset['query']) ? $urlset['query'] : ''));
+        curl_setopt($ch, CURLOPT_URL, $urlSet['scheme'] . '://' . $urlSet['host'] . (empty($urlSet['port']) || '80' == $urlSet['port'] ? '' : ':' . $urlSet['port']) . $urlSet['path'] . (!empty($urlSet['query']) ? $urlSet['query'] : ''));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         @curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         curl_setopt($ch, CURLOPT_HEADER, 1);
