@@ -68,16 +68,27 @@ class Communication
             return self::request($url, [], ['Content-Type' => 'application/x-www-form-urlencoded']);
         }
 
-        // 判断是否还有args，如果只有一个参数，那么就是data，如果有更多的参数，那么第一个参数是params，第二个参数是data，第三个参数是header
         $params = [];
+        $body   = [];
         $header = [];
 
         if (count($args) == 1) {
-            $data = (array)$args[0];
+            $body = (array)$args[0];
         } else {
-            $params = (array)$args[0];
-            $data   = (array)$args[1];
-            $header = (array)$args[2];
+            foreach ($args as $arg) {
+                if (is_array($arg)) {
+                    if (empty($params)) {
+                        $params = $arg;
+                    } elseif (empty($body)) {
+                        $body = $arg;
+                    } elseif (empty($header)) {
+                        $header = $arg;
+                        break;
+                    }
+                } else {
+                    return Util::error(ErrCode::PARAMETER_ERROR, '参数格式错误');
+                }
+            }
         }
 
         if (!empty($params)) {
@@ -91,11 +102,11 @@ class Communication
         }
 
         $headers = ['Content-Type' => 'application/x-www-form-urlencoded'];
-        if(!empty($header)){
+        if (!empty($header)) {
             $headers = ArrayHelper::merge($headers, $header);
         }
 
-        return self::request($url, $data, $headers);
+        return self::request($url, $body, $headers);
     }
 
     /**
