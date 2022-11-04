@@ -62,4 +62,54 @@ class Ocr extends Base
 
         return $content;
     }
+
+    /**
+     * 将身份证识别接口返回的数据进行解析
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array $data
+     * @return array
+     * @lasttime: 2022/11/4 14:57
+     */
+    public static function parseIdCard(array $data = []): array
+    {
+        $translate = [
+            '姓名'         => 'name',
+            '民族'         => 'nation',
+            '住址'         => 'address',
+            '公民身份号码' => 'idCard',
+            '出生'         => 'birth',
+            '性别'         => 'genderTitle',
+            '签发机关'     => 'issue',
+            '签发日期'     => 'issued',
+            '失效日期'     => 'expired',
+        ];
+
+        if (empty($data['words_result'])) {
+            return Util::error(ErrCode::PARAMETER_EMPTY, '身份证信息为空');
+        }
+
+        $result = [];
+        foreach ($data['words_result'] as $item) {
+            foreach ($item['card_result'] as $key => $value) {
+                if (isset($translate[$key])) {
+                    $result[$translate[$key]] = $value['words'];
+                }
+            }
+        }
+
+        $result['gender']     = $result['genderTitle'] == '男' ? 1 : 2;
+        $birth                = date('Y-m-d', strtotime($result['birth']));
+        $result['birth']      = $birth;
+        $birthArr             = explode('-', $birth);
+        $result['birthYear']  = $birthArr[0];
+        $result['birthMonth'] = $birthArr[1];
+        $result['birthDay']   = $birthArr[2];
+        $result['issued']     = date('Y-m-d', strtotime($result['issued']));
+        $result['expired']    = date('Y-m-d', strtotime($result['expired']));
+
+        return $result;
+    }
 }
