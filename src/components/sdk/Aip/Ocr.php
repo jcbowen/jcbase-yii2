@@ -6,7 +6,6 @@ use Jcbowen\JcbaseYii2\components\Communication;
 use Jcbowen\JcbaseYii2\components\ErrCode;
 use Jcbowen\JcbaseYii2\components\Util;
 use Yii;
-use yii\base\Exception;
 use yii\helpers\ArrayHelper;
 
 class Ocr extends Base
