@@ -5,10 +5,80 @@ namespace Jcbowen\JcbaseYii2\components\sdk\Aip;
 use Jcbowen\JcbaseYii2\components\Communication;
 use Jcbowen\JcbaseYii2\components\ErrCode;
 use Jcbowen\JcbaseYii2\components\Util;
+use Yii;
+use yii\base\Exception;
 use yii\helpers\ArrayHelper;
 
 class Ocr extends Base
 {
+    private $parse = false;
+
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $action
+     * @param array $args
+     * @param array $option
+     * @return $this
+     * @lasttime: 2022/11/4 16:10
+     */
+    public function run(string $action = '', array $args = [], array $option = []): Ocr
+    {
+        $this->action = $action;
+        $this->args   = $args;
+
+        $this->apiKey    = $option['apiKey'] ?? Yii::$app->params['baiduAip']['ApiKey'];
+        $this->apiSecret = $option['apiSecret'] ?? Yii::$app->params['baiduAip']['ApiSecret'];
+
+        if (empty($this->apiKey) || empty($this->apiSecret)) {
+            $this->errors[] = Util::error(ErrCode::PARAMETER_ERROR, 'apiKey or apiSecret is empty');
+        }
+        return $this;
+    }
+
+    /**
+     * 是否对返回数据进行解析
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return $this
+     * @lasttime: 2022/11/4 16:09
+     */
+    public function parse(): Ocr
+    {
+        $this->parse = true;
+        return $this;
+    }
+
+    /**
+     * 获取返回信息
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return mixed
+     * @lasttime: 2022/11/4 16:09
+     */
+    public function get()
+    {
+        if (!empty($this->errors)) {
+            return Util::error(ErrCode::UNKNOWN, '执行前错误', $this->errors);
+        }
+        $content = call_user_func_array([$this, $this->action], $this->args);
+        if (Util::isError($content)) {
+            return $content;
+        }
+        if ($this->parse) {
+            $content = call_user_func_array([__CLASS__, 'parse' . ucfirst($this->action)], [$content]);
+        }
+        return $content;
+    }
+
+    //------------------------------------ sdk处理逻辑 ------------------------------------/
+
     /**
      * 身份证识别接口
      *
@@ -91,7 +161,9 @@ class Ocr extends Base
             return Util::error(ErrCode::PARAMETER_EMPTY, '身份证信息为空');
         }
 
-        $result = [];
+        $result = [
+            'log_id' => $data['log_id'],
+        ];
         foreach ($data['words_result'] as $item) {
             foreach ($item['card_result'] as $key => $value) {
                 if (isset($translate[$key])) {
