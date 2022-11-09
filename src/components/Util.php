@@ -214,7 +214,7 @@ class Util
      * @param bool $numeric 返回纯数字随机数
      * @return string
      */
-    public static function random($length, $numeric = FALSE): string
+    public static function random(int $length, bool $numeric = false): string
     {
         $seed = base_convert(md5(microtime() . $_SERVER['DOCUMENT_ROOT']), 16, $numeric ? 10 : 35);
         $seed = $numeric ? (str_replace('0', '', $seed) . '012340567890') : ($seed . 'zZ' . strtoupper($seed));
