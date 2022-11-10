@@ -41,6 +41,10 @@ class WechatPay extends Component
      */
     public $description;
     /**
+     * @var string 附加数据，在查询API和支付通知中原样返回，可作为自定义参数使用，实际情况下只有支付完成状态才会返回该字段。
+     */
+    public $attach;
+    /**
      * @var string 异步接收微信支付结果通知的回调地址，通知url必须为外网可访问的url，不能携带参数。 公网域名必须为https，如果是走专线接入，使用专线NAT IP或者私有回调域名可使用http。 示例值：https://www.weixin.qq.com/wxpay/pay.php
      */
     public $notifyUrl;
@@ -200,6 +204,21 @@ class WechatPay extends Component
     }
 
     /**
+     * 设置附加数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param string $attach
+     * @return $this
+     * @lasttime 2022/11/10 10:41
+     */
+    public function attach(string $attach = ''): WechatPay
+    {
+        $this->attach = $attach;
+        return $this;
+    }
+
+    /**
      * 批量设置支付信息（通过上面的方法）
      *
      * @author Bowen
@@ -276,17 +295,23 @@ class WechatPay extends Component
             return $check;
         }
 
+        $jsonData = [
+            'mchid'        => $this->merchantId,
+            'out_trade_no' => $this->outTradeNo ?? 'jc' . date('YmdHis') . '000' . Util::random(4, true),
+            'appid'        => $this->appId,
+            'description'  => $this->description ?? '商品' . date('YmdHis'),
+            'notify_url'   => $this->notifyUrl,
+            'amount'       => $this->amount,
+            'payer'        => $this->payer,
+        ];
+
+        if(!empty($this->attach)){
+            $jsonData['attach'] = $this->attach;
+        }
+
         try {
             $resp = $this->instance->chain('v3/pay/transactions/jsapi')->post([
-                'json' => [
-                    'mchid'        => $this->merchantId,
-                    'out_trade_no' => $this->outTradeNo ?? 'jc' . date('YmdHis') . '000' . Util::random(4, true),
-                    'appid'        => $this->appId,
-                    'description'  => $this->description ?? '商品' . date('YmdHis'),
-                    'notify_url'   => $this->notifyUrl,
-                    'amount'       => $this->amount,
-                    'payer'        => $this->payer,
-                ],
+                'json' => $jsonData,
             ]);
             if ($resp->getStatusCode() == 200) {
                 $body = $resp->getBody();
@@ -350,13 +375,13 @@ class WechatPay extends Component
         if (empty($transactionId) && empty($this->outTradeNo))
             return Util::error(ErrCode::PARAMETER_ERROR, 'transactionId和outTradeNo不能同时为空');
 
-        try {
-            if (!empty($transactionId)) {
-                $path = 'v3/pay/transactions/id/' . $transactionId . '?mchid=' . $this->merchantId;
-            } else {
-                $path = 'v3/pay/transactions/out-trade-no/' . $this->outTradeNo . '?mchid=' . $this->merchantId;
-            }
+        if (!empty($transactionId)) {
+            $path = 'v3/pay/transactions/id/' . $transactionId . '?mchid=' . $this->merchantId;
+        } else {
+            $path = 'v3/pay/transactions/out-trade-no/' . $this->outTradeNo . '?mchid=' . $this->merchantId;
+        }
 
+        try {
             $resp = $this->instance->chain($path)->get();
             if ($resp->getStatusCode() == 200) {
                 $body = $resp->getBody();
