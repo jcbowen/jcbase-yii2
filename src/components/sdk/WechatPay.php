@@ -7,6 +7,7 @@ use Jcbowen\JcbaseYii2\components\ErrCode;
 use Jcbowen\JcbaseYii2\components\Util;
 use WeChatPay\Builder;
 use WeChatPay\BuilderChainable;
+use WeChatPay\Crypto\AesGcm;
 use WeChatPay\Crypto\Rsa;
 use WeChatPay\Formatter;
 use WeChatPay\Util\PemUtil;
@@ -18,7 +19,7 @@ class WechatPay extends Component
     /**
      * @var string v3 API密钥
      */
-    public $apiKey;
+    public $apiV3Key;
     /**
      * @var string 商户证书序列号
      */
@@ -91,7 +92,7 @@ class WechatPay extends Component
         $this->merchantId                = Yii::$app->params[$type . "Config"]['mchId'];
         $this->appId                     = Yii::$app->params[$type . "Config"]['app_id'];
         $this->merchantCertificateSerial = Yii::$app->params[$type . "Config"]['merchantCertificateSerial'];
-        $this->apiKey                    = Yii::$app->params[$type . "Config"]['apiKey'];
+        $this->apiV3Key                  = Yii::$app->params[$type . "Config"]['apiKey'];
         $this->notifyUrl                 = Yii::$app->params[$type . "Config"]['notifyUrl'];
 
         // 从本地文件中加载「商户API私钥」，「商户API私钥」会用来生成请求的签名
@@ -305,7 +306,7 @@ class WechatPay extends Component
             'payer'        => $this->payer,
         ];
 
-        if(!empty($this->attach)){
+        if (!empty($this->attach)) {
             $jsonData['attach'] = $this->attach;
         }
 
@@ -479,6 +480,51 @@ class WechatPay extends Component
             return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
         } catch (Exception $e) {
             return Util::error($e->getResponse()->getStatusCode(), $e->getMessage());
+        }
+    }
+
+    /**
+     * 解密回调消息
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @return array|void
+     * @lasttime 2022/11/10 11:06
+     */
+    public function dealNotify()
+    {
+        $inWechatpaySignature = $_SERVER['HTTP_WECHATPAY_SIGNATURE'];
+        $inWechatpayTimestamp = $_SERVER['HTTP_WECHATPAY_TIMESTAMP'];
+        $inWechatpaySerial    = $_SERVER['HTTP_WECHATPAY_SERIAL'];
+        $inWechatpayNonce     = $_SERVER['HTTP_WECHATPAY_NONCE'];
+        $inBody               = file_get_contents('php://input');
+
+        // 根据通知的平台证书序列号，查询本地平台证书文件，
+        $platformPublicKeyInstance = Rsa::from('file://' . Yii::getAlias('@common/pay/wechat/') . $this->merchantId . '/cert.pem', Rsa::KEY_TYPE_PUBLIC);
+
+        // 检查通知时间偏移量，允许5分钟之内的偏移
+        $timeOffsetStatus = 300 >= abs(Formatter::timestamp() - (int)$inWechatpayTimestamp);
+        $verifiedStatus   = Rsa::verify(
+        // 构造验签名串
+            Formatter::joinedByLineFeed($inWechatpayTimestamp, $inWechatpayNonce, $inBody),
+            $inWechatpaySignature,
+            $platformPublicKeyInstance
+        );
+        if ($timeOffsetStatus && $verifiedStatus) {
+            // 转换通知的JSON文本消息为PHP Array数组
+            $inBodyArray = (array)json_decode($inBody, true);
+            // 使用PHP7的数据解构语法，从Array中解构并赋值变量
+            [
+                'resource' => [
+                    'ciphertext'      => $ciphertext,
+                    'nonce'           => $nonce,
+                    'associated_data' => $aad
+                ]
+            ] = $inBodyArray;
+            // 加密文本消息解密
+            $inBodyResource = AesGcm::decrypt($ciphertext, $this->apiV3Key, $nonce, $aad);
+            // 把解密后的文本转换为PHP Array数组
+            return (array)json_decode($inBodyResource, true);
         }
     }
 }
