@@ -296,21 +296,21 @@ class WechatPay extends Component
             return $check;
         }
 
-        $jsonData = [
-            'mchid'        => $this->merchantId,
-            'out_trade_no' => $this->outTradeNo ?? 'jc' . date('YmdHis') . '000' . Util::random(4, true),
-            'appid'        => $this->appId,
-            'description'  => $this->description ?? '商品' . date('YmdHis'),
-            'notify_url'   => $this->notifyUrl,
-            'amount'       => $this->amount,
-            'payer'        => $this->payer,
-        ];
-
-        if (!empty($this->attach)) {
-            $jsonData['attach'] = $this->attach;
-        }
-
         try {
+            $jsonData = [
+                'mchid'        => $this->merchantId,
+                'out_trade_no' => $this->outTradeNo ?? 'jc' . date('YmdHis') . '000' . Util::random(4, true),
+                'appid'        => $this->appId,
+                'description'  => $this->description ?? '商品' . date('YmdHis'),
+                'notify_url'   => $this->notifyUrl,
+                'amount'       => $this->amount,
+                'payer'        => $this->payer,
+            ];
+
+            if (!empty($this->attach)) {
+                $jsonData['attach'] = $this->attach;
+            }
+
             $resp = $this->instance->chain('v3/pay/transactions/jsapi')->post([
                 'json' => $jsonData,
             ]);
@@ -449,27 +449,27 @@ class WechatPay extends Component
         if (empty($this->notifyUrl))
             return Util::error(ErrCode::PARAMETER_ERROR, 'notifyUrl不能为空');
 
-        $jsonData = [
-            'out_refund_no' => $outRefundNo,
-
-            'notify_url' => $this->notifyUrl,
-            'amount'     => [
-                'refund'   => $refundAmount,
-                'total'    => $totalAmount,
-                'currency' => 'CNY',
-            ],
-        ];
-
-        if (!empty($transactionId)) {
-            $jsonData['transaction_id'] = $transactionId;
-        } else {
-            $jsonData['out_trade_no'] = $this->outTradeNo;
-        }
-
-        if (!empty($refundReason))
-            $jsonData['reason'] = $refundReason;
-
         try {
+            $jsonData = [
+                'out_refund_no' => $outRefundNo,
+
+                'notify_url' => $this->notifyUrl,
+                'amount'     => [
+                    'refund'   => $refundAmount,
+                    'total'    => $totalAmount,
+                    'currency' => 'CNY',
+                ],
+            ];
+
+            if (!empty($transactionId)) {
+                $jsonData['transaction_id'] = $transactionId;
+            } else {
+                $jsonData['out_trade_no'] = $this->outTradeNo;
+            }
+
+            if (!empty($refundReason))
+                $jsonData['reason'] = $refundReason;
+            
             $resp = $this->instance->chain('v3/refund/domestic/refunds')->post([
                 'json' => $jsonData,
             ]);
