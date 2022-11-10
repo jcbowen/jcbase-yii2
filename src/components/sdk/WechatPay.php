@@ -311,6 +311,8 @@ class WechatPay extends Component
                 $jsonData['attach'] = $this->attach;
             }
 
+            $jsonData['amount']['total'] = intval($jsonData['amount']['total']);
+
             $resp = $this->instance->chain('v3/pay/transactions/jsapi')->post([
                 'json' => $jsonData,
             ]);
@@ -469,7 +471,7 @@ class WechatPay extends Component
 
             if (!empty($refundReason))
                 $jsonData['reason'] = $refundReason;
-            
+
             $resp = $this->instance->chain('v3/refund/domestic/refunds')->post([
                 'json' => $jsonData,
             ]);
