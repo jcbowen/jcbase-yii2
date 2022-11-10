@@ -140,7 +140,7 @@ class WechatPay extends Component
             $total = bcmul($total, 100);
         }
 
-        $this->amount['total'] = $total;
+        $this->amount['total'] = intval($total);
         return $this;
     }
 
@@ -310,8 +310,6 @@ class WechatPay extends Component
             if (!empty($this->attach)) {
                 $jsonData['attach'] = $this->attach;
             }
-
-            $jsonData['amount']['total'] = intval($jsonData['amount']['total']);
 
             $resp = $this->instance->chain('v3/pay/transactions/jsapi')->post([
                 'json' => $jsonData,
