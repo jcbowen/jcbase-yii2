@@ -131,7 +131,7 @@ class ActiveRecord extends \yii\db\ActiveRecord
         if (!empty($config)) {
             $className = static::class;
 
-            $config['_extend'] = 'json';
+            $config[$className]['_extend'] = 'json';
             if (empty($config[$className])) return $fields;
             foreach ($config[$className] as $name => $type) {
                 if (empty($fields[$name])) continue;
