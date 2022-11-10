@@ -9,7 +9,7 @@ trait ModelHelper
     //---------- 其他方法 ----------/
     public $model;
 
-    /** @var FieldFilter  */
+    /** @var FieldFilter */
     private $_FieldFilter;
 
     /**
@@ -26,10 +26,10 @@ trait ModelHelper
      */
     protected function toSave($model, array $data = [], string $formName = '')
     {
-        $this->model = $model;
+        $this->model        = $model;
         $this->_FieldFilter = new FieldFilter($model);
         if (!empty($data)) {
-            $data = $this->filterData($data, $model);
+            $data = $this->filterData($data);
             if ($model->load($data, $formName) && $model->save()) {
                 return true;
             }
@@ -58,11 +58,10 @@ trait ModelHelper
      * @email bowen@jiuchet.com
      *
      * @param $data
-     * @param mixed $model
      * @return array
      * @lasttime: 2022/8/28 23:03
      */
-    protected function filterData($data, $model = ''): array
+    protected function filterData($data): array
     {
         // 如果数据为空返回空数组
         if (empty($data)) return [];
@@ -80,9 +79,17 @@ trait ModelHelper
             throw new InvalidArgumentException('更新参数必须是数组');
         }
 
-        // 把不存在的字段放入扩展字段extend中
+        // 把不存在的字段放入扩展字段extend中以json格式存储
         if ($this->filedExist('_extend')) {
             $data['_extend'] = [];
+
+            // 读取原有的扩展数据
+            if (!empty($this->model)) {
+                if (!empty($this->model['_extend'])) {
+                    $data['_extend'] = (array)@json_decode($this->model['_extend'], true);
+                }
+            }
+
             foreach ($data as $field => $value) {
                 // 如果字段不存在放入extend中
                 if (!$this->filedExist($field)) {

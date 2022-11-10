@@ -130,13 +130,11 @@ class ActiveRecord extends \yii\db\ActiveRecord
         $config = Yii::$app->params['model_filter_field'];
         if (!empty($config)) {
             $className = static::class;
-            if (empty($config[$className])) {
-                return $fields;
-            }
+
+            $config['_extend'] = 'json';
+            if (empty($config[$className])) return $fields;
             foreach ($config[$className] as $name => $type) {
-                if (empty($fields[$name])) {
-                    continue;
-                }
+                if (empty($fields[$name])) continue;
                 switch ($type) {
                     case 'json':
                         $fields[$name] = function () use ($name) {

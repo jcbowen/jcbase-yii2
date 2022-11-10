@@ -140,6 +140,7 @@ class FieldFilter
     {
         $config = $this->getConfig();
         if (!empty($config)) {
+            $config['_extend'] = 'json';
             foreach ($fields as $key => &$field) {
                 if (empty($config[$key])) continue;
                 switch ($config[$key]) {
