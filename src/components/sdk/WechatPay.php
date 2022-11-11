@@ -395,6 +395,32 @@ class WechatPay extends Component
     }
 
     /**
+     * 查询单笔退款
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param $outRefundNo
+     * @return array|mixed
+     * @lasttime 2022/11/11 17:11
+     */
+    public function queryRefund($outRefundNo)
+    {
+        if (empty($outRefundNo))
+            return Util::error(ErrCode::PARAMETER_ERROR, 'outRefundNo不能为空');
+
+        try {
+            $resp = $this->instance->chain('v3/refund/domestic/refunds/' . $this->outTradeNo)->get();
+            if ($resp->getStatusCode() == 200) {
+                $body = $resp->getBody();
+                return json_decode($body, true);
+            }
+            return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
+        } catch (Exception $e) {
+            return Util::error($e->getResponse()->getStatusCode(), $e->getMessage());
+        }
+    }
+
+    /**
      * 关闭订单
      *
      * @author Bowen
