@@ -267,14 +267,15 @@ trait CurdActionTrait
         $row->limit($pageSize);
         if (!empty($order)) $row->orderBy($order);
 
-        $list = $row->asArray()->all();
+        $list  = $row->asArray()->all();
+        $total = $row->count();
 
         $minTime = '';
         $maxTime = '';
         if ($this->runLoaderEach() && !empty($list))
             foreach ($list as &$item) $item = $this->loaderEach($item, $minTime, $maxTime);
 
-        return $this->loaderReturn($list, $pageSize, $minTime, $maxTime);
+        return $this->loaderReturn($list, $total, $pageSize, $minTime, $maxTime);
     }
 
     /**
@@ -309,9 +310,9 @@ trait CurdActionTrait
         if (!empty($maxTime) && !empty($minTime))
             return ['between', $this->modelTableName . '.created_at', $minTime, $maxTime];
         // 只传minTime意味着时间为倒叙，所以只查询小于minTime的数据
-        if (!empty($minTime)) return ['<', $this->modelTableName . '.created_at', $maxTime];
+        if (!empty($minTime)) return ['<', $this->modelTableName . '.created_at', $minTime];
         // 只传maxTime意味着时间为正序，所以只查询大于maxTime的数据
-        if (!empty($maxTime)) return ['>', $this->modelTableName . '.created_at', $minTime];
+        if (!empty($maxTime)) return ['>', $this->modelTableName . '.created_at', $maxTime];
 
         return [];
     }
@@ -410,12 +411,11 @@ trait CurdActionTrait
      * @return string|Response
      * @lasttime: 2022/10/13 17:58
      */
-    public function loaderReturn($list, $pageSize, $minTime, $maxTime)
+    public function loaderReturn($list, $total, $pageSize, $minTime, $maxTime)
     {
-        return (new Util)->result(ErrCode::SUCCESS, 'ok', [
-            'list'      => $list,
-            'maxTime'  => $maxTime,
-            'minTime'  => $minTime,
+        return (new Util)->result(ErrCode::SUCCESS, 'ok', $list, [
+            'count'     => $total, 'totalCount' => $total,
+            'maxTime'   => $maxTime, 'minTime' => $minTime,
             'page_size' => $pageSize
         ]);
     }
