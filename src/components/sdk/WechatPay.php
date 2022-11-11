@@ -409,7 +409,7 @@ class WechatPay extends Component
             return Util::error(ErrCode::PARAMETER_ERROR, 'outRefundNo不能为空');
 
         try {
-            $resp = $this->instance->chain('v3/refund/domestic/refunds/' . $this->outTradeNo)->get();
+            $resp = $this->instance->chain('v3/refund/domestic/refunds/' . $outRefundNo)->get();
             if ($resp->getStatusCode() == 200) {
                 $body = $resp->getBody();
                 return json_decode($body, true);
