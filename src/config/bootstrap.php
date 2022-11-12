@@ -23,6 +23,53 @@ const ATTACH_TYPE_NEWS   = 4;
 const ATTACH_TYPE_OFFICE = 5;
 const ATTACH_TYPE_ZIP    = 6;
 
+const CLIENT_UNKNOWN               = -1;
+const CLIENT_ANDROID               = 1;
+const CLIENT_IOS                   = 2;
+const CLIENT_PC                    = 3;
+const CLIENT_H5                    = 4;
+const CLIENT_WECHAT                = 5;
+const CLIENT_WECHAT_MINI_PROGRAM   = 6;
+const CLIENT_WECHAT_WORK           = 7;
+const CLIENT_ALIPAY                = 8;
+const CLIENT_ALIPAY_MINI_PROGRAM   = 9;
+const CLIENT_BAIDU_SMART_PROGRAM   = 10;
+const CLIENT_BYTEDANCE_MICRO_APP   = 11;
+const CLIENT_QUICK_APP             = 12;
+const CLIENT_QQ                    = 13;
+const CLIENT_QQ_MINI_PROGRAM       = 14;
+const CLIENT_360_MINI_PROGRAM      = 15;
+const CLIENT_KUAISHOU_MINI_PROGRAM = 16;
+const CLIENT_FEISHU                = 17;
+const CLIENT_FEISHU_MICRO_APP      = 18;
+const CLIENT_DINGTALK              = 19;
+const CLIENT_DINGTALK_MINI_PROGRAM = 20;
+const CLIENT_JINGDONG_MINI_PROGRAM = 21;
+const CLIENT_LIST                  = [
+    CLIENT_UNKNOWN               => '未知',
+    CLIENT_ANDROID               => '安卓',
+    CLIENT_IOS                   => 'IOS',
+    CLIENT_PC                    => 'PC',
+    CLIENT_H5                    => 'H5',
+    CLIENT_WECHAT                => '微信公众号',
+    CLIENT_WECHAT_MINI_PROGRAM   => '微信小程序',
+    CLIENT_WECHAT_WORK           => '企业微信',
+    CLIENT_ALIPAY                => '支付宝',
+    CLIENT_ALIPAY_MINI_PROGRAM   => '支付宝小程序',
+    CLIENT_BAIDU_SMART_PROGRAM   => '百度小程序',
+    CLIENT_BYTEDANCE_MICRO_APP   => '字节跳动小程序',
+    CLIENT_QUICK_APP             => '快应用',
+    CLIENT_QQ                    => 'QQ',
+    CLIENT_QQ_MINI_PROGRAM       => 'QQ小程序',
+    CLIENT_360_MINI_PROGRAM      => '360小程序',
+    CLIENT_KUAISHOU_MINI_PROGRAM => '快手小程序',
+    CLIENT_FEISHU                => '飞书',
+    CLIENT_FEISHU_MICRO_APP      => '飞书小程序',
+    CLIENT_DINGTALK              => '钉钉',
+    CLIENT_DINGTALK_MINI_PROGRAM => '钉钉小程序',
+    CLIENT_JINGDONG_MINI_PROGRAM => '京东小程序',
+];
+
 const NO_TIME = '0000-00-00 00:00:00';
 
 define('MAGIC_QUOTES_GPC', (bool)ini_set("magic_quotes_runtime", 0));

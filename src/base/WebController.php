@@ -45,8 +45,9 @@ class WebController extends Controller
         }
 
         //----- 默认参数，及将参数配置写到全局变量中 -----/
-        $_B['page']   = ['title' => 'jcsoft'];
-        $_B['params'] = ArrayHelper::merge((array)$_B['params'], Yii::$app->params);
+        $_B['page']     = ['title' => 'jcsoft'];
+        $_B['params']   = ArrayHelper::merge((array)$_B['params'], Yii::$app->params);
+        $_B['JcClient'] = Yii::$app->request->headers->get('JcClient', 1);
     }
 
     /**
