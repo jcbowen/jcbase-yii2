@@ -23,7 +23,7 @@ const ATTACH_TYPE_NEWS   = 4;
 const ATTACH_TYPE_OFFICE = 5;
 const ATTACH_TYPE_ZIP    = 6;
 
-const CLIENT_UNKNOWN               = -1;
+const CLIENT_UNKNOWN               = 0;
 const CLIENT_ANDROID               = 1;
 const CLIENT_IOS                   = 2;
 const CLIENT_PC                    = 3;
