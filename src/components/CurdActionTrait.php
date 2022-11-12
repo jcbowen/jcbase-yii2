@@ -267,15 +267,15 @@ trait CurdActionTrait
         $row->limit($pageSize);
         if (!empty($order)) $row->orderBy($order);
 
-        $list  = $row->asArray()->all();
-        $total = $row->count();
+        $list = $row->asArray()->all();
+        // $total = $row->count();
 
         $minTime = '';
         $maxTime = '';
         if ($this->runLoaderEach() && !empty($list))
             foreach ($list as &$item) $item = $this->loaderEach($item, $minTime, $maxTime);
 
-        return $this->loaderReturn($list, $total, $pageSize, $minTime, $maxTime);
+        return $this->loaderReturn($list, $pageSize, $minTime, $maxTime);
     }
 
     /**
@@ -411,10 +411,9 @@ trait CurdActionTrait
      * @return string|Response
      * @lasttime: 2022/10/13 17:58
      */
-    public function loaderReturn($list, $total, $pageSize, $minTime, $maxTime)
+    public function loaderReturn($list, $pageSize, $minTime, $maxTime)
     {
         return (new Util)->result(ErrCode::SUCCESS, 'ok', $list, [
-            'count'     => $total, 'totalCount' => $total,
             'maxTime'   => $maxTime, 'minTime' => $minTime,
             'page_size' => $pageSize
         ]);
