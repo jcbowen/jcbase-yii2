@@ -8,7 +8,9 @@ use Jcbowen\JcbaseYii2\components\Template;
 use Jcbowen\JcbaseYii2\components\Util;
 use Yii;
 use yii\helpers\ArrayHelper;
+use yii\web\BadRequestHttpException;
 use yii\web\Controller;
+use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
 /**
@@ -45,6 +47,23 @@ class WebController extends Controller
         //----- 默认参数，及将参数配置写到全局变量中 -----/
         $_B['page']   = ['title' => 'jcsoft'];
         $_B['params'] = ArrayHelper::merge((array)$_B['params'], Yii::$app->params);
+    }
+
+    /**
+     * {@inheritdoc}
+     * @throws NotFoundHttpException|BadRequestHttpException
+     */
+    public function beforeAction($action)
+    {
+        $beforeAction = parent::beforeAction($action);
+
+        if (!$beforeAction) return false;
+
+        if (!empty($this->denyAction) && in_array($action->id, $this->denyAction)) {
+            throw new NotFoundHttpException(Yii::t('yii', 'Page not found.'));
+        }
+
+        return true;
     }
 
     public function vTpl(?string $filename = 'index'): Response
