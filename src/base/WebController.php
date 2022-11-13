@@ -31,7 +31,7 @@ class WebController extends Controller
      * 如果设置了denyAction，则allowAction无效
      * @var array 允许访问的action
      */
-    protected $allowAction = [];
+    public $allowAction = [];
 
     public function init()
     {
