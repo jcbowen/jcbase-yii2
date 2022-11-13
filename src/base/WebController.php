@@ -26,6 +26,13 @@ class WebController extends Controller
     use BaseControllerTrait;
     use CurdActionTrait;
 
+    /**
+     * 只允许访问allowAction中的action，其他的将报错404
+     * 如果设置了denyAction，则allowAction无效
+     * @var array 允许访问的action
+     */
+    protected $allowAction = [];
+
     public function init()
     {
         global $_B;
@@ -59,6 +66,24 @@ class WebController extends Controller
         $beforeAction = parent::beforeAction($action);
 
         if (!$beforeAction) return false;
+
+        if (empty($this->denyAction) && !empty($this->allowAction)) {
+            $actions          = [
+                'list',
+                'detail',
+                'loader',
+                'create',
+                'update',
+                'set-value',
+                'save',
+                'delete',
+                'restore',
+                'remove',
+            ];
+            $this->denyAction = array_filter($actions, function ($item) {
+                return !in_array($item, $this->allowAction);
+            });
+        }
 
         if (!empty($this->denyAction) && in_array($action->id, $this->denyAction)) {
             throw new NotFoundHttpException(Yii::t('yii', 'Page not found.'));
