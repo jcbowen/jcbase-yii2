@@ -26,8 +26,6 @@ class ErrCode
     const SYSTEM_BUSY = 9001001;
     /** @var int 维护中 */
     const UNDER_MAINTENANCE = 9001002;
-    /** @var int 无效的配置 */
-    const INVALID_CONFIG = 9001003;
 
     /** @var int 失去连接 */
     const LOST_CONNECTION = 9002001;
@@ -86,6 +84,60 @@ class ErrCode
 
     /** @var int 数据存储错误 */
     const STORAGE_ERROR = 9003001;
+    /** @var int 数据库错误 */
+    const DATABASE_ERROR = 9003002;
+    /** @var int 数据库连接错误 */
+    const DATABASE_CONNECTION_ERROR = 9003003;
+    /** @var int 数据库查询错误 */
+    const DATABASE_QUERY_ERROR = 9003004;
+    /** @var int 数据库写入错误 */
+    const DATABASE_WRITE_ERROR = 9003005;
+    /** @var int 数据库更新错误 */
+    const DATABASE_UPDATE_ERROR = 9003006;
+    /** @var int 数据库删除错误 */
+    const DATABASE_DELETE_ERROR = 9003007;
+    /** @var int 数据库事务错误 */
+    const DATABASE_TRANSACTION_ERROR = 9003008;
+    /** @var int 数据库存储过程错误 */
+    const DATABASE_STORED_PROCEDURE_ERROR = 9003009;
+    /** @var int 数据库触发器错误 */
+    const DATABASE_TRIGGER_ERROR = 9003010;
+    /** @var int 数据库视图错误 */
+    const DATABASE_VIEW_ERROR = 9003011;
+    /** @var int 数据库函数错误 */
+    const DATABASE_FUNCTION_ERROR = 9003012;
+    /** @var int 数据库索引错误 */
+    const DATABASE_INDEX_ERROR = 9003013;
+    /** @var int 数据库序列错误 */
+    const DATABASE_SEQUENCE_ERROR = 9003014;
+    /** @var int 数据库约束错误 */
+    const DATABASE_CONSTRAINT_ERROR = 9003015;
+    /** @var int 数据库锁错误 */
+    const DATABASE_LOCK_ERROR = 9003016;
+    /** @var int 数据库事务隔离级别错误 */
+    const DATABASE_TRANSACTION_ISOLATION_LEVEL_ERROR = 9003017;
+    /** @var int 数据库事务锁定错误 */
+    const DATABASE_TRANSACTION_LOCK_ERROR = 9003018;
+    /** @var int 数据库事务超时错误 */
+    const DATABASE_TRANSACTION_TIMEOUT_ERROR = 9003019;
+    /** @var int 数据库事务死锁错误 */
+    const DATABASE_TRANSACTION_DEADLOCK_ERROR = 9003020;
+    /** @var int 数据库事务回滚错误 */
+    const DATABASE_TRANSACTION_ROLLBACK_ERROR = 9003021;
+    /** @var int 数据库事务提交错误 */
+    const DATABASE_TRANSACTION_COMMIT_ERROR = 9003022;
+    /** @var int 数据库事务保存点错误 */
+    const DATABASE_TRANSACTION_SAVEPOINT_ERROR = 9003023;
+    /** @var int 数据库事务回滚到保存点错误 */
+    const DATABASE_TRANSACTION_ROLLBACK_TO_SAVEPOINT_ERROR = 9003024;
+    /** @var int 数据库事务释放保存点错误 */
+    const DATABASE_TRANSACTION_RELEASE_SAVEPOINT_ERROR = 9003025;
+    /** @var int 数据库事务回滚到释放保存点错误 */
+    const DATABASE_TRANSACTION_ROLLBACK_TO_RELEASE_SAVEPOINT_ERROR = 9003026;
+    /** @var int 无效的配置 */
+    const INVALID_CONFIG = 9001003;
+    /** @var int 没有配置 */
+    const NO_CONFIG = 9001004;
 
     /** @var int 其他错误 */
     const OTHER = 9999999;
