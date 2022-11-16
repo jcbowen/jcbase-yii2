@@ -26,6 +26,8 @@ class ErrCode
     const SYSTEM_BUSY = 9001001;
     /** @var int 维护中 */
     const UNDER_MAINTENANCE = 9001002;
+    /** @var int 无效的配置 */
+    const INVALID_CONFIG = 9001003;
 
     /** @var int 失去连接 */
     const LOST_CONNECTION = 9002001;
