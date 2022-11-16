@@ -411,7 +411,7 @@ class Util
     /**
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param $errno
+     * @param int|string $errno
      * @param string $message
      * @param mixed $data
      * @param array $params
@@ -421,7 +421,7 @@ class Util
     public static function error($errno, string $message = '', $data = [], array $params = []): array
     {
         $error = [
-            'errcode' => $errno,
+            'errcode' => (int)$errno,
             'errmsg'  => $message,
             'data'    => $data
         ];
@@ -655,8 +655,12 @@ class Util
     public function resultError(array $error = [])
     {
         if (empty($error))
-            return (new self())->result(ErrCode::UNKNOWN, '传入数据为空');
-        return (new self())->result($error['errcode'], $error['errmsg'], $error['data']);
+            return (new self)->result(ErrCode::UNKNOWN, '发生了未知错误，返回结果为空');
+
+        $params = array_filter($error, function ($key) {
+            return !in_array($key, ['errcode', 'errmsg', 'data']);
+        }, ARRAY_FILTER_USE_KEY);
+        return (new self)->result($error['errcode'], $error['errmsg'], $error['data'], $params);
     }
 
     /**
