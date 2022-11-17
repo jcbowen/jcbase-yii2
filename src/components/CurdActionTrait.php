@@ -808,7 +808,9 @@ trait CurdActionTrait
         if ($model->$field === $value)
             return (new Util)->result(ErrCode::SUCCESS, '值未发生改变，请确认修改内容');
 
-        $this->getSetValueRecord($model);
+        $res = $this->getSetValueRecord($model);
+        if (Util::isError($res))
+            return (new Util)->resultError($res);
 
         $result = $this->toSave($model, [$field => $value]);
         if (Util::isError($result))
@@ -856,10 +858,10 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param ActiveRecord $record
-     * @return ActiveRecord
+     * @return ActiveRecord|Response
      * @lasttime 2022/11/17 16:09
      */
-    public function getSetValueRecord(ActiveRecord &$record): ActiveRecord
+    public function getSetValueRecord(ActiveRecord &$record)
     {
         return $record;
     }
