@@ -42,6 +42,7 @@ class WebController extends Controller
         define('MTIME', microtime());
         define('TIMESTAMP', time());
         define('TIME', date('Y-m-d H:i:s', TIMESTAMP));
+        define('TODAY', date('Y-m-d', TIMESTAMP));
 
         //----- 初始化附件域名配置 -----/
         if (empty(Yii::$app->params['domain']['attachment_local'])) {
