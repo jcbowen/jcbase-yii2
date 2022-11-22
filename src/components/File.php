@@ -134,7 +134,7 @@ class File extends Model
     /**
      * 通过文件对应的key创建上传类
      * @param string $name
-     * @return static|null
+     * @return File|null
      */
     public static function getInstanceByName(string $name): ?File
     {
@@ -155,9 +155,9 @@ class File extends Model
     /**
      * 上传base64字符串
      * @param string $base64
-     * @return bool|static
+     * @return static
      */
-    public static function getInstanceByBase64($base64)
+    public static function getInstanceByBase64(string $base64): File
     {
         if (!preg_match('/^data:(.*);base64,(.*)/', $base64, $matches)) {
             $matches[1] = 'image/jpg';
@@ -295,9 +295,8 @@ class File extends Model
     public function file_upload(string $key = 'file', string $type = 'image', string $name = '', bool $compress = false): ?array
     {
         global $_GPC;
-        if (empty(self::$_files[$key])) {
+        if (empty($this->size))
             return Util::error(ErrCode::PARAMETER_EMPTY, '没有上传内容');
-        }
 
         $group_id = intval($_GPC['group_id']);
         $group_id = $group_id === 0 ? '-1' : $group_id;
@@ -676,7 +675,7 @@ class File extends Model
             $ext    = pathinfo($srcFile, PATHINFO_EXTENSION);
             $srcDir = dirname($srcFile);
             do {
-                $desFile = $srcDir . '/' . Util::random(30) . ".{$ext}";
+                $desFile = $srcDir . '/' . Util::random(30) . ".$ext";
             } while (file_exists($desFile));
         }
 
@@ -763,8 +762,12 @@ class File extends Model
         }
 
         if (!is_dir($this->attachmentRoot . '/' . $path)) {
-            if (!FileHelper::createDirectory($this->attachmentRoot . '/' . $path)) {
-                return Util::error(ErrCode::UNAUTHORIZED, '提取文件失败: 权限不足.');
+            try {
+                if (!FileHelper::createDirectory($this->attachmentRoot . '/' . $path)) {
+                    return Util::error(ErrCode::UNAUTHORIZED, '提取文件失败: 权限不足.');
+                }
+            } catch (Exception $e) {
+                return Util::error(ErrCode::UNAUTHORIZED, '提取文件失败: ' . $e->getMessage());
             }
         }
 
