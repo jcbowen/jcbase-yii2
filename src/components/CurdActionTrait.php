@@ -256,7 +256,9 @@ trait CurdActionTrait
         $row->select($fields);
 
         // 传给子类便于扩展
-        $this->getLoaderRow($row);
+        $result = $this->getLoaderRow($row);
+        if (isset($result) && Util::isError($result))
+            return (new Util)->resultError($result);
 
         if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
             $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
@@ -323,7 +325,7 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param ActiveQuery $row
-     * @return ActiveQuery|void
+     * @return ActiveQuery|array|Response|void
      * @lasttime: 2022/3/18 11:11 下午
      */
     public function getLoaderRow(ActiveQuery &$row)
