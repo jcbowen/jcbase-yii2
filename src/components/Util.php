@@ -648,14 +648,17 @@ class Util
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param array $error
+     * @param array|Response $error
      * @return string|Response
      * @lasttime 2022/9/28 15:49
      */
-    public function resultError(array $error = [])
+    public function resultError($error = [])
     {
         if (empty($error))
             return (new self)->result(ErrCode::UNKNOWN, '发生了未知错误，返回结果为空');
+
+        if ($error instanceof Response)
+            return $error;
 
         $params = array_filter($error, function ($key) {
             return !in_array($key, ['errcode', 'errmsg', 'data']);
