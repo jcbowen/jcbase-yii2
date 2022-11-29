@@ -4866,5 +4866,33 @@ class RegionCode
         }
         return $parent_province_code;
     }
+
+    /**
+     * 根据区域编码获取省市区信息
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $area_code
+     * @return array
+     * @lasttime: 2022/11/29 3:37 PM
+     */
+    public static function parseAreaCode($area_code): array
+    {
+        $province_code = self::getProvinceCodeByCityCode($area_code);
+        if (empty($province_code)) return Util::error(ErrCode::PARAMETER_ERROR, '地区编码错误');
+        $city_code = self::getCityCodeByAreaCode($area_code);
+        $province  = self::$data['provinces'][$province_code] ?? '';
+        $city      = self::$data['citys'][$province_code][$city_code] ?? '';
+        $area      = self::$data['areas'][$city_code][$area_code] ?? '';
+        return [
+            'province_code' => $province_code,
+            'province'      => $province,
+            'city_code'     => $city_code,
+            'city'          => $city,
+            'area_code'     => $area_code,
+            'area'          => $area,
+        ];
+    }
 }
 
