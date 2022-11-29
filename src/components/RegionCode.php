@@ -4879,9 +4879,9 @@ class RegionCode
      */
     public static function parseAreaCode($area_code): array
     {
-        $province_code = self::getProvinceCodeByCityCode($area_code);
-        if (empty($province_code)) return Util::error(ErrCode::PARAMETER_ERROR, '地区编码错误');
         $city_code = self::getCityCodeByAreaCode($area_code);
+        if (empty($city_code)) return Util::error(ErrCode::PARAMETER_ERROR, '地区编码错误');
+        $province_code = self::getProvinceCodeByCityCode($area_code);
         $province  = self::$data['provinces'][$province_code] ?? '';
         $city      = self::$data['citys'][$province_code][$city_code] ?? '';
         $area      = self::$data['areas'][$city_code][$area_code] ?? '';
