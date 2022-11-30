@@ -110,7 +110,7 @@ class Communication
     }
 
     /**
-     * 发起请求
+     * 发起http/https请求
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -149,13 +149,15 @@ class Communication
 
         if ('https' == $urlSet['scheme']) {
             $fp = self::socketOpen('ssl://' . $urlSet['host'], $urlSet['port'], $errno, $error);
-        } else {
+        } elseif ('http' == $urlSet['scheme']) {
             $fp = self::socketOpen($urlSet['host'], $urlSet['port'], $errno, $error);
+        } else {
+            return Util::error(ErrCode::PARAMETER_ERROR, '只能使用 http / https 协议');
         }
         stream_set_blocking($fp, $timeout > 0);
         stream_set_timeout($fp, ini_get('default_socket_timeout'));
         if (!$fp) {
-            return Util::error(1, $error);
+            return Util::error(ErrCode::UNKNOWN, $error);
         } else {
             fwrite($fp, $body);
             $content = '';
@@ -220,6 +222,43 @@ class Communication
         curl_multi_close($curl_multi);
 
         return $response;
+    }
+
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $url
+     * @param string|array $message
+     * @param int $timeout
+     * @return array|string
+     * @lasttime: 2022/11/30 11:57 AM
+     */
+    public static function tcpRequest($url, $message = '', int $timeout = 60)
+    {
+        $urlSet = self::parseUrl($url, true);
+        if (!empty($urlSet['ip']))
+            $urlSet['host'] = $urlSet['ip'];
+
+        $fp = self::socketOpen($urlSet['host'], $urlSet['port'], $errno, $error);
+        stream_set_blocking($fp, $timeout > 0);
+        stream_set_timeout($fp, ini_get('default_socket_timeout'));
+        if (!$fp) {
+            return Util::error($errno, $error);
+        } else {
+            $message = is_string($message) ? $message : json_encode($message);
+            fwrite($fp, $message);
+            $content = '';
+            if ($timeout > 0) {
+                while (!feof($fp)) {
+                    $content .= fgets($fp, 128);
+                }
+            }
+            fclose($fp);
+
+            return $content;
+        }
     }
 
     /**
@@ -361,11 +400,11 @@ class Communication
     public static function parseUrl($url, bool $set_default_port = false)
     {
         if (empty($url)) {
-            return Util::error(1, 'url为空');
+            return Util::error(ErrCode::PARAMETER_ERROR, 'url为空');
         }
         $urlSet = parse_url($url);
-        if (!empty($urlSet['scheme']) && !in_array($urlSet['scheme'], array('http', 'https'))) {
-            return Util::error(1, '只能使用 http 及 https 协议');
+        if (!empty($urlSet['scheme']) && !in_array($urlSet['scheme'], ['http', 'https', 'tcp'])) {
+            return Util::error(ErrCode::PARAMETER_ERROR, '只能使用 http / https / tcp 协议');
         }
         if (empty($urlSet['path'])) {
             $urlSet['path'] = '/';
@@ -374,7 +413,7 @@ class Communication
             $urlSet['query'] = "?{$urlSet['query']}";
         }
         if (Util::strExists($url, 'https://') && !extension_loaded('openssl')) {
-            return Util::error(1, '请开启您PHP环境的openssl', '');
+            return Util::error(ErrCode::NO_CONFIG, '请开启您PHP环境的openssl', '');
         }
         if (empty($urlSet['host'])) {
             $current_url      = parse_url($GLOBALS['_B']['siteRoot']);
@@ -406,7 +445,7 @@ class Communication
     public static function buildCurl($url, $post, $extra, $timeout)
     {
         if (!function_exists('curl_init') || !function_exists('curl_exec')) {
-            return Util::error(1, 'curl扩展未开启');
+            return Util::error(ErrCode::NO_CONFIG, 'curl扩展未开启');
         }
 
         $urlSet = self::parseUrl($url);
