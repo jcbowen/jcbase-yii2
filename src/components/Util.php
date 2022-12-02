@@ -655,7 +655,7 @@ class Util
     public function resultError($error = [])
     {
         if (empty($error))
-            return (new self)->result(ErrCode::UNKNOWN, '发生了未知错误，返回结果为空');
+            return (new self)->result(ErrCode::UNKNOWN, '数据不存在或已被删除');
 
         if ($error instanceof Response)
             return $error;
