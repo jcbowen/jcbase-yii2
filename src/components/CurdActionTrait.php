@@ -444,22 +444,18 @@ trait CurdActionTrait
         /** @var ActiveQuery $row */
         $row = call_user_func($this->modelClass . '::find');
         $row = $row->select($fields);
-        $row = $this->getDetailRow($row);
-        $row = $row->andWhere($where);
+        $row = $row->where($where);
 
-        $detail = $row->asArray()->one();
+        $this->getDetailRow($row);
 
-        if (!empty($detail)) {
-            if (!$asArray)
-                (new FieldFilter)->set([
-                    'modelClass' => $this->modelClass,
-                ])->de($detail);
+        if ($asArray) $row = $row->asArray();
+        $detail = $row->one();
 
-            $detail = $this->detail($detail);
-            return (new Util)->result(ErrCode::SUCCESS, 'ok', $detail);
-        }
+        if (empty($detail)) return (new Util)->result(ErrCode::NOT_EXIST, '查询数据不存在或已被删除');
 
-        return (new Util)->result(ErrCode::NOT_EXIST, '查询数据不存在或已被删除');
+        $detail = $this->detail($detail);
+
+        return $this->detailReturn($detail);
     }
 
     /**
@@ -481,10 +477,10 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param ActiveQuery $row
-     * @return ActiveQuery
+     * @return ActiveQuery|void
      * @lasttime: 2022/3/21 11:11 下午
      */
-    public function getDetailRow(ActiveQuery $row): ActiveQuery
+    public function getDetailRow(ActiveQuery &$row): ActiveQuery
     {
         return $row;
     }
@@ -527,13 +523,35 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param $detail
+     * @param array|ActiveRecord $detail
      * @return mixed
      * @lasttime: 2022/3/13 3:30 下午
      */
     public function detail($detail)
     {
+        if (!$this->detailAsArray()) {
+            if (method_exists($detail, 'toArray')) $detail = $detail->toArray();
+            /*(new FieldFilter)->set([
+                'modelClass' => $this->modelClass,
+            ])->de($detail);*/
+        }
+
         return $detail;
+    }
+
+    /**
+     * 查询数据详情的返回数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $detail
+     * @return string|Response
+     * @lasttime: 2022/12/15 14:03
+     */
+    public function detailReturn($detail)
+    {
+        return (new Util)->result(ErrCode::SUCCESS, 'ok', $detail);
     }
 
     //---------- 新增数据 ----------/
