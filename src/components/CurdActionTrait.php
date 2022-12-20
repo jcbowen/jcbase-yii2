@@ -103,7 +103,9 @@ trait CurdActionTrait
         $row = $row->limit($pageSize)->offset(($page - 1) * $pageSize);
         if (!empty($order)) $row = $row->orderBy($order);
 
-        $list  = $row->asArray()->all();
+        if ($this->listAsArray())
+            $row = $row->asArray();
+        $list  = $row->all();
         $total = $row->count();
 
         if ($this->runListEach() && !empty($list))
@@ -179,6 +181,20 @@ trait CurdActionTrait
     }
 
     /**
+     * 查询数据列表时是否调用asArray()
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return bool
+     * @lasttime: 2022/12/20 1:45 PM
+     */
+    public function listAsArray(): bool
+    {
+        return false;
+    }
+
+    /**
      * 是否遍历数据
      *
      * @author Bowen
@@ -188,6 +204,7 @@ trait CurdActionTrait
      */
     public function runListEach(): bool
     {
+        if (!$this->listAsArray()) return true;
         return false;
     }
 
@@ -202,6 +219,7 @@ trait CurdActionTrait
      */
     public function listEach($item)
     {
+        if (!$this->listAsArray() && method_exists($item, 'toArray')) $item = $item->toArray();
         return $item;
     }
 
@@ -269,7 +287,9 @@ trait CurdActionTrait
         $row->limit($pageSize);
         if (!empty($order)) $row->orderBy($order);
 
-        $list = $row->asArray()->all();
+        if ($this->loaderAsArray())
+            $row = $row->asArray();
+        $list = $row->all();
         // $total = $row->count();
 
         $minTime = '';
@@ -369,6 +389,20 @@ trait CurdActionTrait
     }
 
     /**
+     * 查询无分页列表时是否调用asArray()
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return bool
+     * @lasttime: 2022/12/20 1:45 PM
+     */
+    public function loaderAsArray(): bool
+    {
+        return false;
+    }
+
+    /**
      * 是否遍历无分页列表查询结果数据
      *
      * @author Bowen
@@ -378,7 +412,8 @@ trait CurdActionTrait
      */
     public function runLoaderEach(): bool
     {
-        return true;
+        if (!$this->loaderAsArray()) return true;
+        return false;
     }
 
     /**
@@ -394,6 +429,8 @@ trait CurdActionTrait
      */
     public function loaderEach($item, string &$minTime, string &$maxTime)
     {
+        if (!$this->loaderAsArray() && method_exists($item, 'toArray')) $item = $item->toArray();
+
         if (empty($maxTime) || $item['created_at'] > $maxTime) $maxTime = $item['created_at'];
         if (empty($minTime) || $item['created_at'] < $minTime) $minTime = $item['created_at'];
 
