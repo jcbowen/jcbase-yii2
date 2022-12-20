@@ -219,7 +219,14 @@ trait CurdActionTrait
      */
     public function listEach($item)
     {
-        if (!$this->listAsArray() && method_exists($item, 'toArray')) $item = $item->toArray();
+        if (!$this->listAsArray()) {
+            if (method_exists($item, 'toArray')) $item = $item->toArray();
+        } else {
+            (new FieldFilter)->set([
+                'modelClass' => $this->modelClass,
+            ])->de($item);
+        }
+
         return $item;
     }
 
@@ -429,7 +436,13 @@ trait CurdActionTrait
      */
     public function loaderEach($item, string &$minTime, string &$maxTime)
     {
-        if (!$this->loaderAsArray() && method_exists($item, 'toArray')) $item = $item->toArray();
+        if (!$this->loaderAsArray()) {
+            if (method_exists($item, 'toArray')) $item = $item->toArray();
+        } else {
+            (new FieldFilter)->set([
+                'modelClass' => $this->modelClass,
+            ])->de($item);
+        }
 
         if (empty($maxTime) || $item['created_at'] > $maxTime) $maxTime = $item['created_at'];
         if (empty($minTime) || $item['created_at'] < $minTime) $minTime = $item['created_at'];
@@ -568,9 +581,10 @@ trait CurdActionTrait
     {
         if (!$this->detailAsArray()) {
             if (method_exists($detail, 'toArray')) $detail = $detail->toArray();
-            /*(new FieldFilter)->set([
+        } else {
+            (new FieldFilter)->set([
                 'modelClass' => $this->modelClass,
-            ])->de($detail);*/
+            ])->de($detail);
         }
 
         return $detail;
