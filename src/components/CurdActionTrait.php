@@ -108,7 +108,7 @@ trait CurdActionTrait
         $list  = $row->all();
         $total = $row->count();
 
-        if ($this->runListEach() && !empty($list))
+        if (!empty($list))
             foreach ($list as &$item) $item = $this->listEach($item);
 
         return $this->listReturn($list, $total, $page, $pageSize);
@@ -191,20 +191,6 @@ trait CurdActionTrait
      */
     public function listAsArray(): bool
     {
-        return false;
-    }
-
-    /**
-     * 是否遍历数据
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @return boolean
-     * @lasttime: 2022/3/13 10:50 上午
-     */
-    public function runListEach(): bool
-    {
-        if (!$this->listAsArray()) return true;
         return false;
     }
 
@@ -301,7 +287,7 @@ trait CurdActionTrait
 
         $minTime = '';
         $maxTime = '';
-        if ($this->runLoaderEach() && !empty($list))
+        if (!empty($list))
             foreach ($list as &$item) $item = $this->loaderEach($item, $minTime, $maxTime);
 
         return $this->loaderReturn($list, $pageSize, $minTime, $maxTime);
@@ -406,20 +392,6 @@ trait CurdActionTrait
      */
     public function loaderAsArray(): bool
     {
-        return false;
-    }
-
-    /**
-     * 是否遍历无分页列表查询结果数据
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @return boolean
-     * @lasttime: 2022/3/13 10:50 上午
-     */
-    public function runLoaderEach(): bool
-    {
-        if (!$this->loaderAsArray()) return true;
         return false;
     }
 
