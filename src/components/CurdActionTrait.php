@@ -855,9 +855,29 @@ trait CurdActionTrait
         if (Util::isError($res))
             return (new Util)->resultError($res);
 
+        $tr = Yii::$app->db->beginTransaction();
+
         $result = $this->toSave($model, [$field => $value]);
-        if (Util::isError($result))
+        if (Util::isError($result)) {
+            $tr->rollBack();
             return (new Util)->resultError($result);
+        }
+
+        $result_after = $this->setValueAfter($pkId, $field, $value);
+        if (Util::isError($result_after)) {
+            $tr->rollBack();
+            return (new Util)->resultError($result_after);
+        }
+
+        try {
+            $tr->commit();
+        } catch (Exception $e) {
+            $tr->rollBack();
+            return (new Util)->result(ErrCode::DATABASE_TRANSACTION_COMMIT_ERROR, '系统繁忙，请稍后再试', [
+                'errCode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
+            ]);
+        }
 
         return (new Util)->result(ErrCode::SUCCESS, '设置成功', ['value' => $value]);
     }
@@ -907,6 +927,22 @@ trait CurdActionTrait
     public function getSetValueRecord(ActiveRecord &$record)
     {
         return $record;
+    }
+
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param int $pkId
+     * @param string $field
+     * @param string|null $value
+     * @return bool|array
+     * @lasttime: 2022/12/26 3:20 PM
+     */
+    public function setValueAfter(int $pkId, string $field = '', ?string $value = '')
+    {
+        return true;
     }
 
     //---------- 变更通用 ----------/
