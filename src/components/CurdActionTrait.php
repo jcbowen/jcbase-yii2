@@ -985,7 +985,6 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
-     * @throws Exception
      * @lasttime: 2022/3/13 10:53 上午
      */
     public function actionDelete()
@@ -1025,24 +1024,34 @@ trait CurdActionTrait
         if (Util::isError($result_before))
             return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
 
-        $transaction = Yii::$app->db->beginTransaction();
+        $tr = Yii::$app->db->beginTransaction();
 
         // 获取删除操作更新的属性值
         $condition = $this->getDeleteCondition($dels);
 
         if (!call_user_func("$this->modelClass::updateAll", $condition, $where)) {
-            $transaction->rollBack();
+            $tr->rollBack();
             return (new Util)->result(ErrCode::STORAGE_ERROR, '删除失败，未知错误');
         }
 
         // 删除后
         $result_after = $this->deleteAfter($delIds);
         if (Util::isError($result_after)) {
-            $transaction->rollBack();
+            $tr->rollBack();
             return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
         }
 
-        $transaction->commit();
+        try {
+            $tr->commit();
+            call_user_func($this->modelClass . '::clearCache');
+        } catch (Exception $e) {
+            $tr->rollBack();
+            return (new Util)->result(ErrCode::DATABASE_TRANSACTION_COMMIT_ERROR, '事务提交失败，请重试', [
+                'errCode' => $e->getCode(),
+                'errMsg'  => $e->getMessage(),
+            ]);
+        }
+
         return (new Util)->result(ErrCode::SUCCESS, '删除成功', ['delIds' => $delIds]);
     }
 
