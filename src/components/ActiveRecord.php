@@ -17,7 +17,7 @@ use yii\db\ActiveQuery;
  */
 class ActiveRecord extends \yii\db\ActiveRecord
 {
-    /** @var int|bool 缓存时间，不开启缓存应该为false|-1 */
+    /** @var int|bool 缓存时间(单位秒)，不开启缓存为false */
     public static $cacheTime = false;
 
     /**
@@ -33,7 +33,7 @@ class ActiveRecord extends \yii\db\ActiveRecord
         if (static::$cacheTime !== false) {
             $this->on('*', static function ($e) {
                 if (in_array($e->name, ['afterInsert', 'afterUpdate', 'afterDelete'])) {
-                    ModelCacheDependency::clear(static::class);
+                    self::clearCache();
                 }
             });
         }
