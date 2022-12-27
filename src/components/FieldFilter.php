@@ -104,6 +104,9 @@ class FieldFilter
             case 'rich_text2':
                 $value = Content::toSave($value);
                 break;
+            case 'datetime':
+                $value = !empty($value) ? $value : NO_TIME;
+                break;
         }
         return (string)$value;
     }
@@ -158,6 +161,9 @@ class FieldFilter
                         break;
                     case 'rich_text2':
                         $field = !empty($field) ? Content::toShow($field, false) : '';
+                        break;
+                    case 'datetime':
+                        $field = $field != NO_TIME ? $field : '';
                         break;
                 }
             }
