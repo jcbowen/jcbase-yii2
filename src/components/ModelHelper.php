@@ -3,6 +3,7 @@
 namespace Jcbowen\JcbaseYii2\components;
 
 use InvalidArgumentException;
+use \yii\db\ActiveRecord;
 
 trait ModelHelper
 {
@@ -18,33 +19,27 @@ trait ModelHelper
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param $model
+     * @param ActiveRecord $model
      * @param array $data
      * @param string $formName
-     * @return array|bool|mixed
-     * @lasttime: 2022/8/28 22:58
+     * @return array|bool
+     * @lasttime: 2022/12/28 10:29 AM
      */
-    protected function toSave($model, array $data = [], string $formName = '')
+    protected function toSave(ActiveRecord $model, array $data = [], string $formName = '')
     {
         $this->model        = $model;
         $this->_FieldFilter = new FieldFilter($model);
         if (!empty($data)) {
             $data = $this->filterData($data);
-            if ($model->load($data, $formName) && $model->save()) {
-                return true;
-            }
-        } else {
-            if ($model->save()) {
-                return $model;
-            }
-        }
+            if ($model->load($data, $formName) && $model->save()) return true;
+        } else
+            if ($model->save()) return true;
 
         $errors = $model->errors;
         if (!empty($errors)) {
             $errmsg = '';
-            foreach ($errors as $item) {
-                $errmsg .= "【" . implode(',', $item) . "】";
-            }
+            foreach ($errors as $item) $errmsg .= "【" . implode(',', $item) . "】";
+
             return Util::error(ErrCode::STORAGE_ERROR, $errmsg, $model->errors);
         }
 
@@ -75,9 +70,8 @@ trait ModelHelper
             if (empty($data)) return [];
         }
 
-        if (!is_array($data)) {
+        if (!is_array($data))
             throw new InvalidArgumentException('更新参数必须是数组');
-        }
 
         // 把不存在的字段放入扩展字段extend中以json格式存储
         if ($this->filedExist('_extend')) {
@@ -100,9 +94,8 @@ trait ModelHelper
         }
 
         // 转换字段值类型
-        foreach ($data as $field => $value) {
+        foreach ($data as $field => $value)
             $data[$field] = $this->_FieldFilter->en($field, $value);
-        }
 
         return $data;
     }
