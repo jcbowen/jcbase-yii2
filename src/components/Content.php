@@ -111,17 +111,18 @@ class Content
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param string $html
+     * @param bool $unique 图片是否去重
      * @return array
      * @lasttime 2022/10/22 16:16
      */
-    public static function separationImg(string $html = ''): array
+    public static function separationImg(string $html = '', bool $unique = false): array
     {
         self::html_entity_decode($html);
 
         /** 提取图片 */
         $pattern = "/<[img|IMG].*?src=[\'|\"](.*?(?:[\.gif|\.jpg|\.png|\.jpeg|\.bmp]))[\'|\"].*?[\/]?>/";
         preg_match_all($pattern, $html, $match);
-        $images = array_unique($match[1]);
+        $images = $unique ? array_unique($match[1]) : $match[1];
 
         /** 去除内容中的图片 */
         $content = preg_replace("/(<img.*?>)/is", '', $html);
