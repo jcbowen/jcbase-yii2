@@ -5,6 +5,7 @@ namespace Jcbowen\JcbaseYii2\components;
 use Yii;
 use yii\db\ActiveQuery;
 use yii\db\Exception;
+use yii\db\ActiveRecord;
 use yii\web\Response;
 use yii\helpers\ArrayHelper;
 use RuntimeException;
@@ -832,8 +833,10 @@ trait CurdActionTrait
         $type  = trim($data['type']); // 字段值的类型
         $value = $data['value']; // 字段值
 
-        if ($type === 'number' || $type === 'int')
+        if ($type === 'int')
             $value = intval($value);
+        elseif ($type === 'float')
+            $value = floatval($value);
         elseif ($type === 'money')
             $value = Util::round_money($value);
         elseif (is_array($value)) {
@@ -857,7 +860,11 @@ trait CurdActionTrait
 
         $tr = Yii::$app->db->beginTransaction();
 
-        $result = $this->toSave($model, [$field => $value]);
+        $changeData = $this->getSetValueChangeData($field, $value, $model);
+        if (Util::isError($changeData))
+            return (new Util)->resultError($changeData);
+
+        $result = $this->toSave($model, $changeData);
         if (Util::isError($result)) {
             $tr->rollBack();
             return (new Util)->resultError($result);
@@ -927,6 +934,23 @@ trait CurdActionTrait
     public function getSetValueRecord(ActiveRecord &$record)
     {
         return $record;
+    }
+
+    /**
+     * 获取setValue修改的数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $field
+     * @param mixed $value
+     * @param ActiveRecord $model
+     * @return array
+     * @lasttime: 2022/12/28 4:48 PM
+     */
+    public function getSetValueChangeData(string $field, $value, ActiveRecord $model): array
+    {
+        return [$field => $value];
     }
 
     /**
