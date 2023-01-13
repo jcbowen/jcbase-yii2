@@ -24,6 +24,15 @@ if (Util::isSecureConnection()) {
     $_B['sitescheme'] = 'https://';
 }
 
+// 初始化$_GPC
+$res  = new yii\web\Request();
+$_GPC = $res->get();
+$_GPC = array_merge($_GPC, $res->post());
+if (strpos($res->getContentType(), 'application/json') !== false) {
+    $_GPC = array_merge($_GPC, (array)json_decode($res->getRawBody(), true));
+}
+unset($res);
+
 header('Content-Type: text/html; charset=UTF-8');
 
 /**
