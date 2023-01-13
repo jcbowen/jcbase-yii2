@@ -35,7 +35,7 @@ class WebController extends Controller
 
     public function init()
     {
-        global $_B;
+        global $_B, $_GPC;
 
         parent::init();
 
@@ -45,17 +45,26 @@ class WebController extends Controller
         define('TODAY', date('Y-m-d', TIMESTAMP));
 
         //----- 初始化附件域名配置 -----/
-        if (empty(Yii::$app->params['domain']['attachment_local'])) {
+        if (empty(Yii::$app->params['domain']['attachment_local']))
             Yii::$app->params['domain']['attachment_local'] = Util::getSiteRoot();
-        }
-        if (empty(Yii::$app->params['domain']['attachment'])) {
+
+        if (empty(Yii::$app->params['domain']['attachment']))
             Yii::$app->params['domain']['attachment'] = Yii::$app->params['domain']['attachment_local'];
-        }
 
         //----- 默认参数，及将参数配置写到全局变量中 -----/
         $_B['page']     = ['title' => 'jcsoft'];
         $_B['params']   = ArrayHelper::merge((array)$_B['params'], Yii::$app->params);
         $_B['JcClient'] = Yii::$app->request->headers->get('JcClient', 1);
+
+        // ----- 全局变量$_GPC赋值 -----/
+        $_GPC     = $_GPC ?? [];
+        $res      = new yii\web\Request();
+        $getData  = (array)$res->get();
+        $postData = (array)$res->post();
+        if (!empty($getData)) $_GPC = array_merge($_GPC, $getData);
+        if (!empty($postData)) $_GPC = array_merge($_GPC, $postData);
+        if (strpos($res->getContentType(), 'application/json') !== false)
+            $_GPC = array_merge($_GPC, (array)json_decode($res->getRawBody(), true));
     }
 
     /**
@@ -86,9 +95,8 @@ class WebController extends Controller
             });
         }
 
-        if (!empty($this->denyAction) && in_array($action->id, $this->denyAction)) {
+        if (!empty($this->denyAction) && in_array($action->id, $this->denyAction))
             throw new NotFoundHttpException(Yii::t('yii', 'Page not found.'));
-        }
 
         return true;
     }
@@ -106,7 +114,7 @@ class WebController extends Controller
     }
 
     /**
-     * 输出json结构数据
+     * 输出json结构数据到Response中
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -124,11 +132,34 @@ class WebController extends Controller
         return (new Util)->result($errCode, $errmsg, $data, $params, $returnType);
     }
 
-    public function result_r($errcode = '0', $errmsg = '', $data = [], $params = [])
+    /**
+     * 输出json字符串
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string|integer $errCode
+     * @param string $errmsg
+     * @param mixed $data
+     * @param array $params
+     * @return string|Response
+     * @lasttime: 2023/1/13 1:33 PM
+     */
+    public function result_r($errCode = '0', string $errmsg = '', $data = [], array $params = [])
     {
-        return $this->result($errcode, $errmsg, $data, $params, 'return');
+        return $this->result($errCode, $errmsg, $data, $params, 'return');
     }
 
+    /**
+     * 将error数组转换Response输出
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param mixed $error
+     * @return string|Response
+     * @lasttime: 2023/1/13 1:35 PM
+     */
     public function resultError($error = [])
     {
         return (new Util)->resultError($error);

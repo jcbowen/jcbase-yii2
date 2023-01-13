@@ -24,14 +24,6 @@ if (Util::isSecureConnection()) {
     $_B['sitescheme'] = 'https://';
 }
 
-$res  = new yii\web\Request();
-$_GPC = $res->get();
-$_GPC = array_merge($_GPC, $res->post());
-if (strpos($res->getContentType(), 'application/json') !== false) {
-    $_GPC = array_merge($_GPC, (array)json_decode($res->getRawBody(), true));
-}
-unset($apps, $app, $res);
-
 header('Content-Type: text/html; charset=UTF-8');
 
 /**
@@ -47,7 +39,7 @@ header('Content-Type: text/html; charset=UTF-8');
 if (!function_exists('allowCrossDomain')) {
     function allowCrossDomain(string $domain): bool
     {
-        header("Access-Control-Allow-Origin: {$domain}");
+        header("Access-Control-Allow-Origin: $domain");
         header('Access-Control-Allow-Methods: *');
 //        header('Access-Control-Allow-Methods: GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH');
 //        header('Access-Control-Allow-Headers:*');
