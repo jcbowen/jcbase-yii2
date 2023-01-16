@@ -179,8 +179,8 @@ class Template
         $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff\[\]\'\"\$]*)}/', '<?php echo $1; ?>', $str);
         $str = preg_replace('/{media\s+(\S+)}/', '<?php echo tomedia($1); ?>', $str);
         $str = preg_replace_callback('/<\?php([^?]+)?>/', "\Jcbowen\JcbaseYii2\components\Template::templateAddQuote", $str);
-        $str = preg_replace('/<jc_tpl_php>(.+?)<\/jc_tpl_php>/', '<?php include $this->template($1, TEMPLATE_INCLUDEPATH); ?>', $str);
-        $str = preg_replace('/{template\s+(.+?)}/', '<?php include $this->template($1, TEMPLATE_INCLUDEPATH); ?>', $str);
+        $str = preg_replace('/<jc_tpl_php>(.+?)<\/jc_tpl_php>/', '<?php include (new \Jcbowen\JcbaseYii2\components\Template)->template($1, TEMPLATE_INCLUDEPATH); ?>', $str);
+        $str = preg_replace('/{template\s+(.+?)}/', '<?php include (new \Jcbowen\JcbaseYii2\components\Template)->template($1, TEMPLATE_INCLUDEPATH); ?>', $str);
         $str = preg_replace('/{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)}/', '<?php echo $1; ?>', $str);
         $str = str_replace('{##', '{', $str);
         return /*"<?php defined('IN_JC') or exit('Access Denied');?>" .*/ str_replace('##}', '}', $str);
