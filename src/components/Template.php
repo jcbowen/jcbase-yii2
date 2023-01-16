@@ -84,7 +84,10 @@ class Template
         }
         switch ($flag) {
             case TEMPLATE_DISPLAY:
-                break;
+            default:
+                extract($GLOBALS, EXTR_SKIP);
+                include $compile;
+                return $compile;
             case TEMPLATE_FETCH:
                 extract($GLOBALS, EXTR_SKIP);
                 ob_flush();
@@ -96,10 +99,6 @@ class Template
                 return $contents;
             case TEMPLATE_INCLUDEPATH:
                 return $compile;
-            default:
-                extract($GLOBALS, EXTR_SKIP);
-                include $compile;
-                break;
         }
     }
 
