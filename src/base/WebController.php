@@ -101,12 +101,18 @@ class WebController extends Controller
         return true;
     }
 
+    /**
+     * @Deprecated 废弃中，等待完善
+     */
     public function vTpl(?string $filename = 'index'): Response
     {
         (new Template)->vTpl($filename);
         return (new Util)->resultHtml();
     }
 
+    /**
+     * @Deprecated 废弃中，等待完善
+     */
     public function template(?string $filename = null): Response
     {
         (new Template)->template($filename);
