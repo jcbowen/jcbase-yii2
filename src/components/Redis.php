@@ -198,4 +198,18 @@ class Redis
         $redis = $this->getConnection();
         return $redis->expire($key, $expire);
     }
+
+    public function lpush($key, ...$values)
+    {
+        $redis = $this->getConnection();
+        if (Util::isError($redis)) return $redis;
+        return $redis->lpush($key, ...$values);
+    }
+
+    public function rpop($key)
+    {
+        $redis = $this->getConnection();
+        if (Util::isError($redis)) return $redis;
+        return $redis->rpop($key);
+    }
 }
