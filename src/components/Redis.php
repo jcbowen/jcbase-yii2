@@ -199,6 +199,17 @@ class Redis
         return $redis->expire($key, $expire);
     }
 
+    /**
+     * redis->lpush
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $key
+     * @param ...$values
+     * @return false|mixed|Yii\redis\Connection|null
+     * @lasttime: 2023/1/17 4:39 PM
+     */
     public function lpush($key, ...$values)
     {
         $redis = $this->getConnection();
@@ -210,10 +221,42 @@ class Redis
         return $redis->lpush($key, ...$values);
     }
 
+    /**
+     * redis->rpop
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $key
+     * @return false|mixed|Yii\redis\Connection|null
+     * @lasttime: 2023/1/17 4:40 PM
+     */
     public function rpop($key)
     {
         $redis = $this->getConnection();
         if (Util::isError($redis)) return $redis;
-        return $redis->rpop($key);
+        $value = $redis->rpop($key);
+        return Util::unserializer($value);
+    }
+
+    /**
+     * redis->setnx
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $key
+     * @param $value
+     * @return false|mixed|Yii\redis\Connection|null
+     * @lasttime: 2023/1/17 4:40 PM
+     */
+    public function setnx($key, $value)
+    {
+        $redis = $this->getConnection();
+        if (Util::isError($redis)) return $redis;
+
+        if (is_array($value)) $value = serialize($value);
+
+        return $redis->setnx($key, $value);
     }
 }
