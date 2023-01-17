@@ -52,7 +52,7 @@ if (!function_exists('allowCrossDomain')) {
         header('Access-Control-Allow-Methods: *');
 //        header('Access-Control-Allow-Methods: GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH');
 //        header('Access-Control-Allow-Headers:*');
-        header("Access-Control-Allow-Headers:Authorization, Accept, Client-Security-Token, Accept-Encoding, Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, X-Requested-By, If-Modified-Since, X-File-Name, X-File-Type, Cache-Control, Origin, online_token, Referer, User-Agent, JcClient");
+        header("Access-Control-Allow-Headers:Authorization, Accept, Client-Security-Token, Accept-Encoding, Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, X-Requested-By, If-Modified-Since, X-File-Name, X-File-Type, Cache-Control, Origin, online_token, Referer, User-Agent, JcClient, EnvVersion, RELEASE");
         header('Access-Control-Allow-Credentials:true');
         header('Access-Control-Request-Method:OPTIONS,GET,POST');
         header('Access-Control-Expose-Headers: Authorization');
