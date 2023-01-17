@@ -203,6 +203,10 @@ class Redis
     {
         $redis = $this->getConnection();
         if (Util::isError($redis)) return $redis;
+
+        foreach ($values as &$value)
+            if (is_array($value)) $value = serialize($value);
+
         return $redis->lpush($key, ...$values);
     }
 
