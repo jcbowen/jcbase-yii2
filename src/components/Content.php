@@ -7,12 +7,11 @@ namespace Jcbowen\JcbaseYii2\components;
  *
  * @author Bowen
  * @email bowen@jiuchet.com
- * @lasttime: 2022/9/19 5:15 PM
+ * @lasttime: 2023/1/17 9:45 AM
  * @package Jcbowen\JcbaseYii2\components
  */
 class Content
 {
-
     /**
      * 对html内容进行转换便于存库
      * 会将其中的图片链接全部去除域名，只保留路径
@@ -128,6 +127,99 @@ class Content
         $content = preg_replace("/(<img.*?>)/is", '', $html);
 
         return ['images' => $images, 'content' => $content, 'html' => $html];
+    }
+
+    /**
+     * 替换文本中的换行符及空格为p标签或br标签
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $content 文本内容
+     * @param string $tag 转换为的标签名，只能为p或br
+     * @return string|null
+     * @lasttime: 2023/1/17 10:08 AM
+     */
+    public static function replaceRN(string $content, string $tag = 'p'): ?string
+    {
+        $pattern = [
+            '/ /', // 半角下空格
+            '/　/', // 全角下空格
+            '/\r\n/', // window 换行符
+            '/\n/', // Linux && Unix 换行符
+        ];
+        if ($tag == 'br') {
+            $replace = ['&nbsp;', '&nbsp;', '<br/>', '<br/>'];
+            $content = preg_replace($pattern, $replace, $content);
+        } else { // p标签
+            $replace = ['&nbsp;', '&nbsp;', '</p><p>', '</p><p>'];
+            $content = preg_replace($pattern, $replace, $content);
+            $content = '<p>' . $content . '</p>';
+        }
+        return $content;
+    }
+
+    /**
+     * 移除换行、空格符
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $content
+     * @param bool $is_en 是否使用转义符&nbsp;
+     * @param string $type 移除类型，all为全部移除，space为只移除空格，rn为只移除换行符
+     * @return string|null
+     * @lasttime: 2023/1/17 10:04 AM
+     */
+    public static function removeRN(string $content, bool $is_en = false, string $type = 'all'): ?string
+    {
+        $pattern = [
+            '/ /', // 半角下空格
+            '/　/', // 全角下空格
+            '/&nbsp;/', // html里的空格占位符
+            '/\r\n/', // window 换行符
+            '/\n/', // Linux && Unix 换行符
+        ];
+        if ($is_en)
+            $replace = ['&nbsp;', '&nbsp;', '&nbsp;', '&nbsp;', '&nbsp;'];
+        else
+            $replace = ["", "", "", "", ""];
+
+        switch ($type) {
+            case 'rn': // 只移除换行符
+                $pattern = ['/\r\n/', '/\n/',];
+                if ($is_en)
+                    $replace = ['&nbsp;', '&nbsp;'];
+                else
+                    $replace = ["", ""];
+                break;
+            case 'space': // 只移除空格
+                $pattern = ['/ /', '/　/', '/&nbsp;/',];
+                if ($is_en)
+                    $replace = ['&nbsp;', '&nbsp;', '&nbsp;'];
+                else
+                    $replace = ["", "", ""];
+                break;
+        }
+
+        return preg_replace($pattern, $replace, $content);
+    }
+
+    /**
+     * 获取html中的纯文本(没有换行和空格)
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $html
+     * @return string
+     * @lasttime: 2023/1/17 9:47 AM
+     */
+    public static function html2text(string $html): string
+    {
+        self::html_entity_decode($html);
+        $html = strip_tags($html);
+        return self::removeRN($html);
     }
 }
 
