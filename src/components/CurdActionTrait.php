@@ -192,7 +192,7 @@ trait CurdActionTrait
      */
     public function listAsArray(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -393,7 +393,7 @@ trait CurdActionTrait
      */
     public function loaderAsArray(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -538,7 +538,7 @@ trait CurdActionTrait
      */
     public function detailAsArray(): bool
     {
-        return false;
+        return true;
     }
 
     /**
