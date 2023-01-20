@@ -201,6 +201,15 @@ class FieldFilter
         return $this->attributes;
     }
 
+    /**
+     * 获取字段特殊结构配置
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return array|mixed
+     * @lasttime: 2023/1/20 11:15
+     */
     private function getConfig()
     {
         if (empty(self::$config)) {
