@@ -102,7 +102,7 @@ trait CurdActionTrait
         $row = $row->andFilterWhere($filterWhere);
 
         $row = $row->limit($pageSize)->offset(($page - 1) * $pageSize);
-        if (!empty($order)) $row = $row->orderBy($order);
+        if (!empty($order)) $row = $row->addOrderBy($order);
 
         if ($this->listAsArray())
             $row = $row->asArray();
@@ -279,7 +279,7 @@ trait CurdActionTrait
         $row->andFilterWhere($filterWhere);
 
         $row->limit($pageSize);
-        if (!empty($order)) $row->orderBy($order);
+        if (!empty($order)) $row->addOrderBy($order);
 
         if ($this->loaderAsArray())
             $row = $row->asArray();
