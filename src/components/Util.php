@@ -4,6 +4,7 @@ namespace Jcbowen\JcbaseYii2\components;
 
 use Yii;
 use yii\base\ExitException;
+use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 use Yii\redis\Connection;
 use yii\web\Response;
@@ -18,37 +19,114 @@ use yii\web\Response;
  */
 class Util
 {
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return string|null
+     * @lasttime: 2023/2/1 3:38 PM
+     */
     public static function getHostName(): ?string
     {
         return Yii::$app->request->getHostName();
     }
 
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return string|null
+     * @lasttime: 2023/2/1 3:38 PM
+     */
     public static function getHostInfo(): ?string
     {
         return Yii::$app->request->getHostInfo();
     }
 
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return string|null
+     * @lasttime: 2023/2/1 3:38 PM
+     */
     public static function getSiteRoot(): ?string
     {
         global $_B;
-        $_B['siteRoot'] = $_B['siteRoot'] ?: self::getHostInfo();
-        if (substr($_B['siteRoot'], -1) != '/') $_B['siteRoot'] .= '/';
+        if (!empty($_B['siteRoot'])) return $_B['siteRoot'];
+
+        $_B['siteRoot'] = self::getHostInfo();
+        if (!self::endsWith($_B['siteRoot'], '/')) $_B['siteRoot'] .= '/';
+
         return $_B['siteRoot'];
     }
 
-    public static function getHeaders($url, $format = 0)
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $url
+     * @param bool|int $format
+     * @return array|false
+     * @lasttime: 2023/2/1 3:45 PM
+     */
+    public static function getHeaders($url, $format = false)
     {
         $result = @get_headers($url, $format);
         if (empty($result)) {
-            stream_context_set_default(array(
-                'ssl' => array(
+            stream_context_set_default([
+                'ssl' => [
                     'verify_peer'      => false,
                     'verify_peer_name' => false,
-                ),
-            ));
+                ],
+            ]);
             $result = get_headers($url, $format);
         }
         return $result;
+    }
+
+    /**
+     * 获取Referer
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $needle 需要排除的特征字符串
+     * @param string $default 当referer中包含$needle时，返回的默认值
+     * @return string
+     * @lasttime: 2023/2/1 3:32 PM
+     */
+    public static function getReferer(string $needle = '', string $default = ''): string
+    {
+        global $_GPC, $_B;
+
+        $_SERVER['HTTP_REFERER'] = $_SERVER['HTTP_REFERER'] ?: '';
+
+        $_B['referer'] = !empty($_GPC['referer']) ? $_GPC['referer'] : $_SERVER['HTTP_REFERER'];
+        $_B['referer'] = self::endsWith($_B['referer'], '?') ? substr($_B['referer'], 0, -1) : $_B['referer'];
+
+        if (!empty($needle) && strpos($_B['referer'], $needle)) {
+            $_B['referer'] = $default;
+        }
+
+        $_B['referer'] = str_replace('&amp;', '&', $_B['referer']);
+        $reUrl         = parse_url($_B['referer']);
+
+        $_B['siteRoot'] = self::getSiteRoot();
+        if (
+            !empty($reUrl['host'])
+            && !in_array($reUrl['host'], [$_SERVER['HTTP_HOST'], 'www.' . $_SERVER['HTTP_HOST']])
+            && !in_array($_SERVER['HTTP_HOST'], [$reUrl['host'], 'www.' . $reUrl['host']])
+        )
+            $_B['referer'] = $_B['siteRoot'];
+        elseif (empty($reUrl['host']))
+            $_B['referer'] = $_B['siteRoot'] . './' . $_B['referer'];
+
+        return strip_tags($_B['referer']);
     }
 
     /**
@@ -259,7 +337,7 @@ class Util
      * @return mixed
      * @lasttime: 2022/3/26 10:05 下午
      */
-    public static function getArrValueByKey($arr = [], $key = '')
+    public static function getArrValueByKey(array $arr = [], string $key = '')
     {
         $key = trim($key, '.');
         if (empty($arr)) return null;
@@ -319,8 +397,8 @@ class Util
             $result = unserialize($value);
         }
         if (false === $result) {
-            $temp = preg_replace_callback('!s:(\d+):"(.*?)";!s', function ($matchs) {
-                return 's:' . strlen($matchs[2]) . ':"' . $matchs[2] . '";';
+            $temp = preg_replace_callback('!s:(\d+):"(.*?)";!s', function ($matches) {
+                return 's:' . strlen($matches[2]) . ':"' . $matches[2] . '";';
             }, $value);
 
             return unserialize($temp);
@@ -340,7 +418,7 @@ class Util
      * @param $data
      * @return bool
      */
-    public static function is_serialized($data, $strict = true): bool
+    public static function is_serialized($data, bool $strict = true): bool
     {
         if (!is_string($data)) return false;
         $data = trim($data);
@@ -348,8 +426,8 @@ class Util
         if (strlen($data) < 4) return false;
         if (':' !== $data[1]) return false;
         if ($strict) {
-            $lastc = substr($data, -1);
-            if (';' !== $lastc && '}' !== $lastc) return false;
+            $lastC = substr($data, -1);
+            if (';' !== $lastC && '}' !== $lastC) return false;
         } else {
             $semicolon = strpos($data, ';');
             $brace     = strpos($data, '}');
@@ -364,14 +442,14 @@ class Util
                     if ('"' !== substr($data, -2, 1)) return false;
                 } elseif (false === strpos($data, '"')) return false;
             case 'a' :
-                return (bool)preg_match("/^{$token}:[0-9]+:/s", $data);
+                return (bool)preg_match("/^$token:[0-9]+:/s", $data);
             case 'O' :
                 return false;
             case 'b' :
             case 'i' :
             case 'd' :
                 $end = $strict ? '$' : '';
-                return (bool)preg_match("/^{$token}:[0-9.E-]+;$end/", $data);
+                return (bool)preg_match("/^$token:[0-9.E-]+;$end/", $data);
         }
         return false;
     }
@@ -429,13 +507,21 @@ class Util
         return $error;
     }
 
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $data
+     * @return bool
+     * @lasttime: 2023/2/1 3:47 PM
+     */
     public static function isError($data): bool
     {
-        if (empty($data) || (is_array($data) && array_key_exists('errcode', $data) && $data['errcode'] != 0)) {
+        if (empty($data) || (is_array($data) && array_key_exists('errcode', $data) && $data['errcode'] != 0))
             return true;
-        } else {
+        else
             return false;
-        }
     }
 
     /**
@@ -453,10 +539,10 @@ class Util
         $template = [];
         if (is_dir($path)) {
             if ($handle = opendir($path)) {
-                while (false !== ($templatepath = readdir($handle))) {
-                    if ($templatepath != '.' && $templatepath != '..') {
-                        if (is_dir($path . $templatepath)) {
-                            $template[] = $templatepath;
+                while (false !== ($templatePath = readdir($handle))) {
+                    if ($templatePath != '.' && $templatePath != '..') {
+                        if (is_dir($path . $templatePath)) {
+                            $template[] = $templatePath;
                         }
                     }
                 }
@@ -799,7 +885,7 @@ class Util
     {
         if (is_string($msg)) return $msg;
 
-        if (is_object($msg) && $msg instanceof Response) {
+        if ($msg instanceof Response) {
             $this->_end(0, $msg);
             return '';
         }
@@ -812,14 +898,15 @@ class Util
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @lastTime 2021/12/18 12:22 上午
-     * @param null $response
      *
      * @param string|int $status
+     * @param null $response
+     * @lastTime 2021/12/18 12:22 上午
      */
-    private function _end($status = 0, $response = null)
+    private function _end($status = '0', $response = null)
     {
         try {
+            $status = intval($status);
             Yii::$app->end($status, $response);
         } catch (ExitException $e) {
         }
@@ -848,7 +935,7 @@ class Util
      * @email bowen@jiuchet.com
      * @param yii\web\Controller $controller
      * @return array|string|Response
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      * @lasttime: 2021/12/20 10:00 上午
      */
     public function showCaptcha(Yii\web\Controller $controller)
@@ -856,17 +943,17 @@ class Util
         global $_GPC;
         $type = Safe::gpcString($_GPC['captchaType']);
         if (empty($type)) {
-            return $this->result(9001002, '验证码类型不能为空');
+            return $this->result(ErrCode::PARAMETER_EMPTY, '验证码类型不能为空');
         }
         $c            = Yii::createObject('Jcbowen\JcbaseYii2\components\captcha\CaptchaAction', [
             '__' . $type,
             $controller
         ]);
         $c->maxLength = $_GPC['maxLength'] ? intval($_GPC['maxLength']) : 5;
-        $c->minLength = $_GPC['minLength'] ? intval($_GPC['minLength']) : 5;;
-        $c->height = $_GPC['height'] ? intval($_GPC['height']) : 40;
-        $c->width  = $_GPC['width'] ? intval($_GPC['width']) : 120;
-        $c->offset = $_GPC['offset'] ? intval($_GPC['offset']) : 9;
+        $c->minLength = $_GPC['minLength'] ? intval($_GPC['minLength']) : 5;
+        $c->height    = $_GPC['height'] ? intval($_GPC['height']) : 40;
+        $c->width     = $_GPC['width'] ? intval($_GPC['width']) : 120;
+        $c->offset    = $_GPC['offset'] ? intval($_GPC['offset']) : 9;
         //$c->backColor = 0x000000;
         $c->getVerifyCode(true);
         return $c->run();
@@ -877,21 +964,21 @@ class Util
      * @param string $code 传入的验证码
      * @param yii\web\Controller $controller
      * @return bool
-     * @throws \yii\base\InvalidConfigException 控制器中的使用示例 verifyCaptcha($code, new \backend\controllers\utility\CaptchaController('utility/captcha', $this->module));
+     * @throws InvalidConfigException 控制器中的使用示例 verifyCaptcha($code, new \backend\controllers\utility\CaptchaController('utility/captcha', $this->module));
      */
     public function verifyCaptcha(string $code, Yii\web\Controller $controller)
     {
         global $_GPC;
 
         $type = Safe::gpcString($_GPC['captchaType']);
-        if (empty($type)) return $this->result(9001002, '验证码类型不能为空');
+        if (empty($type)) return $this->result(ErrCode::PARAMETER_EMPTY, '验证码类型不能为空');
 
         $code = trim($code);
         $code = Safe::gpcString($code);
         $code = strtolower($code);
-        if (empty($code)) return $this->result(9001002, '验证码不能为空');
-        $verifycode = $this->getCaptcha($controller);
-        if ($verifycode == $code) {
+        if (empty($code)) return $this->result(ErrCode::PARAMETER_EMPTY, '验证码不能为空');
+        $verifyCode = $this->getCaptcha($controller);
+        if ($verifyCode == $code) {
             return true;
         }
         return false;
@@ -901,13 +988,13 @@ class Util
      * 获取图形验证码
      * @param yii\web\Controller $controller
      * @return string
-     * @throws \yii\base\InvalidConfigException 控制器中的使用示例 getCaptcha(new \backend\controllers\utility\CaptchaController('utility/captcha', $this->module));
+     * @throws InvalidConfigException 控制器中的使用示例 getCaptcha(new \backend\controllers\utility\CaptchaController('utility/captcha', $this->module));
      */
     public function getCaptcha(Yii\web\Controller $controller)
     {
         global $_GPC;
         $type = Safe::gpcString($_GPC['captchaType']);
-        if (empty($type)) return $this->result(9001002, '验证码类型不能为空');
+        if (empty($type)) return $this->result(ErrCode::PARAMETER_EMPTY, '验证码类型不能为空');
 
         $c = Yii::createObject('yii\captcha\CaptchaAction', ['__' . $type, $controller]);
         return $c->getVerifyCode();
