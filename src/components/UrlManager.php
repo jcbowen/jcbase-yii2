@@ -65,7 +65,7 @@ class UrlManager extends BaseObject implements UrlRuleInterface
 
         $pathInfo_arr = explode('/', $pathInfo);
 
-        if (is_dir($this->currentAppInfo['path'] . '/modules/' . $pathInfo_arr[0])) {
+        if (is_dir(Yii::getAlias('@app/modules/') . $pathInfo_arr[0])) {
             $this->isModule   = true;
             $this->moduleName = array_shift($pathInfo_arr);
             $defaultRoute     = self::getDefaultRoute();
@@ -116,10 +116,10 @@ class UrlManager extends BaseObject implements UrlRuleInterface
     private function makeController($path, bool $hasIndex = false, string &$pathInfo = ''): string
     {
         $defaultRoute = self::getDefaultRoute();
-        $nameSpace    = $this->currentAppInfo['name'] . '\controllers\\';
-        if ($this->isModule) $nameSpace = sprintf($this->currentAppInfo['name'] . '\modules\%s\controllers\\', $this->moduleName);
+        $nameSpace    = Yii::$app->controllerNamespace;
+        if ($this->isModule) $nameSpace = sprintf($this->currentAppInfo['name'] . '\modules\%s\controllers', $this->moduleName);
         if ($hasIndex) {
-            $controller     = rtrim($nameSpace . $path, '\\') . '\\' . ucfirst($defaultRoute) . 'Controller';
+            $controller     = rtrim($nameSpace . '\\' . $path, '\\') . '\\' . ucfirst($defaultRoute) . 'Controller';
             $pathInfo_arr   = explode('/', $pathInfo);
             $action         = array_splice($pathInfo_arr, -1)[0];
             $pathInfo_arr[] = 'index';
@@ -134,7 +134,7 @@ class UrlManager extends BaseObject implements UrlRuleInterface
         $path_arr[]      = ucfirst($action);
         $path            = implode('\\', $path_arr);
         $controller_name = $path . 'Controller';
-        return $nameSpace . $controller_name;
+        return $nameSpace . '\\' . $controller_name;
     }
 
     /**
