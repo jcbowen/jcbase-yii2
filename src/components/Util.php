@@ -239,31 +239,6 @@ class Util
     }
 
     /**
-     * 获取当前app信息
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @lastTime 2021/12/17 11:33 下午
-     * @return array
-     * @throws ExitException
-     */
-    public static function getCurrentAppInfo(): array
-    {
-        static $appInfo = [];
-        if (!empty($appInfo)) return $appInfo;
-
-        if (defined('APP_NAME')) {
-            $appInfo['name'] = APP_NAME;
-        } else {
-            throw new ExitException('APP_NAME is not defined');
-        }
-
-        if (!empty($appInfo['name'])) $appInfo['path'] = Yii::getAlias('@' . $appInfo['name']);
-
-        return $appInfo;
-    }
-
-    /**
      * 是否为https通讯
      *
      * @author Bowen
