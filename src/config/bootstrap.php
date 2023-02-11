@@ -23,6 +23,8 @@ const ATTACH_TYPE_NEWS   = 4;
 const ATTACH_TYPE_OFFICE = 5;
 const ATTACH_TYPE_ZIP    = 6;
 
+defined("IN_CLIENT") or define("IN_CLIENT", false);
+
 const CLIENT_UNKNOWN               = 0;
 const CLIENT_ANDROID               = 1;
 const CLIENT_IOS                   = 2;
