@@ -18,7 +18,7 @@ const ATTACH_COS   = 4;
 
 const ATTACH_TYPE_IMAGE  = 1;
 const ATTACH_TYPE_VOICE  = 2;
-const ATTACH_TYPE_VEDIO  = 3;
+const ATTACH_TYPE_VIDEO  = 3;
 const ATTACH_TYPE_NEWS   = 4;
 const ATTACH_TYPE_OFFICE = 5;
 const ATTACH_TYPE_ZIP    = 6;

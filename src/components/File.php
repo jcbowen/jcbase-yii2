@@ -518,7 +518,7 @@ class File extends Model
                 $int_type = ATTACH_TYPE_ZIP;
                 break;
             case 'video':
-                $int_type = ATTACH_TYPE_VEDIO;
+                $int_type = ATTACH_TYPE_VIDEO;
                 break;
         }
 
