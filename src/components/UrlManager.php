@@ -19,17 +19,6 @@ class UrlManager extends BaseObject implements UrlRuleInterface
 
     public $isModule = false;
     public $moduleName = '';
-    public $currentAppInfo = [];
-
-    /** @noinspection PhpInconsistentReturnPointsInspection */
-    public function init()
-    {
-        parent::init();
-
-        $this->currentAppInfo = Util::getCurrentAppInfo();
-
-        if (empty($this->currentAppInfo)) return (new Util)->result(1, '非法访问');
-    }
 
     /**
      * {@inheritdoc}
@@ -64,8 +53,7 @@ class UrlManager extends BaseObject implements UrlRuleInterface
         }
 
         $pathInfo_arr = explode('/', $pathInfo);
-
-        if (is_dir(Yii::getAlias('@app/modules/') . $pathInfo_arr[0])) {
+        if (Yii::$app->hasModule($pathInfo_arr[0])) {
             $this->isModule   = true;
             $this->moduleName = array_shift($pathInfo_arr);
             $defaultRoute     = self::getDefaultRoute();
@@ -116,8 +104,10 @@ class UrlManager extends BaseObject implements UrlRuleInterface
     private function makeController($path, bool $hasIndex = false, string &$pathInfo = ''): string
     {
         $defaultRoute = self::getDefaultRoute();
-        $nameSpace    = Yii::$app->controllerNamespace;
-        if ($this->isModule) $nameSpace = sprintf($this->currentAppInfo['name'] . '\modules\%s\controllers', $this->moduleName);
+        $nameSpace    = !$this->isModule ?
+            Yii::$app->controllerNamespace :
+            Yii::$app->getModule($this->moduleName)->controllerNamespace;
+
         if ($hasIndex) {
             $controller     = rtrim($nameSpace . '\\' . $path, '\\') . '\\' . ucfirst($defaultRoute) . 'Controller';
             $pathInfo_arr   = explode('/', $pathInfo);
