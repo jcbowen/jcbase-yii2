@@ -12,10 +12,10 @@ const TEMPLATE_FETCH       = 1;
 const TEMPLATE_INCLUDEPATH = 2;
 
 // 附件存储方式
-const ATTACH_FTP   = 1;
-const ATTACH_OSS   = 2;
-const ATTACH_QINIU = 3;
-const ATTACH_COS   = 4;
+const ATTACH_FTP   = 'ftp';
+const ATTACH_OSS   = 'oss';
+const ATTACH_QINIU = 'qiniu';
+const ATTACH_COS   = 'cos';
 
 // 附件类型
 const ATTACH_TYPE_IMAGE  = 1;
