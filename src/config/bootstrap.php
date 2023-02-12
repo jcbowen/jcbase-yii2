@@ -11,11 +11,13 @@ const TEMPLATE_DISPLAY     = 0;
 const TEMPLATE_FETCH       = 1;
 const TEMPLATE_INCLUDEPATH = 2;
 
+// 附件存储方式
 const ATTACH_FTP   = 1;
 const ATTACH_OSS   = 2;
 const ATTACH_QINIU = 3;
 const ATTACH_COS   = 4;
 
+// 附件类型
 const ATTACH_TYPE_IMAGE  = 1;
 const ATTACH_TYPE_VOICE  = 2;
 const ATTACH_TYPE_VIDEO  = 3;
@@ -23,8 +25,10 @@ const ATTACH_TYPE_NEWS   = 4;
 const ATTACH_TYPE_OFFICE = 5;
 const ATTACH_TYPE_ZIP    = 6;
 
+// IN_CLIENT 默认为 false
 defined("IN_CLIENT") or define("IN_CLIENT", false);
 
+// 客户端类型
 const CLIENT_UNKNOWN               = 0;
 const CLIENT_ANDROID               = 1;
 const CLIENT_IOS                   = 2;
@@ -72,6 +76,7 @@ const CLIENT_LIST                  = [
     CLIENT_JINGDONG_MINI_PROGRAM => '京东小程序',
 ];
 
+// 空时间字符串（一般用于时间字段表示为空，如：deleted_at为NO_TIME，就代表没有删除）
 const NO_TIME = '0000-00-00 00:00:00';
 
 define('MAGIC_QUOTES_GPC', (bool)ini_set("magic_quotes_runtime", 0));
