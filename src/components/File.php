@@ -397,7 +397,10 @@ class File extends Model
         }
 
         // 如果已经上传过了，就直接通过数据库里的数据进行返回
-        if ($row = $this->attachmentModel::find()->where([$this->attachmentFieldsMap['md5'] => $this->md5()])->one()) {
+        if ($row = $this->attachmentModel::find()->where([
+            $this->attachmentFieldsMap['md5']        => $this->md5(),
+            $this->attachmentFieldsMap['deleted_at'] => NO_TIME
+        ])->one()) {
             // 更新修改时间，以便排序需要
             $row->setAttributes([$this->attachmentFieldsMap['updated_at'] => date('Y-m-d H:i:s')]);
             // $row->updated_at = date('Y-m-d H:i:s');
