@@ -835,8 +835,8 @@ class File extends Model
         }
         $filename = $this->file_random_name($this->attachmentRoot . '/' . $path, $ext);
         $pathname = $path . $filename;
-        $fullname = $this->attachmentRoot . '/' . $pathname;
-        if (!file_put_contents($fullname, $resp['content'])) {
+        $fullName = $this->attachmentRoot . '/' . $pathname;
+        if (!file_put_contents($fullName, $resp['content'])) {
             return Util::error(ErrCode::UNKNOWN, '提取失败.');
         }
 
