@@ -447,8 +447,8 @@ class File extends Model
                 FileHelper::createDirectory($this->_savePath);
             } catch (Exception $e) {
                 return Util::error(ErrCode::UNKNOWN, '创建存储目录失败', [
-                    'code'    => $e->getCode(),
-                    'message' => $e->getMessage(),
+                    'errCode' => $e->getCode(),
+                    'errmsg'  => $e->getMessage(),
                 ]);
             }
             $fileName = $this->file_random_name($this->_savePath, $ext);
@@ -460,8 +460,8 @@ class File extends Model
                 FileHelper::createDirectory($this->_savePath);
             } catch (Exception $e) {
                 return Util::error(ErrCode::UNKNOWN, '创建存储目录失败', [
-                    'code'    => $e->getCode(),
-                    'message' => $e->getMessage(),
+                    'errCode' => $e->getCode(),
+                    'errmsg'  => $e->getMessage(),
                 ]);
             }
             if (!Util::strExists($name, $ext)) {
@@ -498,8 +498,8 @@ class File extends Model
                 $newImage = $this->unlinkFile($this->tmp_name, $savePathFile);
             } catch (Exception $e) {
                 return Util::error(ErrCode::UNKNOWN, '文件移动到附件目录失败', [
-                    'code'    => $e->getCode(),
-                    'message' => $e->getMessage(),
+                    'errCode' => $e->getCode(),
+                    'errmsg'  => $e->getMessage(),
                 ]);
             }
         } else {
@@ -536,8 +536,8 @@ class File extends Model
                     $thumbnail = $this->file_image_thumb($fullName, '', $width);
                 } catch (Exception $e) {
                     return Util::error(ErrCode::UNKNOWN, '图片压缩失败', [
-                        'code'    => $e->getCode(),
-                        'message' => $e->getMessage(),
+                        'errCode' => $e->getCode(),
+                        'errmsg'  => $e->getMessage(),
                     ]);
                 }
                 @FileHelper::unlink($fullName);
@@ -650,7 +650,10 @@ class File extends Model
                 $cosClient->Upload($bucket, $filename, fopen($fullPath, 'rb'));
                 $run = true;
             } catch (\Exception $e) {
-                return Util::error(ErrCode::UNKNOWN, 'FAILED', $e->getMessage());
+                return Util::error(ErrCode::UNKNOWN, '上传cos远程附件失败', [
+                    'errCode' => $e->getCode(),
+                    'errmsg'  => $e->getMessage(),
+                ]);
             }
         } else if (Yii::$app->params['attachment']['remoteType'] === 'oss') { // 阿里云oss
             try {
@@ -658,13 +661,112 @@ class File extends Model
                 $ossClient->uploadFile($this->remoteConfig['oss']['bucket'], $filename, $fullPath);
                 $run = true;
             } catch (OssException $e) {
-                return Util::error(ErrCode::UNKNOWN, 'FAILED', $e->getMessage());
+                return Util::error(ErrCode::UNKNOWN, '上传oss远程附件失败', [
+                    'errCode' => $e->getCode(),
+                    'errmsg'  => $e->getMessage(),
+                ]);
             }
         }
 
         // 如果上传成功，且打开了自动删除本地文件，则删除本地文件
         if ($run && $auto_delete_local && file_exists($fullPath)) {
             @FileHelper::unlink($fullPath);
+        }
+
+        return true;
+    }
+
+    /**
+     * 删除附件
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $filePath
+     * @return array|bool
+     * @lasttime: 2023/2/12 23:21
+     */
+    public function file_delete($filePath)
+    {
+        if (empty($filePath)) {
+            return false;
+        }
+        $filePath = Safe::gpcPath($filePath);
+
+        // 查询附件记录
+        $row    = call_user_func($this->attachmentModel . '::find');
+        $record = $row->where([$this->attachmentFieldsMap['attachment'] => $filePath])->one();
+        if (empty($record))
+            return Util::error(ErrCode::NOT_EXIST, '附件记录不存在');
+
+        // 删除数据库记录
+        $result = $record->delete();
+        if (empty($result))
+            return Util::error(ErrCode::UNKNOWN, '删除附件记录失败');
+
+        // 删除远程附件
+        $result = $this->file_remote_delete($filePath);
+        if (Util::isError($result))
+            return $result;
+
+        // 删除本地附件
+        if (file_exists($this->attachmentRoot . '/' . $filePath)) {
+            @unlink($this->attachmentRoot . '/' . $filePath);
+        }
+
+        return true;
+    }
+
+    /**
+     * 删除远程附件
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $filePath 附件相对路径
+     * @return array|bool
+     * @lasttime: 2023/2/12 22:50
+     */
+    public function file_remote_delete(string $filePath)
+    {
+        if (empty($filePath) || empty(Yii::$app->params['attachment']['isRemote']) || empty(Yii::$app->params['attachment']['remoteType'])) return true;
+
+        if (!empty(Yii::$app->params['attachment']['remoteType'])) {
+            switch (Yii::$app->params['attachment']['remoteType']) {
+                case ATTACH_COS:
+                    try {
+                        $bucket = $this->remoteConfig['cos']['bucket'];
+
+                        $cosClient = new Client([
+                            'region'      => $this->remoteConfig['cos']['region'],
+                            'credentials' => [
+                                'secretId'  => $this->remoteConfig['cos']['secretId'],
+                                'secretKey' => $this->remoteConfig['cos']['secretKey'],
+                            ],
+                        ]);
+                        $cosClient->deleteObjects(array(
+                            'Bucket'  => $bucket,
+                            'Objects' => [['Key' => $filePath]]
+                        ));
+                    } catch (\Exception $e) {
+                        return Util::error(ErrCode::UNKNOWN, '删除cos远程文件失败', [
+                            'errCode' => $e->getCode(),
+                            'errmsg'  => $e->getMessage(),
+                        ]);
+                    }
+                    break;
+                case ATTACH_OSS:
+                    try {
+                        $ossClient = new OssClient($this->remoteConfig['oss']['AccessKeyId'], $this->remoteConfig['oss']['AccessKeySecret'], $this->remoteConfig['oss']['endpoint']);
+                        $ossClient->deleteObject($this->remoteConfig['oss']['bucket'], $filePath);
+                    } catch (OssException $e) {
+                        return Util::error(ErrCode::UNKNOWN, '删除oss远程文件失败', [
+                            'errCode' => $e->getCode(),
+                            'errmsg'  => $e->getMessage(),
+                        ]);
+                    }
+                    break;
+            }
         }
 
         return true;
