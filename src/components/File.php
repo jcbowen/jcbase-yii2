@@ -285,14 +285,18 @@ class File extends Model
     }
 
     /**
-     * @param string $key 上传数据的字段名
+     * 文件上传
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
      * @param string $type 文件类型['image', 'thumb', 'voice', 'video', 'audio', 'office', 'zip']
      * @param string $name 指定文件名
-     * @param bool $compress
-     * @return array|void
-     * @throws Exception
+     * @param bool $compress 是否压缩
+     * @return array|null
+     * @lasttime: 2023/2/12 11:53 AM
      */
-    public function file_upload(string $key = 'file', string $type = 'image', string $name = '', bool $compress = false): ?array
+    public function file_upload(string $type = 'image', string $name = '', bool $compress = false): ?array
     {
         global $_GPC;
         if (empty($this->size))
@@ -379,12 +383,12 @@ class File extends Model
         $ext = $this->getExtension();
 
         // 禁止上传的文件后缀
-        $harmType = ['asp', 'php', 'jsp', 'js', 'css', 'php3', 'php4', 'php5', 'ashx', 'aspx', 'exe', 'cgi', 'py'];
+        $harmType = ['asp', 'php', 'jsp', 'js', 'css', 'php3', 'php4', 'php5', 'ashx', 'aspx', 'exe', 'cgi', 'py',
+                     'sh'];
 
         // 验证后缀是否被上传的文件类型所允许
-        if (!in_array(strtolower($ext), $allowExt) || in_array(strtolower($ext), $harmType)) {
+        if (!in_array(strtolower($ext), $allowExt) || in_array(strtolower($ext), $harmType))
             return Util::error(ErrCode::ILLEGAL_FORMAT, '不允许上传此类文件');
-        }
 
         // 计算文件大小是否符合规范
         if (!empty($limit) && $limit * 1024 < $this->size) {
@@ -421,13 +425,27 @@ class File extends Model
         if (empty($name) || 'auto' == $name) {
             $path            = "{$type}s/" . date('Y/m/');
             $this->_savePath = FileHelper::normalizePath($this->attachmentRoot . '/' . $path, '/');
-            FileHelper::createDirectory($this->_savePath);
+            try {
+                FileHelper::createDirectory($this->_savePath);
+            } catch (Exception $e) {
+                return Util::error(ErrCode::UNKNOWN, '创建存储目录失败', [
+                    'code'    => $e->getCode(),
+                    'message' => $e->getMessage(),
+                ]);
+            }
             $fileName = $this->file_random_name($this->_savePath, $ext);
 
             $path = $path . $fileName;
         } else {
             $this->_savePath = FileHelper::normalizePath(dirname($this->attachmentRoot . '/' . $name), '/');
-            FileHelper::createDirectory($this->_savePath);
+            try {
+                FileHelper::createDirectory($this->_savePath);
+            } catch (Exception $e) {
+                return Util::error(ErrCode::UNKNOWN, '创建存储目录失败', [
+                    'code'    => $e->getCode(),
+                    'message' => $e->getMessage(),
+                ]);
+            }
             if (!Util::strExists($name, $ext)) {
                 $name .= '.' . $ext;
             }
@@ -458,7 +476,14 @@ class File extends Model
         }
         if (empty($image)) {
             // 将上传文件移动到附件目录
-            $newimage = $this->unlinkFile($this->tmp_name, $savePathFile);
+            try {
+                $newimage = $this->unlinkFile($this->tmp_name, $savePathFile);
+            } catch (Exception $e) {
+                return Util::error(ErrCode::UNKNOWN, '文件移动到附件目录失败', [
+                    'code'    => $e->getCode(),
+                    'message' => $e->getMessage(),
+                ]);
+            }
         } else {
             // 生成旋转好的图片
             $newimage = imagejpeg($image, $savePathFile);
@@ -489,7 +514,14 @@ class File extends Model
                 $width = $option['width'];
             }
             if ($thumb == 1 && $width > 0) {
-                $thumbnail = $this->file_image_thumb($fullName, '', $width);
+                try {
+                    $thumbnail = $this->file_image_thumb($fullName, '', $width);
+                } catch (Exception $e) {
+                    return Util::error(ErrCode::UNKNOWN, '图片压缩失败', [
+                        'code'    => $e->getCode(),
+                        'message' => $e->getMessage(),
+                    ]);
+                }
                 @FileHelper::unlink($fullName);
                 if (Util::isError($thumbnail)) {
                     return Util::error(ErrCode::UNKNOWN, $thumbnail['errmsg']);
