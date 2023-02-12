@@ -132,9 +132,14 @@ class File extends Model
     }
 
     /**
-     * 通过文件对应的key创建上传类
+     * 根据文件流字段名获取实例
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
      * @param string $name
      * @return File|null
+     * @lasttime: 2023/2/12 4:57 PM
      */
     public static function getInstanceByName(string $name): ?File
     {
@@ -153,9 +158,14 @@ class File extends Model
     }
 
     /**
-     * 上传base64字符串
+     * 根据base64字符串获取实例
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
      * @param string $base64
-     * @return static
+     * @return File
+     * @lasttime: 2023/2/12 4:57 PM
      */
     public static function getInstanceByBase64(string $base64): File
     {
@@ -181,7 +191,12 @@ class File extends Model
 
     /**
      * 初始化上传文件
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
      * @return array
+     * @lasttime: 2023/2/12 4:58 PM
      */
     private static function loadFiles(): array
     {
