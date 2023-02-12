@@ -495,7 +495,7 @@ class File extends Model
         if (empty($image)) {
             // 将上传文件移动到附件目录
             try {
-                $newimage = $this->unlinkFile($this->tmp_name, $savePathFile);
+                $newImage = $this->unlinkFile($this->tmp_name, $savePathFile);
             } catch (Exception $e) {
                 return Util::error(ErrCode::UNKNOWN, '文件移动到附件目录失败', [
                     'code'    => $e->getCode(),
@@ -504,10 +504,10 @@ class File extends Model
             }
         } else {
             // 生成旋转好的图片
-            $newimage = imagejpeg($image, $savePathFile);
+            $newImage = imagejpeg($image, $savePathFile);
             imagedestroy($image);
         }
-        if (empty($newimage)) {
+        if (empty($newImage)) {
             return Util::error(ErrCode::NO_PERMISSION, '文件上传失败, 请将 附件目录 及其子目录的权限设为777 <br> (如果777上传失败,可尝试将目录设置为755)');
         }
 
