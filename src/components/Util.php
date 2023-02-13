@@ -496,9 +496,8 @@ class Util
             ], $strCut);
         }
 
-        if ($haveDot) {
-            $string = $string . '...';
-        }
+        if (!empty($string) && $haveDot)
+            $string .= '...';
 
         return $string;
     }
