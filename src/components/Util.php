@@ -348,6 +348,162 @@ class Util
     }
 
     /**
+     * 获取字符串长度
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $string 字符串
+     * @param string $charset 字符集
+     * @return false|int|mixed
+     * @lasttime: 2023/2/13 2:06 PM
+     */
+    public static function strLen(string $string, string $charset = 'utf8')
+    {
+        $charset = 'gbk' === strtolower($charset) ? 'gbk' : 'utf8';
+
+        if (function_exists('mb_strlen') && extension_loaded('mbstring')) {
+            return mb_strlen($string, $charset);
+        } else {
+            $n      = $noc = 0;
+            $strlen = strlen($string);
+
+            if ('utf8' == $charset) {
+                while ($n < $strlen) {
+                    $t = ord($string[$n]);
+                    if (9 == $t || 10 == $t || (32 <= $t && $t <= 126)) {
+                        ++$n;
+                        ++$noc;
+                    } elseif (194 <= $t && $t <= 223) {
+                        $n += 2;
+                        ++$noc;
+                    } elseif (224 <= $t && $t <= 239) {
+                        $n += 3;
+                        ++$noc;
+                    } elseif (240 <= $t && $t <= 247) {
+                        $n += 4;
+                        ++$noc;
+                    } elseif (248 <= $t && $t <= 251) {
+                        $n += 5;
+                        ++$noc;
+                    } elseif (252 == $t || 253 == $t) {
+                        $n += 6;
+                        ++$noc;
+                    } else {
+                        ++$n;
+                    }
+                }
+            } else {
+                while ($n < $strlen) {
+                    $t = ord($string[$n]);
+                    if ($t > 127) {
+                        $n += 2;
+                    } else {
+                        ++$n;
+                    }
+                    ++$noc;
+                }
+            }
+
+            return $noc;
+        }
+    }
+
+    /**
+     * 截取字符串
+     *
+     * @param string $string 字符串
+     * @param int $length 截取长度
+     * @param bool $haveDot 是否有省略号
+     * @param string $charset 字符集
+     * @return string
+     */
+    public static function substr(string $string, int $length, bool $haveDot = false, string $charset = 'utf8'): string
+    {
+        $charset = 'gbk' === strtolower($charset) ? 'gbk' : 'utf8';
+        if (self::strLen($string, $charset) <= $length) return $string;
+
+        if (function_exists('mb_strcut')) {
+            $string = mb_substr($string, 0, $length, $charset);
+        } else {
+            $pre    = '{%';
+            $end    = '%}';
+            $string = str_replace([
+                '&amp;', '&quot;', '&lt;', '&gt;'
+            ], [
+                $pre . '&' . $end, $pre . '"' . $end, $pre . '<' . $end, $pre . '>' . $end
+            ], $string);
+
+            $strlen = strlen($string);
+            $n      = $tn = $noc = 0;
+            if ('utf8' == $charset) {
+                while ($n < $strlen) {
+                    $t = ord($string[$n]);
+                    if (9 == $t || 10 == $t || (32 <= $t && $t <= 126)) {
+                        $tn = 1;
+                        ++$n;
+                        ++$noc;
+                    } elseif (194 <= $t && $t <= 223) {
+                        $tn = 2;
+                        $n  += 2;
+                        ++$noc;
+                    } elseif (224 <= $t && $t <= 239) {
+                        $tn = 3;
+                        $n  += 3;
+                        ++$noc;
+                    } elseif (240 <= $t && $t <= 247) {
+                        $tn = 4;
+                        $n  += 4;
+                        ++$noc;
+                    } elseif (248 <= $t && $t <= 251) {
+                        $tn = 5;
+                        $n  += 5;
+                        ++$noc;
+                    } elseif (252 == $t || 253 == $t) {
+                        $tn = 6;
+                        $n  += 6;
+                        ++$noc;
+                    } else {
+                        ++$n;
+                    }
+                    if ($noc >= $length)
+                        break;
+                }
+            } else {
+                while ($n < $strlen) {
+                    $t = ord($string[$n]);
+                    if ($t > 127) {
+                        $tn = 2;
+                        $n  += 2;
+                    } else {
+                        $tn = 1;
+                        ++$n;
+                    }
+                    ++$noc;
+                    if ($noc >= $length) {
+                        break;
+                    }
+                }
+            }
+            if ($noc > $length) {
+                $n -= $tn;
+            }
+            $strCut = substr($string, 0, $n);
+            $string = str_replace([
+                $pre . '&' . $end, $pre . '"' . $end, $pre . '<' . $end, $pre . '>' . $end
+            ], [
+                '&amp;', '&quot;', '&lt;', '&gt;'
+            ], $strCut);
+        }
+
+        if ($haveDot) {
+            $string = $string . '...';
+        }
+
+        return $string;
+    }
+
+    /**
      * 反序列化
      *
      * @author Bowen
