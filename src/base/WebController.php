@@ -82,7 +82,7 @@ class WebController extends Controller
      * @return string|Response
      * @lasttime: 2023/2/1 4:04 PM
      */
-    public function message($msg, string $redirect = '', string $type = '')
+    public function resultMessage($msg, string $redirect = '', string $type = '')
     {
         global $_B;
         if ($redirect == 'refresh') {
@@ -152,7 +152,7 @@ class WebController extends Controller
     }
 
     /**
-     * @Deprecated 废弃中，等待完善
+     * @Deprecated 已废弃
      */
     public function vTpl(?string $filename = 'index'): Response
     {
@@ -161,7 +161,7 @@ class WebController extends Controller
     }
 
     /**
-     * @Deprecated 废弃中，等待完善
+     * @Deprecated 已废弃
      */
     public function template(?string $filename = null): Response
     {
