@@ -76,9 +76,9 @@ class WebController extends Controller
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param $msg
-     * @param string $redirect
-     * @param string $type
+     * @param string $msg 提示信息
+     * @param string $redirect 跳转地址 refresh:刷新当前页，referer:返回上一页，其他:跳转到指定地址
+     * @param string $type 提示类型 success:成功，error:失败，info:提示，warning:警告，ajax:ajax请求，sql:sql错误
      * @return string|Response
      * @lasttime: 2023/2/1 4:04 PM
      */
