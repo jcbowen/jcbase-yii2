@@ -1,0 +1,47 @@
+{php define('IN_MESSAGE', true)}
+<!DOCTYPE html>
+<html lang="zh-cn">
+    <head>
+        <meta charset="utf-8" />
+        <title>消息提示</title>
+        <meta name="renderer" content="webkit" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+        <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.7.6/css/layui.css?v=2021">
+        <link rel="stylesheet" href="https://res.jiuqikeji.cn/bowen_site/v2.21.16/dist/style/admin.css?v=2021" media="all" />
+        <style type="text/css">
+        .msg-icon:before{content: "\e664";}
+        .msg-icon-success:before{color: #009688; content: "\e60c";}
+        .msg-icon-danger:before{color: #FF5722;}
+        .msg-icon-info:before{content: "\e60b";color: #1E9FFF;}
+        .msg-icon-warning:before{content: '\1007';color: #FFB800;}
+        .layadmin-tips .layui-text {width: 80%; max-width: 500px;}
+        .layadmin-tips .msg-text-danger{border-top: 5px solid #FF5722;}
+        .layadmin-tips .msg-text-info{border-top: 5px solid #1E9FFF;}
+        .layadmin-tips .msg-text-warning{border-top: 5px solid #FFB800;}
+        </style>
+    </head>
+    <body>
+        <div class="layui-fluid">
+            <div class="layadmin-tips">
+                <i class="layui-icon msg-icon msg-icon-{$label}" face></i>
+                <div class="layui-text msg-text-{$label}" style="font-size: 20px;">
+                    {$msg}
+                    {if $redirect}
+        			<p style="margin-top: 45px;">
+        				<a class="layui-btn layui-btn-radius layui-btn-primary" href="{$redirect}">如果你的浏览器没有自动跳转，请点击此按钮...</a>
+        				<script type="text/javascript">
+        					setTimeout(function () {
+        						location.href = "{$redirect}";
+        					}, 3000);
+        				</script>
+        			</p>
+        			{else}
+        				<p style="margin-top: 30px;"><a href="javascript:history.go(-1);" class="layui-btn layui-btn-radius {if $label=='danger'}layui-btn-danger{/if}{if $label=='info'}layui-btn-normal{/if}{if $label=='warning'}layui-btn-warm{/if}">点击这里返回上一页</a></p>
+        			{/if}
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+<!-- phpDesigner :: Timestamp [2018/9/8 17:24:32] -->

@@ -18,13 +18,15 @@ use yii\helpers\FileHelper;
 class Template
 {
     public $appPath = '';
+    public $jcbaseSrcPath = '';
 
     /**
      * Template constructor.
      */
     public function __construct()
     {
-        $this->appPath = Yii::getAlias('@app');
+        $this->appPath       = Yii::getAlias('@app');
+        $this->jcbaseSrcPath = Yii::getAlias('@vendor/jcbowen/jcbase-yii2/src');
     }
 
     /**
@@ -70,6 +72,36 @@ class Template
             $compile        = $this->appPath . "/runtime/tpl/default/$filename/index.tpl.php";
         }
 
+        // ----- 查找jcbase中是否有默认模板，Begin ----- /
+        // 根据当前模版的指定文件名查找
+        if (!is_file($source)) {
+            $doesNotExist[] = $source;
+            $source         = $this->jcbaseSrcPath . "/views/{$_B['template']}/$filename.html";
+            $compile        = $this->appPath . "/runtime/jcbase/tpl/{$_B['template']}/$filename.tpl.php";
+        }
+
+        // 根据当前模版的index文件查找
+        if (!is_file($source)) {
+            $doesNotExist[] = $source;
+            $source         = $this->jcbaseSrcPath . "/views/{$_B['template']}/$filename/index.html";
+            $compile        = $this->appPath . "/runtime/jcbase/tpl/{$_B['template']}/$filename/index.tpl.php";
+        }
+
+        // 根据默认模版的指定文件名查找
+        if (!is_file($source)) {
+            $doesNotExist[] = $source;
+            $source         = $this->jcbaseSrcPath . "/views/default/$filename.html";
+            $compile        = $this->appPath . "/runtime/jcbase/tpl/default/$filename.tpl.php";
+        }
+
+        // 根据默认模版的index文件查找
+        if (!is_file($source)) {
+            $doesNotExist[] = $source;
+            $source         = $this->jcbaseSrcPath . "/views/default/$filename/index.html";
+            $compile        = $this->appPath . "/runtime/jcbase/tpl/default/$filename/index.tpl.php";
+        }
+        // ----- 查找jcbase中是否有默认模板，End ----- /
+
         if (!is_file($source)) {
             $doesNotExist[] = $source;
             if (YII_DEBUG) {
@@ -79,6 +111,7 @@ class Template
             }
             exit("template source '$filename' is not exist!");
         }
+
         if (YII_DEBUG || !is_file($compile) || filemtime($source) > filemtime($compile)) {
             $this->template_compile($source, $compile);
         }

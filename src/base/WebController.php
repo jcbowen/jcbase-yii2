@@ -4,6 +4,8 @@ namespace Jcbowen\JcbaseYii2\base;
 
 use Jcbowen\JcbaseYii2\components\BaseControllerTrait;
 use Jcbowen\JcbaseYii2\components\CurdActionTrait;
+use Jcbowen\JcbaseYii2\components\ErrCode;
+use Jcbowen\JcbaseYii2\components\Safe;
 use Jcbowen\JcbaseYii2\components\Template;
 use Jcbowen\JcbaseYii2\components\Util;
 use Yii;
@@ -67,6 +69,52 @@ class WebController extends Controller
         if (!empty($postData)) $_GPC = array_merge($_GPC, $postData);
         if (strpos($res->getContentType(), 'application/json') !== false)
             $_GPC = array_merge($_GPC, (array)json_decode($res->getRawBody(), true));
+    }
+
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $msg
+     * @param string $redirect
+     * @param string $type
+     * @return string|Response
+     * @lasttime: 2023/2/1 4:04 PM
+     */
+    public function message($msg, string $redirect = '', string $type = '')
+    {
+        global $_B;
+        if ($redirect == 'refresh') {
+            $_B['siteRoot'] = Util::getSiteRoot();
+            $redirect       = $_B['siteRoot'] . '.' . $_B['script_name'] . '?' . $_SERVER['QUERY_STRING'];
+        }
+        if ($redirect == 'referer') {
+            $redirect = Util::getReferer();
+        }
+        // $redirect = Safe::gpcUrl($redirect);
+
+        if ($redirect == '')
+            $type = Safe::gpcBelong($type, ['success', 'error', 'info', 'warning', 'ajax', 'sql'], 'info');
+        else
+            $type = Safe::gpcBelong($type, ['success', 'error', 'info', 'warning', 'ajax', 'sql'], 'success');
+
+        if (Yii::$app->getRequest()->getIsAjax() || !empty($_GET['isAjax']) || $type == 'ajax') {
+            $r_errno = ($type == 'success') ? ErrCode::SUCCESS : ErrCode::UNKNOWN;
+            $r_data  = ($redirect) ? ['re_url' => $redirect] : '';
+            return $this->result($r_errno, $msg, $r_data);
+        }
+
+        if (empty($msg) && !empty($redirect))
+            return $this->redirect($redirect);
+
+        $label = $type;
+        if ($type == 'error') $label = 'danger';
+
+        if ($type == 'sql') $label = 'warning';
+
+        include (new Template)->template('common/message', TEMPLATE_INCLUDEPATH);
+        return (new Util)->resultHtml();
     }
 
     /**
