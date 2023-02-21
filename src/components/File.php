@@ -688,9 +688,8 @@ class File extends Model
      */
     public function file_delete($filePath)
     {
-        if (empty($filePath)) {
-            return false;
-        }
+        if (empty($filePath)) return false;
+
         $filePath = Safe::gpcPath($filePath);
 
         // 查询附件记录
@@ -699,22 +698,48 @@ class File extends Model
         if (empty($record))
             return Util::error(ErrCode::NOT_EXIST, '附件记录不存在');
 
-        // 删除数据库记录
+        $tr = Yii::$app->db->beginTransaction();
+
+        // 删除记录
         $result = $record->delete();
-        if (empty($result))
+        if (empty($result)) {
+            $tr->rollBack();
             return Util::error(ErrCode::UNKNOWN, '删除附件记录失败');
+        }
+
+        // 初始化删除状态
+        $delFileState = true;
 
         // 删除远程附件
         $result = $this->file_remote_delete($filePath);
-        if (Util::isError($result))
+        if (Util::isError($result)) {
+            $delFileState = false;
             return $result;
-
-        // 删除本地附件
-        if (file_exists($this->attachmentRoot . '/' . $filePath)) {
-            @unlink($this->attachmentRoot . '/' . $filePath);
         }
 
-        return true;
+        // 删除本地附件(如果删除远程附件已经报错，就不再执行)
+        if (!$delFileState && file_exists($this->attachmentRoot . '/' . $filePath)) {
+            $unlinkResult = @unlink($this->attachmentRoot . '/' . $filePath);
+            if (!$unlinkResult) {
+                $delFileState = false;
+            }
+        }
+
+        // 如果删除失败，回滚
+        if (!$delFileState) {
+            $tr->rollBack();
+            return Util::error(ErrCode::UNKNOWN, '删除附件失败');
+        }
+
+        try {
+            $tr->commit();
+            return true;
+        } catch (\yii\db\Exception $e) {
+            return Util::error(ErrCode::DATABASE_TRANSACTION_COMMIT_ERROR, '系统繁忙，删除附件失败，请稍后再试', [
+                'errCode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
