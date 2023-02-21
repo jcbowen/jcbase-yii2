@@ -719,7 +719,7 @@ class File extends Model
 
         // 删除本地附件(如果删除远程附件已经报错，就不再执行)
         if (!$delFileState && file_exists($this->attachmentRoot . '/' . $filePath)) {
-            $unlinkResult = @unlink($this->attachmentRoot . '/' . $filePath);
+            $unlinkResult = FileHelper::unlink($this->attachmentRoot . '/' . $filePath);
             if (!$unlinkResult) {
                 $delFileState = false;
             }
