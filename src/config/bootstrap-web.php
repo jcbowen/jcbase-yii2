@@ -48,6 +48,8 @@ if (!function_exists('allowCrossDomain')) {
      */
     function allowCrossDomain(string $domain = ''): bool
     {
+        global $_B;
+
         if (empty($domain)) return false;
 
         header("Access-Control-Allow-Origin: $domain");
@@ -61,6 +63,7 @@ if (!function_exists('allowCrossDomain')) {
             exit(json_encode(['code' => 200, 'msg' => 'ok']));
         }
 
+        $_B['allowCrossDomain'] = true;
         return true;
     }
 }

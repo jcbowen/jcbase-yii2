@@ -41,6 +41,11 @@ class WebController extends Controller
 
         parent::init();
 
+        if ($_B['allowCrossDomain']) {
+            // Chrome需要设置sameSite为none才能跨域
+            Yii::$app->session->setCookieParams(['sameSite' => 'none', 'secure' => true]);
+        }
+
         define('MTIME', microtime());
         define('TIMESTAMP', time());
         define('TIME', date('Y-m-d H:i:s', TIMESTAMP));

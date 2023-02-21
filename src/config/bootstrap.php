@@ -82,4 +82,5 @@ const NO_TIME = '0000-00-00 00:00:00';
 define('MAGIC_QUOTES_GPC', (bool)ini_set("magic_quotes_runtime", 0));
 
 global $_B;
-$_B['params'] = [];
+$_B['params']           = [];
+$_B['allowCrossDomain'] = false; // 默认不允许跨域
