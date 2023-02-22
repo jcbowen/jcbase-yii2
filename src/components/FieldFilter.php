@@ -135,6 +135,12 @@ class FieldFilter
         if (in_array($field, $this->integerFiles, true)) {
             return floatval($value);
         }
+
+        // 处理时间类型的字段
+        if (in_array($field, ['updated_at', 'created_at', 'deleted_at']) && ($value === '' || $value === null)) {
+            return NO_TIME;
+        }
+
         // 其它类型全部转换成字符串
         return (string)$value;
     }
