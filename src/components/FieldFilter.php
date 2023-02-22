@@ -145,7 +145,11 @@ class FieldFilter
         if (!empty($config)) {
             $config['_extend'] = 'json';
             foreach ($fields as $key => &$field) {
-                if (empty($config[$key])) continue;
+                if (empty($config[$key])) {
+                    // 重置空时间'0000-00-00 00:00:00'为空字符串
+                    if ($field === NO_TIME) $field = '';
+                    continue;
+                }
                 switch ($config[$key]) {
                     case 'json':
                         $field = $field ? (array)@json_decode($field, true) : [];
