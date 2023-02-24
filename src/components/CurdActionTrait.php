@@ -586,7 +586,6 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
-     * @throws Exception
      * @lasttime: 2022/3/13 10:33 下午
      */
     public function actionCreate()
@@ -626,8 +625,14 @@ trait CurdActionTrait
             return (new Util)->result(ErrCode::UNKNOWN, $result['errmsg'], $result['data']);
         }
 
-        // 提交
-        $tr->commit();
+        try {
+            $tr->commit();
+        } catch (Exception $e) {
+            return $this->result(ErrCode::DATABASE_TRANSACTION_COMMIT_ERROR, '系统繁忙，请稍后再试', [
+                'errcode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
+            ]);
+        }
 
         // 如果是通过result函数输出的成功信息，则应该根据成功信息进行输出
         if (!empty($result) && is_array($result) && $result['errcode'] == ErrCode::SUCCESS)
@@ -693,7 +698,6 @@ trait CurdActionTrait
      * @email bowen@jiuchet.com
      * @param array|null $data
      * @return string|Response
-     * @throws Exception
      * @lasttime: 2022/3/13 10:20 下午
      */
     public function actionUpdate(?array $data = null)
@@ -737,7 +741,14 @@ trait CurdActionTrait
             return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '更新失败，请稍后再试');
         }
 
-        $tr->commit();
+        try {
+            $tr->commit();
+        } catch (Exception $e) {
+            return $this->result(ErrCode::DATABASE_TRANSACTION_COMMIT_ERROR, '系统繁忙，请稍后再试', [
+                'errcode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
+            ]);
+        }
 
         return (new Util)->result(ErrCode::SUCCESS, '更新成功', [$this->pkId => $pkId]);
     }
@@ -977,7 +988,6 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
-     * @throws Exception
      * @lasttime: 2022/3/13 10:31 下午
      */
     public function actionSave()
@@ -1194,7 +1204,6 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
-     * @throws Exception
      * @lasttime 2022/9/21 14:52
      */
     public function actionRestore()
@@ -1248,7 +1257,15 @@ trait CurdActionTrait
             return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '恢复数据失败，请稍后再试');
         }
 
-        $transaction->commit();
+        try {
+            $transaction->commit();
+        } catch (Exception $e) {
+            return $this->result(ErrCode::DATABASE_TRANSACTION_COMMIT_ERROR, '系统繁忙，请稍后再试', [
+                'errcode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
+            ]);
+        }
+
         return (new Util)->result(ErrCode::SUCCESS, '恢复成功', ['itemIds' => $itemIds]);
     }
 
@@ -1330,7 +1347,6 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
-     * @throws Exception
      * @lasttime 2022/9/21 14:52
      */
     public function actionRemove()
@@ -1380,7 +1396,15 @@ trait CurdActionTrait
             return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
         }
 
-        $transaction->commit();
+        try {
+            $transaction->commit();
+        } catch (Exception $e) {
+            return $this->result(ErrCode::DATABASE_TRANSACTION_COMMIT_ERROR, '系统繁忙，请稍后再试', [
+                'errcode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
+            ]);
+        }
+
         return (new Util)->result(ErrCode::SUCCESS, '永久删除成功', ['itemIds' => $itemIds]);
     }
 
