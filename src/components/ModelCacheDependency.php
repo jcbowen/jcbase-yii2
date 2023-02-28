@@ -4,6 +4,7 @@ namespace Jcbowen\JcbaseYii2\components;
 
 use Exception;
 use Yii;
+use yii\base\ErrorException;
 use yii\caching\FileDependency;
 use yii\helpers\FileHelper;
 
@@ -50,7 +51,7 @@ class ModelCacheDependency
     public static function buildDependencyFilename($modelClass)
     {
         if (empty(static::$_filenames[$modelClass])) {
-            $path     = Yii::$app->runtimePath . '/model-dependency/';
+            $path     = self::getModelCachePath();
             $filename = $path . basename($modelClass) . '.log';
             try {
                 if (!is_file($filename)) {
@@ -84,13 +85,28 @@ class ModelCacheDependency
      * @author Bowen
      * @email bowen@jiuchet.com
      *
+     * @throws ErrorException
      * @lasttime: 2022/1/5 3:28 下午
      */
     public static function clearAll()
     {
-        try {
-            FileHelper::removeDirectory(Yii::$app->runtimePath . '/model-dependency/');
-        } catch (Exception $exception) {
-        }
+        FileHelper::removeDirectory(self::getModelCachePath());
+    }
+
+    /**
+     * 获取缓存路径
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return string
+     * @lasttime: 2023/2/28 4:18 PM
+     */
+    private static function getModelCachePath(): string
+    {
+        $path = (Yii::$app->params['model_cache_path'] ?: Yii::$app->runtimePath) . '/model-dependency/';
+        if (Util::startsWith($path, '@'))
+            $path = Yii::getAlias($path);
+        return $path;
     }
 }
