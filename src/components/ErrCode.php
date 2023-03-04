@@ -35,6 +35,8 @@ class ErrCode
     const INVALID_TIMESTAMP = 9002003;
     /** @var int 登录失效 */
     const LOGIN_INVALID = 9002004;
+    /** @var int 无效的token */
+    const INVALID_TOKEN = 9002028;
     /** @var int 权限不足 */
     const NO_PERMISSION = 9002005;
     /** @var int 账号或密码错误 */
