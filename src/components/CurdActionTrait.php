@@ -844,6 +844,10 @@ trait CurdActionTrait
         $type  = trim($data['type']); // 字段值的类型
         $value = $data['value']; // 字段值
 
+        // 验证是否传入了字段名，且字段名是否有效
+        if (empty($field) || !in_array($field, $this->modelAttributes))
+            return (new Util)->result(ErrCode::PARAMETER_ERROR, '参数错误，请传入有效的字段名');
+
         if ($type === 'int')
             $value = intval($value);
         elseif ($type === 'float')
