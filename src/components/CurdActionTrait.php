@@ -845,7 +845,7 @@ trait CurdActionTrait
         $value = $data['value']; // 字段值
 
         // 验证是否传入了字段名，且字段名是否有效
-        if (empty($field) || !in_array($field, $this->modelAttributes))
+        if (empty($field) || !array_key_exists($field, $this->modelAttributes))
             return (new Util)->result(ErrCode::PARAMETER_ERROR, '参数错误，请传入有效的字段名');
 
         if ($type === 'int')
