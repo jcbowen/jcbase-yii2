@@ -9,6 +9,7 @@ use Jcbowen\JcbaseYii2\components\Safe;
 use Jcbowen\JcbaseYii2\components\Template;
 use Jcbowen\JcbaseYii2\components\Util;
 use Yii;
+use yii\base\InvalidArgumentException;
 use yii\helpers\ArrayHelper;
 use yii\web\BadRequestHttpException;
 use yii\web\Controller;
@@ -27,13 +28,6 @@ class WebController extends Controller
 {
     use BaseControllerTrait;
     use CurdActionTrait;
-
-    /**
-     * 只允许访问allowAction中的action，其他的将报错404
-     * 如果设置了denyAction，则allowAction无效
-     * @var array 允许访问的action
-     */
-    public $allowAction = [];
 
     public function init()
     {
@@ -120,40 +114,6 @@ class WebController extends Controller
 
         include (new Template)->template('common/message', TEMPLATE_INCLUDEPATH);
         return (new Util)->resultHtml();
-    }
-
-    /**
-     * {@inheritdoc}
-     * @throws NotFoundHttpException|BadRequestHttpException
-     */
-    public function beforeAction($action)
-    {
-        $beforeAction = parent::beforeAction($action);
-
-        if (!$beforeAction) return false;
-
-        if (empty($this->denyAction) && !empty($this->allowAction)) {
-            $actions          = [
-                'list',
-                'detail',
-                'loader',
-                'create',
-                'update',
-                'set-value',
-                'save',
-                'delete',
-                'restore',
-                'remove',
-            ];
-            $this->denyAction = array_filter($actions, function ($item) {
-                return !in_array($item, $this->allowAction);
-            });
-        }
-
-        if (!empty($this->denyAction) && in_array($action->id, $this->denyAction))
-            throw new NotFoundHttpException(Yii::t('yii', 'Page not found.'));
-
-        return true;
     }
 
     /**
