@@ -74,6 +74,11 @@ class WechatPay extends Component
     public $instance;
 
     /**
+     * @var string 支付类型 JSAPI、APP、H5、Native
+     */
+    public $payType = 'JSAPI';
+
+    /**
      * @var array 错误信息
      */
     public $errors = [];
@@ -120,6 +125,15 @@ class WechatPay extends Component
                 $platformCertificateSerial => $platformPublicKeyInstance,
             ],
         ]);
+
+        switch ($type) {
+            case 'App':
+                $this->payType = 'APP';
+                break;
+            default:
+                $this->payType = 'JSAPI';
+                break;
+        }
 
         return $this;
     }
@@ -308,7 +322,7 @@ class WechatPay extends Component
      * @return array|bool|mixed
      * @lasttime 2022/11/10 01:29
      */
-    public function jsApi()
+    public function JSAPI()
     {
         $check = $this->checkJsApiError();
         if (Util::isError($check)) {
@@ -359,7 +373,7 @@ class WechatPay extends Component
      * @return array|mixed|true
      * @lasttime: 2023/3/10 12:15
      */
-    public function app()
+    public function APP()
     {
         $check = $this->checkTransactionsError();
         if (Util::isError($check))
@@ -416,18 +430,46 @@ class WechatPay extends Component
         $merchantPrivateKeyFilePath = 'file://' . Yii::getAlias('@common/pay/wechat/') . $this->merchantId . '/apiclient_key.pem';
         $merchantPrivateKeyInstance = Rsa::from($merchantPrivateKeyFilePath);
 
-        $params = [
-            'appId'     => $this->appId,
-            'timeStamp' => (string)Formatter::timestamp(),
-            'nonceStr'  => Formatter::nonce(),
-            'package'   => 'prepay_id=' . $this->prepayId,
-        ];
-        $params += [
-            'paySign'     => Rsa::sign(
-                Formatter::joinedByLineFeed(...array_values($params)),
-                $merchantPrivateKeyInstance
-            ), 'signType' => 'RSA'
-        ];
+        if ($this->payType == 'APP') {
+            // 适用于常规app
+            $params = [
+                'appId'     => $this->appId,
+                'timeStamp' => (string)Formatter::timestamp(),
+                'nonceStr'  => Formatter::nonce(),
+                'prepayId'  => $this->prepayId,
+
+            ];
+            $params += [
+                'sign'            => Rsa::sign(
+                    Formatter::joinedByLineFeed(...array_values($params)),
+                    $merchantPrivateKeyInstance
+                ), 'packageValue' => 'Sign=WXPay', 'partnerId' => $this->merchantId,
+            ];
+            // 如果用于uniapp的app支付，需要在接收到返回数据后，进行如下转换
+            /*$params = [
+                'appid'     => $appParams['appId'],
+                'noncestr'  => $appParams['nonceStr'],
+                'package'   => $appParams['packageValue'],
+                'partnerid' => $appParams['partnerId'],
+                'prepayid'  => $appParams['prepayId'],
+                'timestamp' => $appParams['timeStamp'],
+                'sign'      => $appParams['sign'],
+            ];*/
+        } else {
+            // 适用于JSAPI
+            $params = [
+                'appId'     => $this->appId,
+                'timeStamp' => (string)Formatter::timestamp(),
+                'nonceStr'  => Formatter::nonce(),
+                'package'   => 'prepay_id=' . $this->prepayId,
+            ];
+            $params += [
+                'paySign'     => Rsa::sign(
+                    Formatter::joinedByLineFeed(...array_values($params)),
+                    $merchantPrivateKeyInstance
+                ), 'signType' => 'RSA'
+            ];
+        }
 
         return $params;
     }
