@@ -23,7 +23,7 @@ trait BaseControllerTrait
      * {@inheritdoc}
      * @throws NotFoundHttpException|BadRequestHttpException
      */
-    public function beforeAction($action): bool
+    public function beforeAction($action)
     {
         $beforeAction = parent::beforeAction($action);
 
