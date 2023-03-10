@@ -258,19 +258,21 @@ class WechatPay extends Component
     }
 
     /**
-     * 检查jsApi参数是否有误
+     * 检查交易参数是否有误
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
      * @return array|true
+     * @lasttime: 2023/3/10 12:21
      */
-    public function checkJsApiError()
+    public function checkTransactionsError()
     {
         if ($this->amount['total'] <= 0)
             $this->errors[] = '金额必须大于0';
 
         if (Util::strExists($this->amount['total'], '.'))
             $this->errors[] = '订单金额(单位分)必须为整数';
-
-        if (empty($this->payer['openid']))
-            $this->errors[] = '支付者openid不能为空';
 
         if (empty($this->notifyUrl))
             $this->errors[] = '回调地址不能为空';
@@ -279,6 +281,23 @@ class WechatPay extends Component
             return Util::error(ErrCode::PARAMETER_ERROR, 'errors', $this->errors);
 
         return true;
+    }
+
+    /**
+     * 检查jsApi交易参数是否有误
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return array|true
+     * @lasttime: 2023/3/10 12:21
+     */
+    public function checkJsApiError()
+    {
+        if (empty($this->payer['openid']))
+            $this->errors[] = '支付者openid不能为空';
+
+        return $this->checkTransactionsError();
     }
 
     /**
@@ -324,13 +343,65 @@ class WechatPay extends Component
             }
             return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
         } catch (Exception $e) {
-            return Util::error($e->getResponse()->getStatusCode(), $e->getMessage());
+            return Util::error($e->getCode(), $e->getMessage(), [
+                'errcode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
+            ]);
         }
     }
 
     /**
-     * 生成前端调用jsApi支付的参数
-     * 执行前务必保证当前实例已经执行过jsApi方法
+     * app下单
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return array|mixed|true
+     * @lasttime: 2023/3/10 12:15
+     */
+    public function app()
+    {
+        $check = $this->checkTransactionsError();
+        if (Util::isError($check))
+            return $check;
+
+        try {
+            $jsonData = [
+                'mchid'        => $this->merchantId,
+                'out_trade_no' => $this->outTradeNo ?? 'jc' . date('YmdHis') . '000' . Util::random(4, true),
+                'appid'        => $this->appId,
+                'description'  => $this->description ?? '商品' . date('YmdHis'),
+                'notify_url'   => $this->notifyUrl,
+                'amount'       => $this->amount,
+            ];
+
+            if (!empty($this->attach)) {
+                $jsonData['attach'] = $this->attach;
+            }
+
+            $resp = $this->instance->chain('v3/pay/transactions/app')->post([
+                'json' => $jsonData,
+            ]);
+            if ($resp->getStatusCode() == 200) {
+                $body = $resp->getBody();
+                $body = json_decode($body, true);
+                if (isset($body['prepay_id'])) {
+                    $this->prepayId = $body['prepay_id'];
+                }
+                return $body;
+            }
+            return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
+        } catch (Exception $e) {
+            return Util::error($e->getCode(), $e->getMessage(), [
+                'errcode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * 生成前端调用支付的参数
+     * 执行前务必保证当前实例已经执行过 jsApi/app下单 方法
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -390,7 +461,10 @@ class WechatPay extends Component
             }
             return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
         } catch (Exception $e) {
-            return Util::error($e->getResponse()->getStatusCode(), $e->getMessage());
+            return Util::error($e->getCode(), $e->getMessage(), [
+                'errcode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
+            ]);
         }
     }
 
@@ -416,7 +490,10 @@ class WechatPay extends Component
             }
             return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
         } catch (Exception $e) {
-            return Util::error($e->getResponse()->getStatusCode(), $e->getMessage());
+            return Util::error($e->getCode(), $e->getMessage(), [
+                'errcode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
+            ]);
         }
     }
 
@@ -446,7 +523,10 @@ class WechatPay extends Component
             }
             return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
         } catch (Exception $e) {
-            return Util::error($e->getResponse()->getStatusCode(), $e->getMessage());
+            return Util::error($e->getCode(), $e->getMessage(), [
+                'errcode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
+            ]);
         }
     }
 
@@ -505,7 +585,10 @@ class WechatPay extends Component
             }
             return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
         } catch (Exception $e) {
-            return Util::error($e->getResponse()->getStatusCode(), $e->getMessage());
+            return Util::error($e->getCode(), $e->getMessage(), [
+                'errcode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
+            ]);
         }
     }
 
