@@ -26,6 +26,10 @@ class ErrCode
     const SYSTEM_BUSY = 9001001;
     /** @var int 维护中 */
     const UNDER_MAINTENANCE = 9001002;
+    /** @var int 无效的配置 */
+    const INVALID_CONFIG = 9001003;
+    /** @var int 没有配置 */
+    const NO_CONFIG = 9001004;
 
     /** @var int 失去连接 */
     const LOST_CONNECTION = 9002001;
@@ -47,8 +51,13 @@ class ErrCode
     const PARAMETER_ERROR = 9002008;
     /** @var int 无效参数 */
     const PARAMETER_INVALID = 9002009;
-    /** @var int 部分参数为空 */
-    const PARAMETER_EMPTY = 9002010;
+    /** @var int 参数缺失 */
+    const PARAMETER_MISSING = 9002010;
+    /**
+     * @var int 部分参数为空
+     * @deprecated 请使用 PARAMETER_ERROR
+     */
+    const PARAMETER_EMPTY = 9002008;
     /** @var int 已存在 */
     const EXISTED = 9002011;
     /** @var int 不存在或已被删除 */
@@ -83,6 +92,16 @@ class ErrCode
     const INOPERABLE_STATE = 9002026;
     /** @var int 暂不支持 */
     const NOT_SUPPORTED = 9002027;
+    /** @var int 网络连接-错误 */
+    const NETWORK_CONNECTION_ERROR = 9002028;
+    /** @var int 网络连接-超时 */
+    const NETWORK_CONNECTION_TIMEOUT = 9002029;
+    /** @var int 网络连接-中断 */
+    const NETWORK_CONNECTION_INTERRUPT = 9002030;
+    /** @var int 网络连接-拒绝 */
+    const NETWORK_CONNECTION_REFUSED = 9002031;
+    /** @var int 网络连接-重置 */
+    const NETWORK_CONNECTION_RESET = 9002032;
 
     /** @var int 数据存储错误 */
     const STORAGE_ERROR = 9003001;
@@ -136,10 +155,6 @@ class ErrCode
     const DATABASE_TRANSACTION_RELEASE_SAVEPOINT_ERROR = 9003025;
     /** @var int 数据库事务回滚到释放保存点错误 */
     const DATABASE_TRANSACTION_ROLLBACK_TO_RELEASE_SAVEPOINT_ERROR = 9003026;
-    /** @var int 无效的配置 */
-    const INVALID_CONFIG = 9001003;
-    /** @var int 没有配置 */
-    const NO_CONFIG = 9001004;
 
     /** @var int 其他错误 */
     const OTHER = 9999999;
