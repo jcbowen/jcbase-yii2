@@ -102,6 +102,12 @@ class ErrCode
     const NETWORK_CONNECTION_REFUSED = 9002031;
     /** @var int 网络连接-重置 */
     const NETWORK_CONNECTION_RESET = 9002032;
+    /** @var int 没有绑定手机号 */
+    const NO_BIND_PHONE = 9002033;
+    /** @var int 没有绑定邮箱 */
+    const NO_BIND_EMAIL = 9002034;
+    /** @var int 没有设置密码 */
+    const NO_SET_PASSWORD = 9002035;
 
     /** @var int 数据存储错误 */
     const STORAGE_ERROR = 9003001;
