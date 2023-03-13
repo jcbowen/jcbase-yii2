@@ -93,6 +93,7 @@ class Redis
         if (Util::isError($redis)) return $redis;
 
         $value = $redis->get($key);
+        if (empty($value)) return $value;
         return Util::unserializer($value);
     }
 
