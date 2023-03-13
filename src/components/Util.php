@@ -519,7 +519,7 @@ class Util
             return $value;
         }
         if (version_compare(PHP_VERSION, '7.0.0', '>=')) {
-            $result = unserialize($value, array('allowed_classes' => false));
+            $result = unserialize($value, ['allowed_classes' => false]);
         } else {
             if (preg_match('/[oc]:[^:]*\d+:/i', $value)) {
                 return [];
