@@ -2,6 +2,7 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
+use SimpleXMLElement;
 use Yii;
 use yii\base\ExitException;
 use yii\base\InvalidConfigException;
@@ -218,27 +219,6 @@ class Util
     }
 
     /**
-     * 取出数组中指定部分
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @param array $arr
-     * @param mixed $default
-     * @param string|array $keys
-     * @return array
-     * @lasttime: 2022/3/19 6:12 下午
-     */
-    public static function arrayElements($keys, array $arr, $default = FALSE): array
-    {
-        $return = [];
-        $keys   = (array)$keys;
-        foreach ($keys as $key) {
-            $return[$key] = $arr[$key] ?? $default;
-        }
-        return $return;
-    }
-
-    /**
      * 是否为https通讯
      *
      * @author Bowen
@@ -286,6 +266,27 @@ class Util
     }
 
     /**
+     * 取出数组中指定部分
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param array $arr
+     * @param mixed $default
+     * @param string|array $keys
+     * @return array
+     * @lasttime: 2022/3/19 6:12 下午
+     */
+    public static function arrayElements($keys, array $arr, $default = FALSE): array
+    {
+        $return = [];
+        $keys   = (array)$keys;
+        foreach ($keys as $key) {
+            $return[$key] = $arr[$key] ?? $default;
+        }
+        return $return;
+    }
+
+    /**
      * 获取数组中指定key的
      *
      *
@@ -329,6 +330,167 @@ class Util
         }
 
         return $nodeArr;
+    }
+
+    /**
+     * 将 XML 字符串解释为对象
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $string
+     * @param string $class_name
+     * @param int $options
+     * @param string $ns
+     * @param bool $is_prefix
+     * @return false|SimpleXMLElement|string
+     * @lasttime: 2023/3/14 23:54
+     */
+    public static function simplexml_load_string($string, string $class_name = 'SimpleXMLElement', int $options = 0, string $ns = '', bool $is_prefix = false)
+    {
+        libxml_disable_entity_loader();
+        if (preg_match('/(\<\!DOCTYPE|\<\!ENTITY)/i', $string))
+            return false;
+
+        $string = preg_replace('/[\\x00-\\x08\\x0b-\\x0c\\x0e-\\x1f\\x7f]/', '', $string);
+        return simplexml_load_string($string, $class_name, $options, $ns, $is_prefix);
+    }
+
+    /**
+     * 将数组转换为xml
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $arr
+     * @param int $level
+     * @return array|string|string[]|null
+     * @lasttime: 2023/3/14 23:57
+     */
+    public static function arrayToXml($arr, int $level = 1)
+    {
+        $s = 1 == $level ? '<xml>' : '';
+        foreach ($arr as $tagName => $value) {
+            if (is_numeric($tagName)) {
+                $tagName = $value['TagName'];
+                unset($value['TagName']);
+            }
+            if (!is_array($value))
+                $s .= "<$tagName>" . (!is_numeric($value) ? '<![CDATA[' : '') . $value . (!is_numeric($value) ? ']]>' : '') . "</$tagName>";
+            else
+                $s .= "<$tagName>" . self::arrayToXml($value, $level + 1) . "</$tagName>";
+        }
+        $s = preg_replace("/([\x01-\x08\x0b-\x0c\x0e-\x1f])+/", ' ', $s);
+
+        return 1 == $level ? $s . '</xml>' : $s;
+    }
+
+    /**
+     * 将xml转换为数组
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $xml
+     * @return array|string
+     * @lasttime: 2023/3/14 23:58
+     */
+    public static function xmlToArray($xml)
+    {
+        if (empty($xml)) return [];
+
+        $result = [];
+        $xmlObj = self::simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
+        if ($xmlObj instanceof SimpleXMLElement) {
+            $result = json_decode(json_encode($xmlObj), true);
+            if (is_array($result))
+                return $result;
+            else
+                return '';
+        } else
+            return $result;
+    }
+
+    /**
+     * 反序列化
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @lastTime 2021/12/19 10:51 下午
+     * @param $value
+     *
+     * @return mixed|array
+     */
+    public static function unserializer($value)
+    {
+        if (empty($value)) return [];
+        if (!self::is_serialized($value)) {
+            return $value;
+        }
+        if (version_compare(PHP_VERSION, '7.0.0', '>=')) {
+            $result = unserialize($value, ['allowed_classes' => false]);
+        } else {
+            if (preg_match('/[oc]:[^:]*\d+:/i', $value)) {
+                return [];
+            }
+            $result = unserialize($value);
+        }
+        if (false === $result) {
+            $temp = preg_replace_callback('!s:(\d+):"(.*?)";!s', function ($matches) {
+                return 's:' . strlen($matches[2]) . ':"' . $matches[2] . '";';
+            }, $value);
+
+            return unserialize($temp);
+        } else {
+            return $result;
+        }
+    }
+
+    /**
+     * 是否为序列化字符串
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @lastTime 2021/12/19 10:52 下午
+     * @param bool $strict
+     *
+     * @param $data
+     * @return bool
+     */
+    public static function is_serialized($data, bool $strict = true): bool
+    {
+        if (!is_string($data)) return false;
+        $data = trim($data);
+        if ('N;' == $data) return true;
+        if (strlen($data) < 4) return false;
+        if (':' !== $data[1]) return false;
+        if ($strict) {
+            $lastC = substr($data, -1);
+            if (';' !== $lastC && '}' !== $lastC) return false;
+        } else {
+            $semicolon = strpos($data, ';');
+            $brace     = strpos($data, '}');
+            if (false === $semicolon && false === $brace) return false;
+            if (false !== $semicolon && $semicolon < 3) return false;
+            if (false !== $brace && $brace < 4) return false;
+        }
+        $token = $data[0];
+        switch ($token) {
+            case 's' :
+                if ($strict) {
+                    if ('"' !== substr($data, -2, 1)) return false;
+                } elseif (false === strpos($data, '"')) return false;
+            case 'a' :
+                return (bool)preg_match("/^$token:[0-9]+:/s", $data);
+            case 'O' :
+                return false;
+            case 'b' :
+            case 'i' :
+            case 'd' :
+                $end = $strict ? '$' : '';
+                return (bool)preg_match("/^$token:[0-9.E-]+;$end/", $data);
+        }
+        return false;
     }
 
     /**
@@ -500,88 +662,6 @@ class Util
             $string .= '...';
 
         return $string;
-    }
-
-    /**
-     * 反序列化
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @lastTime 2021/12/19 10:51 下午
-     * @param $value
-     *
-     * @return mixed|array
-     */
-    public static function unserializer($value)
-    {
-        if (empty($value)) return [];
-        if (!self::is_serialized($value)) {
-            return $value;
-        }
-        if (version_compare(PHP_VERSION, '7.0.0', '>=')) {
-            $result = unserialize($value, ['allowed_classes' => false]);
-        } else {
-            if (preg_match('/[oc]:[^:]*\d+:/i', $value)) {
-                return [];
-            }
-            $result = unserialize($value);
-        }
-        if (false === $result) {
-            $temp = preg_replace_callback('!s:(\d+):"(.*?)";!s', function ($matches) {
-                return 's:' . strlen($matches[2]) . ':"' . $matches[2] . '";';
-            }, $value);
-
-            return unserialize($temp);
-        } else {
-            return $result;
-        }
-    }
-
-    /**
-     * 是否为序列化字符串
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @lastTime 2021/12/19 10:52 下午
-     * @param bool $strict
-     *
-     * @param $data
-     * @return bool
-     */
-    public static function is_serialized($data, bool $strict = true): bool
-    {
-        if (!is_string($data)) return false;
-        $data = trim($data);
-        if ('N;' == $data) return true;
-        if (strlen($data) < 4) return false;
-        if (':' !== $data[1]) return false;
-        if ($strict) {
-            $lastC = substr($data, -1);
-            if (';' !== $lastC && '}' !== $lastC) return false;
-        } else {
-            $semicolon = strpos($data, ';');
-            $brace     = strpos($data, '}');
-            if (false === $semicolon && false === $brace) return false;
-            if (false !== $semicolon && $semicolon < 3) return false;
-            if (false !== $brace && $brace < 4) return false;
-        }
-        $token = $data[0];
-        switch ($token) {
-            case 's' :
-                if ($strict) {
-                    if ('"' !== substr($data, -2, 1)) return false;
-                } elseif (false === strpos($data, '"')) return false;
-            case 'a' :
-                return (bool)preg_match("/^$token:[0-9]+:/s", $data);
-            case 'O' :
-                return false;
-            case 'b' :
-            case 'i' :
-            case 'd' :
-                $end = $strict ? '$' : '';
-                return (bool)preg_match("/^$token:[0-9.E-]+;$end/", $data);
-        }
-        return false;
     }
 
     /**

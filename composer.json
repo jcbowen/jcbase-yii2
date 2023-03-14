@@ -35,7 +35,8 @@
     "ext-mbstring": "*",
     "ext-gd": "*",
     "ext-simplexml": "*",
-    "ext-bcmath": "*"
+    "ext-bcmath": "*",
+    "ext-libxml": "*"
   },
   "extra": {
     "branch-alias": {
