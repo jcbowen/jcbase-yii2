@@ -222,11 +222,13 @@ class FieldFilter
      */
     private function getConfig()
     {
-        if (empty(self::$config)) {
-            if (empty($this->modelClass)) return [];
-            self::$config = Yii::$app->params['model_filter_field'][$this->modelClass] ?? [];
+        if (empty($this->modelClass)) return [];
+
+        if (empty(self::$config[$this->modelClass])) {
+            self::$config[$this->modelClass] = Yii::$app->params['model_filter_field'][$this->modelClass] ?? [];
         }
-        return self::$config;
+
+        return self::$config[$this->modelClass];
     }
 }
 
