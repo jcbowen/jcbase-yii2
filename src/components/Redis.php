@@ -260,4 +260,21 @@ class Redis
 
         return $redis->setnx($key, $value);
     }
+
+    /**
+     * redis->keys
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $pattern
+     * @return mixed
+     * @lasttime: 2023/3/18 12:12 PM
+     */
+    public function keys($pattern)
+    {
+        $redis = $this->getConnection();
+        if (Util::isError($redis)) return $redis;
+        return $redis->keys($pattern);
+    }
 }
