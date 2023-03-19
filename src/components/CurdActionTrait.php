@@ -27,10 +27,15 @@ trait CurdActionTrait
      */
     public $modelClass;
 
-    //---------- 检查 ----------/
+    //---------- 以下赋值于checkInit之后 ----------/
 
     /** @var string 数据表名称 */
     public $modelTableName;
+
+    /**
+     * @var ActiveRecord 数据模型实例
+     */
+    public $modelInstance;
 
     /** @var array 该表拥有的字段 */
     public $modelAttributes;
@@ -40,6 +45,11 @@ trait CurdActionTrait
 
     /** @var string 空时间字符 */
     public $noTime = '0000-00-00 00:00:00';
+
+    //---------- 以下赋值于actionCreate/actionUpdate之后 ----------/
+
+    /** @var bool 是否新增数据 */
+    public $isCreate = false;
 
     /**
      * 调用前需进行的初始化检查
@@ -57,9 +67,9 @@ trait CurdActionTrait
             $this->operateTime    = date('Y-m-d H:i:s');
             $this->modelTableName = call_user_func($this->modelClass . '::tableName');
 
-            $model = new $this->modelClass();
-            if (method_exists($model, 'getAttributes'))
-                $this->modelAttributes = $model->getAttributes();
+            $this->modelInstance = new $this->modelClass;
+            if (method_exists($this->modelInstance, 'getAttributes'))
+                $this->modelAttributes = $this->modelInstance->getAttributes();
         }
     }
 
@@ -243,7 +253,7 @@ trait CurdActionTrait
     //---------- 无分页列表查询(适用于选择器) ----------/
 
     /**
-     * 滚动分页数据加载(最大输出100条数据)
+     * 滚动分页数据加载(最大输出1000条数据)
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -461,18 +471,20 @@ trait CurdActionTrait
 
         $this->checkInit();
 
-        $fields  = $this->getDetailFields();
-        $where   = $this->getDetailWhere($_GPC);
-        $asArray = $this->detailAsArray();
+        $fields = $this->getDetailFields();
+        $where  = $this->getDetailWhere($_GPC);
 
         /** @var ActiveQuery $row */
         $row = call_user_func($this->modelClass . '::find');
         $row = $row->select($fields);
         $row = $row->where($where);
 
-        $this->getDetailRow($row);
+        $result = $this->getDetailRow($row);
+        if (isset($result) && Util::isError($result))
+            return (new Util)->resultError($result);
 
-        if ($asArray) $row = $row->asArray();
+        if ($this->detailAsArray())
+            $row = $row->asArray();
         $detail = $row->one();
 
         if (empty($detail)) return (new Util)->result(ErrCode::NOT_EXIST, '查询数据不存在或已被删除');
@@ -504,7 +516,7 @@ trait CurdActionTrait
      * @return ActiveQuery|array|Response|void
      * @lasttime: 2022/3/21 11:11 下午
      */
-    public function getDetailRow(ActiveQuery &$row): ActiveQuery
+    public function getDetailRow(ActiveQuery &$row)
     {
         return $row;
     }
@@ -520,12 +532,12 @@ trait CurdActionTrait
      */
     public function getDetailWhere(array &$data)
     {
-        $pkId = intval($data[$this->pkId]);
-        if (empty($pkId))
+        $id = intval($data[$this->pkId]);
+        if (empty($id))
             return (new Util)->result(ErrCode::PARAMETER_ERROR, "{$this->pkId}不能为空");
 
         $where   = ['and'];
-        $where[] = [$this->modelTableName . '.' . $this->pkId => $pkId];
+        $where[] = [$this->modelTableName . '.' . $this->pkId => $id];
         return $where;
     }
 
@@ -593,6 +605,8 @@ trait CurdActionTrait
     {
         $this->checkInit();
 
+        $this->isCreate = true;
+
         // 获取新增数据
         $data = $this->getCreateFormData();
         if (empty($data))
@@ -611,7 +625,7 @@ trait CurdActionTrait
         // 开启事务
         $tr = Yii::$app->db->beginTransaction();
 
-        $result = $this->toSave(new $this->modelClass(), $data);
+        $result = $this->toSave($this->modelInstance, $data);
         if (Util::isError($result)) {
             $tr->rollBack();
             return (new Util)->resultError($result);
@@ -639,7 +653,7 @@ trait CurdActionTrait
         if (!empty($result) && is_array($result) && $result['errcode'] == ErrCode::SUCCESS)
             return (new Util)->result(ErrCode::SUCCESS, $result['errmsg'], $result['data']);
 
-        return (new Util)->result(ErrCode::SUCCESS, '添加成功', [$this->pkId => $id]);
+        return $this->createReturn($id);
     }
 
     /**
@@ -690,6 +704,21 @@ trait CurdActionTrait
         return $id;
     }
 
+    /**
+     * 新增数据成功后的返回数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $id
+     * @return string|Response
+     * @lasttime: 2023/3/19 8:00 PM
+     */
+    public function createReturn($id)
+    {
+        return $this->saveReturn($id);
+    }
+
     //---------- 更新数据 ----------/
 
     /**
@@ -705,13 +734,15 @@ trait CurdActionTrait
     {
         $this->checkInit();
 
+        $this->isCreate = false;
+
         // 获取更新数据
         $data = $data ?? $this->getUpdateFormData();
 
         if ($data instanceof Response) return $data;
 
-        $pkId = intval($data[$this->pkId]);
-        if (empty($pkId))
+        $id = intval($data[$this->pkId]);
+        if (empty($id))
             return (new Util)->result(ErrCode::UNKNOWN, "{$this->pkId}不能为空");
 
         // 查询数据是否存在
@@ -736,7 +767,7 @@ trait CurdActionTrait
         }
 
         // 更新后
-        $result_after = $this->updateAfter($pkId, $data);
+        $result_after = $this->updateAfter($id, $data);
         if (Util::isError($result_after)) {
             $tr->rollBack();
             return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '更新失败，请稍后再试');
@@ -751,7 +782,7 @@ trait CurdActionTrait
             ]);
         }
 
-        return (new Util)->result(ErrCode::SUCCESS, '更新成功', [$this->pkId => $pkId]);
+        return $this->updateReturn($id);
     }
 
     /**
@@ -765,12 +796,12 @@ trait CurdActionTrait
      */
     public function getUpdateWhere(array &$data)
     {
-        $pkId = intval($data[$this->pkId]);
-        if (empty($pkId))
+        $id = intval($data[$this->pkId]);
+        if (empty($id))
             return (new Util)->result(ErrCode::PARAMETER_ERROR, "{$this->pkId}不能为空");
 
         $where   = ['and'];
-        $where[] = [$this->pkId => $pkId];
+        $where[] = [$this->pkId => $id];
         return $where;
     }
 
@@ -824,6 +855,23 @@ trait CurdActionTrait
     }
 
     /**
+     * 更新数据成功后的返回数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $id
+     * @return string|Response
+     * @lasttime: 2023/3/19 8:05 PM
+     */
+    public function updateReturn($id)
+    {
+        return $this->saveReturn($id);
+    }
+
+    //---------- 设置字段值 ----------/
+
+    /**
      * 设置某个字段的值
      *
      * @author Bowen
@@ -837,8 +885,8 @@ trait CurdActionTrait
 
         $data = $this->getSetValueFormData();
 
-        $pkId = intval($data[$this->pkId]);
-        if (empty($pkId))
+        $id = intval($data[$this->pkId]);
+        if (empty($id))
             return (new Util)->result(ErrCode::PARAMETER_ERROR, "$this->pkId 不能为空");
 
         $field = Safe::gpcString(trim($data['field'])); // 字段名
@@ -863,7 +911,7 @@ trait CurdActionTrait
         } else
             $value = Safe::gpcString(trim($value));
 
-        $model = call_user_func($this->modelClass . '::findOne', $this->getSetValueQueryWhere($pkId));
+        $model = call_user_func($this->modelClass . '::findOne', $this->getSetValueQueryWhere($id));
         if (!$model)
             return (new Util)->result(ErrCode::NOT_EXIST, '数据不存在或已被删除');
 
@@ -886,7 +934,7 @@ trait CurdActionTrait
             return (new Util)->resultError($result);
         }
 
-        $result_after = $this->setValueAfter($pkId, $field, $value);
+        $result_after = $this->setValueAfter($id, $field, $value);
         if (Util::isError($result_after)) {
             $tr->rollBack();
             return (new Util)->resultError($result_after);
@@ -902,7 +950,7 @@ trait CurdActionTrait
             ]);
         }
 
-        return (new Util)->result(ErrCode::SUCCESS, '设置成功', ['value' => $value]);
+        return $this->setValueReturn($value, $field, $id);
     }
 
     /**
@@ -924,14 +972,14 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param int $pkId
+     * @param int $id
      * @return array|string
      * @lasttime 2022/9/30 09:21
      */
-    public function getSetValueQueryWhere(int $pkId = 0)
+    public function getSetValueQueryWhere(int $id = 0)
     {
         $where   = ['and'];
-        $where[] = [$this->pkId => $pkId];
+        $where[] = [$this->pkId => $id];
         if (array_key_exists('deleted_at', $this->modelAttributes))
             $where[] = ['deleted_at' => $this->noTime];
 
@@ -970,19 +1018,37 @@ trait CurdActionTrait
     }
 
     /**
+     * 设置某个字段的值后执行
      *
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param int $pkId
+     * @param int $id
      * @param string $field
      * @param string|null $value
      * @return bool|array
      * @lasttime: 2022/12/26 3:20 PM
      */
-    public function setValueAfter(int $pkId, string $field = '', ?string $value = '')
+    public function setValueAfter(int $id, string $field = '', ?string $value = '')
     {
         return true;
+    }
+
+    /**
+     * 设置某个字段的值返回数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $value
+     * @param $field
+     * @param $id
+     * @return string|Response
+     * @lasttime: 2023/3/19 8:10 PM
+     */
+    public function setValueReturn($value, $field, $id)
+    {
+        return (new Util)->result(ErrCode::SUCCESS, '设置成功', ['value' => $value]);
     }
 
     //---------- 变更通用 ----------/
@@ -1039,6 +1105,21 @@ trait CurdActionTrait
     }
 
     /**
+     * 新增/更新返回数据(接口合并)
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $id
+     * @return string|Response
+     * @lasttime: 2023/3/19 8:14 PM
+     */
+    public function saveReturn($id)
+    {
+        return (new Util)->result(ErrCode::SUCCESS, ($this->isCreate ? '添加' : '更新') . '成功', [$this->pkId => $id]);
+    }
+
+    /**
      * 获取新增/更新数据
      *
      * @author Bowen
@@ -1054,14 +1135,7 @@ trait CurdActionTrait
 
     //---------- 删除 ----------/
 
-    /**
-     * 删除数据
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @return string|Response
-     * @lasttime: 2022/3/13 10:53 上午
-     */
+
     public function actionDelete()
     {
         global $_GPC;
@@ -1075,12 +1149,15 @@ trait CurdActionTrait
         if (empty($ids))
             return (new Util)->result(ErrCode::PARAMETER_ERROR, '参数缺失，请重试');
 
+        // 设置删除数据的select字段
         $fields = $this->getDeleteFields();
+
+        self::checkFieldExistInSelect($fields, $this->pkId, '设置删除数据的');
 
         // 获取删除条件
         $where = $this->getDeleteWhere($ids);
 
-        $dels = call_user_func($this->modelClass . '::find')
+        $delArr = call_user_func($this->modelClass . '::find')
             ->select($fields)
             ->where([
                 $this->modelTableName . '.deleted_at' => $this->noTime,
@@ -1089,20 +1166,20 @@ trait CurdActionTrait
             ->asArray()
             ->all();
 
-        if (empty($dels))
+        if (empty($delArr))
             return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
 
-        $delIds = ArrayHelper::getColumn($dels, $this->pkId);
+        $delIds = ArrayHelper::getColumn($delArr, $this->pkId);
 
         // 删除前
-        $result_before = $this->deleteBefore($dels, $delIds);
+        $result_before = $this->deleteBefore($delArr, $delIds);
         if (Util::isError($result_before))
             return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
 
         $tr = Yii::$app->db->beginTransaction();
 
         // 获取删除操作更新的属性值
-        $condition = $this->getDeleteCondition($dels);
+        $condition = $this->getDeleteCondition($delArr);
 
         if (!call_user_func("$this->modelClass::updateAll", $condition, $where)) {
             $tr->rollBack();
@@ -1127,11 +1204,11 @@ trait CurdActionTrait
             ]);
         }
 
-        return (new Util)->result(ErrCode::SUCCESS, '删除成功', ['delIds' => $delIds]);
+        return $this->deleteReturn($delIds, $delArr);
     }
 
     /**
-     * 设置被删除数据的查询返回字段（重写方法时，务必查询主键！）
+     * 设置删除数据的select字段（重写方法时，务必查询主键！）
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -1163,12 +1240,12 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param array $dels 所有要被删除的数据
+     * @param array $delArr 所有要被删除的数据
      * @param array $delIds 所有要被删除的数据的ids
      * @return array|bool
      * @lasttime: 2021/5/9 3:04 下午
      */
-    public function deleteBefore(array $dels, array $delIds)
+    public function deleteBefore(array $delArr, array $delIds)
     {
         return true;
     }
@@ -1178,11 +1255,11 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param array $dels 要被删除的数据
+     * @param array $delArr 要被删除的数据
      * @return array|string
      * @lasttime 2022/9/21 15:15
      */
-    public function getDeleteCondition(array $dels)
+    public function getDeleteCondition(array $delArr)
     {
         return ['deleted_at' => $this->operateTime];
     }
@@ -1199,6 +1276,22 @@ trait CurdActionTrait
     public function deleteAfter(array $ids = [])
     {
         return true;
+    }
+
+    /**
+     * 删除返回
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array $delIds
+     * @param array $delArr
+     * @return string|Response
+     * @lasttime: 2023/3/19 10:33 PM
+     */
+    public function deleteReturn(array $delIds, array $delArr)
+    {
+        return (new Util)->result(ErrCode::SUCCESS, '删除成功', ['delIds' => $delIds]);
     }
 
     //---------- 恢复删除的数据 ----------/
@@ -1224,14 +1317,17 @@ trait CurdActionTrait
         if (empty($ids))
             return (new Util)->result(ErrCode::PARAMETER_ERROR, '参数缺失，请重试');
 
+        // 设置恢复数据的select字段
         $fields = $this->getRestoreFields();
+
+        self::checkFieldExistInSelect($fields, $this->pkId, '设置恢复数据的');
 
         // 获取删除条件
         $where = $this->getRestoreWhere($ids);
 
         $items   = call_user_func($this->modelClass . '::find')
             ->select($fields)
-            ->where(['<>', $this->modelTableName . '.deleted_at', $this->noTime,])
+            ->where(['<>', $this->modelTableName . '.deleted_at', $this->noTime])
             ->andWhere($where)
             ->asArray()
             ->all();
@@ -1271,11 +1367,11 @@ trait CurdActionTrait
             ]);
         }
 
-        return (new Util)->result(ErrCode::SUCCESS, '恢复成功', ['itemIds' => $itemIds]);
+        return $this->restoreReturn($itemIds, $items);
     }
 
     /**
-     * 设置被恢复数据的查询返回字段（重写方法时，务必查询主键！）
+     * 设置恢复数据的select字段（重写方法时，务必查询主键！）
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -1344,6 +1440,22 @@ trait CurdActionTrait
         return true;
     }
 
+    /**
+     * 恢复成功返回
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array $restoreIds
+     * @param array $restoreArr
+     * @return string|Response
+     * @lasttime: 2023/3/19 10:48 PM
+     */
+    public function restoreReturn(array $restoreIds, array $restoreArr)
+    {
+        return (new Util)->result(ErrCode::SUCCESS, '恢复成功', ['restoreIds' => $restoreIds]);
+    }
+
     //---------- 真实删除数据 ----------/
 
     /**
@@ -1368,6 +1480,8 @@ trait CurdActionTrait
             return (new Util)->result(ErrCode::PARAMETER_ERROR, '参数缺失，请重试');
 
         $fields = $this->getRemoveFields();
+
+        self::checkFieldExistInSelect($fields, $this->pkId, '设置真实删除数据的');
 
         // 获取删除条件
         $where = $this->getRemoveWhere($ids);
@@ -1410,7 +1524,7 @@ trait CurdActionTrait
             ]);
         }
 
-        return (new Util)->result(ErrCode::SUCCESS, '永久删除成功', ['itemIds' => $itemIds]);
+        return $this->removeReturn($itemIds, $items);
     }
 
     /**
@@ -1467,5 +1581,61 @@ trait CurdActionTrait
     public function removeAfter(array $ids = [])
     {
         return true;
+    }
+
+    /**
+     * 永久删除成功返回
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array $removeIds
+     * @param array $removeArr
+     * @return string|Response
+     * @lasttime: 2023/3/19 11:10 PM
+     */
+    public function removeReturn(array $removeIds, array $removeArr)
+    {
+        return (new Util)->result(ErrCode::SUCCESS, '永久删除成功', ['removeIds' => $removeIds]);
+    }
+
+    // ---------- 其他 ----------/
+
+    /**
+     * 检查查询语句中是否包含指定字段
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array|string $select Check the SELECT part of the query.
+     * @param string $field 检查的字段名
+     * @param string $useAlias 本次查询的用处别名
+     * @lasttime: 2023/3/19 11:01 PM
+     */
+    public static function checkFieldExistInSelect($select, string $field, string $useAlias = '')
+    {
+        // 检查恢复数据的select字段是否包含主键
+        $result_checkSelect = false;
+        if (is_array($select)) {
+            foreach ($select as $item) {
+                // 判断是否有数据表别名
+                if (strpos($item, '.') !== false)
+                    $item = explode('.', $item)[1];
+                if ($item == $field) {
+                    $result_checkSelect = true;
+                    break;
+                }
+            }
+        } elseif (is_string($select)) {
+            // 判断是否有数据表别名
+            if (strpos($select, '.') !== false)
+                $select = explode('.', $select)[1];
+            if ($select == $field)
+                $result_checkSelect = true;
+        } else {
+            throw new RuntimeException($useAlias . 'select字段类型错误');
+        }
+        if (!$result_checkSelect)
+            throw new RuntimeException($useAlias . 'select字段不包含主键');
     }
 }
