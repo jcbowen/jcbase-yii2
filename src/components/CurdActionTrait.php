@@ -93,8 +93,12 @@ trait CurdActionTrait
         $row = call_user_func($this->modelClass . '::find');
         $row = $row->select($fields);
 
-        $row = $this->getListRow($row);
+        // 用于补充查询
+        $result = $this->getListRow($row);
+        if (isset($result) && Util::isError($result))
+            return (new Util)->resultError($result);
 
+        // 仅在存在deleted_at字段时才进行软删除过滤
         if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
             $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
 
@@ -147,10 +151,10 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param ActiveQuery $row
-     * @return ActiveQuery
+     * @return ActiveQuery|array|Response|void
      * @lasttime: 2022/3/18 11:11 下午
      */
-    public function getListRow(ActiveQuery $row): ActiveQuery
+    public function getListRow(ActiveQuery &$row)
     {
         return $row;
     }
@@ -267,11 +271,12 @@ trait CurdActionTrait
         $row = call_user_func($this->modelClass . '::find');
         $row->select($fields);
 
-        // 传给子类便于扩展
+        // 用于补充查询
         $result = $this->getLoaderRow($row);
         if (isset($result) && Util::isError($result))
             return (new Util)->resultError($result);
 
+        // 仅在存在deleted_at字段时才进行软删除过滤
         if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
             $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
 
@@ -284,7 +289,6 @@ trait CurdActionTrait
         if ($this->loaderAsArray())
             $row = $row->asArray();
         $list = $row->all();
-        // $total = $row->count();
 
         $minTime = '';
         $maxTime = '';
