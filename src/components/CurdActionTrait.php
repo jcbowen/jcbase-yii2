@@ -236,8 +236,7 @@ trait CurdActionTrait
     public function listReturn($list, $total, $page, $pageSize)
     {
         return (new Util)->result(ErrCode::SUCCESS, 'ok', $list, [
-            'count'     => $total, 'page' => $page,
-            'page_size' => $pageSize
+            'count' => $total, 'page' => $page, 'page_size' => $pageSize
         ]);
     }
 
@@ -379,9 +378,8 @@ trait CurdActionTrait
         // 都没传的时候，不进行排序
         if (!isset($_GPC['minTime']) && !isset($_GPC['maxTime'])) return [];
         // 只传maxTime时，正序
-        if (isset($_GPC['maxTime']) && !isset($_GPC['minTime'])) {
+        if (isset($_GPC['maxTime']) && !isset($_GPC['minTime']))
             return [$this->modelTableName . '.created_at' => SORT_ASC];
-        }
 
         return [$this->modelTableName . '.created_at' => SORT_DESC];
     }
@@ -443,8 +441,7 @@ trait CurdActionTrait
     public function loaderReturn($list, $pageSize, $minTime, $maxTime)
     {
         return (new Util)->result(ErrCode::SUCCESS, 'ok', $list, [
-            'maxTime'   => $maxTime, 'minTime' => $minTime,
-            'page_size' => $pageSize
+            'maxTime' => $maxTime, 'minTime' => $minTime, 'page_size' => $pageSize
         ]);
     }
 
@@ -504,7 +501,7 @@ trait CurdActionTrait
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param ActiveQuery $row
-     * @return ActiveQuery|void
+     * @return ActiveQuery|array|Response|void
      * @lasttime: 2022/3/21 11:11 下午
      */
     public function getDetailRow(ActiveQuery &$row): ActiveQuery
@@ -525,7 +522,7 @@ trait CurdActionTrait
     {
         $pkId = intval($data[$this->pkId]);
         if (empty($pkId))
-            return (new Util)->result(ErrCode::PARAMETER_EMPTY, "{$this->pkId}不能为空");
+            return (new Util)->result(ErrCode::PARAMETER_ERROR, "{$this->pkId}不能为空");
 
         $where   = ['and'];
         $where[] = [$this->modelTableName . '.' . $this->pkId => $pkId];
@@ -599,7 +596,7 @@ trait CurdActionTrait
         // 获取新增数据
         $data = $this->getCreateFormData();
         if (empty($data))
-            return (new Util)->result(ErrCode::PARAMETER_EMPTY, '数据不能为空');
+            return (new Util)->result(ErrCode::PARAMETER_ERROR, '数据不能为空');
 
         if ($data instanceof Response) return $data;
 
@@ -617,7 +614,7 @@ trait CurdActionTrait
         $result = $this->toSave(new $this->modelClass(), $data);
         if (Util::isError($result)) {
             $tr->rollBack();
-            return (new Util)->result($result['errcode'], $result['errmsg'], $result['data']);
+            return (new Util)->resultError($result);
         }
 
         $id = Yii::$app->db->getLastInsertID();
@@ -626,7 +623,7 @@ trait CurdActionTrait
         $result = $this->createAfter($id, $data);
         if (Util::isError($result)) {
             $tr->rollBack();
-            return (new Util)->result(ErrCode::UNKNOWN, $result['errmsg'], $result['data']);
+            return (new Util)->resultError($result);
         }
 
         try {
@@ -638,7 +635,7 @@ trait CurdActionTrait
             ]);
         }
 
-        // 如果是通过result函数输出的成功信息，则应该根据成功信息进行输出
+        // 如果是通过Util::error输出的成功信息，则应该根据成功信息进行输出
         if (!empty($result) && is_array($result) && $result['errcode'] == ErrCode::SUCCESS)
             return (new Util)->result(ErrCode::SUCCESS, $result['errmsg'], $result['data']);
 
@@ -735,7 +732,7 @@ trait CurdActionTrait
         $result = $this->toSave($model, $data);
         if (Util::isError($result)) {
             $tr->rollBack();
-            return (new Util)->result($result['errcode'], $result['errmsg'], $result['data']);
+            return (new Util)->resultError($result);
         }
 
         // 更新后
@@ -770,7 +767,7 @@ trait CurdActionTrait
     {
         $pkId = intval($data[$this->pkId]);
         if (empty($pkId))
-            return (new Util)->result(ErrCode::PARAMETER_EMPTY, "{$this->pkId}不能为空");
+            return (new Util)->result(ErrCode::PARAMETER_ERROR, "{$this->pkId}不能为空");
 
         $where   = ['and'];
         $where[] = [$this->pkId => $pkId];
@@ -842,7 +839,7 @@ trait CurdActionTrait
 
         $pkId = intval($data[$this->pkId]);
         if (empty($pkId))
-            return (new Util)->result(ErrCode::PARAMETER_EMPTY, "$this->pkId 不能为空");
+            return (new Util)->result(ErrCode::PARAMETER_ERROR, "$this->pkId 不能为空");
 
         $field = Safe::gpcString(trim($data['field'])); // 字段名
         $type  = trim($data['type']); // 字段值的类型
@@ -900,7 +897,7 @@ trait CurdActionTrait
         } catch (Exception $e) {
             $tr->rollBack();
             return (new Util)->result(ErrCode::DATABASE_TRANSACTION_COMMIT_ERROR, '系统繁忙，请稍后再试', [
-                'errCode' => $e->getCode(),
+                'errcode' => $e->getCode(),
                 'errmsg'  => $e->getMessage(),
             ]);
         }
@@ -1076,7 +1073,7 @@ trait CurdActionTrait
             if (empty($id)) unset($ids[$i]);
 
         if (empty($ids))
-            return (new Util)->result(ErrCode::PARAMETER_EMPTY, '参数缺失，请重试');
+            return (new Util)->result(ErrCode::PARAMETER_ERROR, '参数缺失，请重试');
 
         $fields = $this->getDeleteFields();
 
@@ -1125,8 +1122,8 @@ trait CurdActionTrait
         } catch (Exception $e) {
             $tr->rollBack();
             return (new Util)->result(ErrCode::DATABASE_TRANSACTION_COMMIT_ERROR, '事务提交失败，请重试', [
-                'errCode' => $e->getCode(),
-                'errMsg'  => $e->getMessage(),
+                'errcode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
             ]);
         }
 
@@ -1225,7 +1222,7 @@ trait CurdActionTrait
             if (empty($id)) unset($ids[$i]);
 
         if (empty($ids))
-            return (new Util)->result(ErrCode::PARAMETER_EMPTY, '参数缺失，请重试');
+            return (new Util)->result(ErrCode::PARAMETER_ERROR, '参数缺失，请重试');
 
         $fields = $this->getRestoreFields();
 
@@ -1368,7 +1365,7 @@ trait CurdActionTrait
             if (empty($id)) unset($ids[$i]);
 
         if (empty($ids))
-            return (new Util)->result(ErrCode::PARAMETER_EMPTY, '参数缺失，请重试');
+            return (new Util)->result(ErrCode::PARAMETER_ERROR, '参数缺失，请重试');
 
         $fields = $this->getRemoveFields();
 
