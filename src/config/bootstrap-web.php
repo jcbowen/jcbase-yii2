@@ -28,11 +28,18 @@ if (Util::isSecureConnection()) {
 $res  = new yii\web\Request();
 $_GPC = $res->get();
 $_GPC = array_merge($_GPC, $res->post());
-if (strpos($res->getContentType(), 'application/json') !== false) {
-    $_GPC = array_merge($_GPC, (array)json_decode($res->getRawBody(), true));
+
+if (!empty($res->getRawBody())) {
+    if (strpos($res->getContentType(), 'application/json') !== false) {
+        $_GPC = array_merge($_GPC, (array)json_decode($res->getRawBody(), true));
+    } elseif (strpos($res->getContentType(), 'text/xml') !== false) {
+        $_GPC = array_merge($_GPC, (array)Util::xmlToArray($res->getRawBody()));
+    }
 }
+
 unset($res);
 
+// 默认header
 header('Content-Type: text/html; charset=UTF-8');
 
 if (!function_exists('allowCrossDomain')) {
