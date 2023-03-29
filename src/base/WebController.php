@@ -56,7 +56,7 @@ class WebController extends Controller
         $_B['page']       = ['title' => 'jcsoft'];
         $_B['params']     = ArrayHelper::merge((array)$_B['params'], Yii::$app->params);
         $_B['JcClient']   = Yii::$app->request->headers->get('JcClient', '') ?: Yii::$app->request->headers->get('jcclient', '') ?: CLIENT_UNKNOWN; // 客户端类型
-        $_B['EnvVersion'] = Yii::$app->request->headers->get('EnvVersion', '') ?: Yii::$app->request->headers->get('envversion', '') ?: 'development'; // 开发环境 development, production
+        $_B['EnvVersion'] = Yii::$app->request->headers->get('EnvVersion', '') ?: Yii::$app->request->headers->get('envversion', '') ?: 'production'; // 开发环境 development, production
         $_B['RELEASE']    = Yii::$app->request->headers->get('RELEASE', '') ?: Yii::$app->request->headers->get('release', '') ?: '1.0.0'; // 版本号
 
         // ----- 全局变量$_GPC赋值 -----/
