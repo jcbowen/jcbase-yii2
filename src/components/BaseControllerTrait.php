@@ -4,7 +4,6 @@ namespace Jcbowen\JcbaseYii2\components;
 
 use Yii;
 use yii\base\InvalidArgumentException;
-use yii\filters\AccessControl;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
 
@@ -22,30 +21,26 @@ trait BaseControllerTrait
 
     /**
      * {@inheritdoc}
+     * @throws NotFoundHttpException|BadRequestHttpException
      */
-    public function behaviors()
+    public function beforeAction($action)
     {
-        return [
-            'access' => [
-                'class'        => AccessControl::className(),
-                'rules'        => [
-                    [
-                        'allow'   => false,
-                        'actions' => $this->denyAction,
-                    ],
-                    [
-                        'allow'   => true,
-                        'actions' => $this->allowAction,
-                    ],
-                ],
-                'denyCallback' => function ($rule, $action) {
-                    if (!Yii::$app instanceof \yii\console\Application) {
-                        throw new NotFoundHttpException(Yii::t('yii', 'Page not found.'));
-                    } else {
-                        throw new InvalidArgumentException(Yii::t('yii', 'Action not found.'));
-                    }
-                },
-            ],
-        ];
+        $beforeAction = parent::beforeAction($action);
+
+        if (!$beforeAction) return false;
+
+        // 如果属于denyAction，则抛出404异常
+        // 如果配置了allowAction，但当前action不在allowAction中，则抛出404异常
+        if (
+            in_array($action->id, $this->denyAction)
+            || (!empty($this->allowAction) && !in_array($action->id, $this->allowAction))
+        )
+            if (!Yii::$app instanceof \yii\console\Application) {
+                throw new NotFoundHttpException(Yii::t('yii', 'Page not found.'));
+            } else {
+                throw new InvalidArgumentException(Yii::t('yii', 'Action not found.'));
+            }
+
+        return true;
     }
 }
