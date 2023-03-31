@@ -2,6 +2,7 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
+use Jcbowen\JcbaseYii2\components\jobs\FileRemoteUpload;
 use Yii;
 use yii\base\Exception;
 use yii\base\Model;
@@ -599,15 +600,26 @@ class File extends Model
 
         // 开启远程附件，并配置了远程附件类型的情况下才执行远程附件上传
         if (!empty(Yii::$app->params['attachment']['isRemote']) && !empty(Yii::$app->params['attachment']['remoteType'])) {
-            $remoteResult = $this->file_remote_upload($path);
-            if (Util::isError($remoteResult)) {
-                $result['message'] = '远程附件上传失败，请检查配置并重新上传';
-                @FileHelper::unlink($fullName);
-                return Util::error(ErrCode::UNKNOWN, $result['message']);
+            // 判断是否安装了队列扩展
+            if (!class_exists('yii\queue\cli\Queue')) {
+                $remoteResult = $this->file_remote_upload($path);
+                if (Util::isError($remoteResult)) {
+                    $result['message'] = '远程附件上传失败，请检查配置并重新上传';
+                    @FileHelper::unlink($fullName);
+                    return Util::error(ErrCode::UNKNOWN, $result['message']);
+                }
             } else {
-                $info['url'] = Util::toMedia($path);
+                $queue = Yii::$app->queue;
+                if (empty($queue->push(new FileRemoteUpload([
+                    'fileInstance' => $this,
+                    'filePath'     => $path,
+                    'fullPath'     => $fullName
+                ]))))
+                    return Util::error(ErrCode::UNKNOWN, '远程附件上传任务添加失败，请检查队列配置并重新上传');
             }
         }
+
+        $info['url'] = Util::toMedia($path);
 
         $attach_id         = $this->saveDb($info);
         $info['attach_id'] = $attach_id;
@@ -617,7 +629,7 @@ class File extends Model
 
     /**
      * 将文件上传到远程附件中
-     * 目前仅支持腾讯云cos
+     * 目前仅支持腾讯云cos/阿里云oss
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -661,10 +673,7 @@ class File extends Model
                 $ossClient->uploadFile($this->remoteConfig['oss']['bucket'], $filename, $fullPath);
                 $run = true;
             } catch (OssException $e) {
-                return Util::error(ErrCode::UNKNOWN, '上传oss远程附件失败', [
-                    'errCode' => $e->getCode(),
-                    'errmsg'  => $e->getMessage(),
-                ]);
+                return Util::error(ErrCode::UNKNOWN, $e->getMessage(), ['from' => 'file_remote_upload->oss']);
             }
         }
 
