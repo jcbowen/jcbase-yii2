@@ -600,8 +600,8 @@ class File extends Model
 
         // 开启远程附件，并配置了远程附件类型的情况下才执行远程附件上传
         if (!empty(Yii::$app->params['attachment']['isRemote']) && !empty(Yii::$app->params['attachment']['remoteType'])) {
-            // 判断是否安装了队列扩展
-            if (!class_exists('yii\queue\cli\Queue')) {
+            // 没有安装队列扩展时，直接上传
+            if (empty(Yii::$app->components['queue'])) {
                 $remoteResult = $this->file_remote_upload($path);
                 if (Util::isError($remoteResult)) {
                     $result['message'] = '远程附件上传失败，请检查配置并重新上传';
