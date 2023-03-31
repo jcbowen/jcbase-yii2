@@ -79,7 +79,7 @@ class File extends Model
     public $type;
 
     /**
-     * @var int 上传文件尺寸
+     * @var int 上传文件尺寸（单位：Bytes）
      */
     public $size;
 
@@ -600,8 +600,8 @@ class File extends Model
 
         // 开启远程附件，并配置了远程附件类型的情况下才执行远程附件上传
         if (!empty(Yii::$app->params['attachment']['isRemote']) && !empty(Yii::$app->params['attachment']['remoteType'])) {
-            // 没有安装队列扩展时，直接上传
-            if (empty(Yii::$app->components['queue'])) {
+            // 没有安装队列扩展或小于5M的，直接上传
+            if (empty(Yii::$app->components['queue']) || $this->size < 5 * 1024 * 1024) {
                 $remoteResult = $this->file_remote_upload($path);
                 if (Util::isError($remoteResult)) {
                     $result['message'] = '远程附件上传失败，请检查配置并重新上传';
@@ -616,6 +616,7 @@ class File extends Model
                     'fullPath'     => $fullName
                 ]))))
                     return Util::error(ErrCode::UNKNOWN, '远程附件上传任务添加失败，请检查队列配置并重新上传');
+                $info['url_local'] = Util::toMedia($path, true);
             }
         }
 
