@@ -48,7 +48,7 @@ class FileRemoteUpload extends \yii\base\BaseObject implements \yii\queue\Retrya
      */
     public function getTtr()
     {
-        return 60;
+        return 120;
     }
 
     /**
