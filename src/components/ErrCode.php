@@ -106,8 +106,16 @@ class ErrCode
     const NO_BIND_PHONE = 9002033;
     /** @var int 没有绑定邮箱 */
     const NO_BIND_EMAIL = 9002034;
+    /** @var int 没有绑定微信 */
+    const NO_BIND_WECHAT = 9002037;
+    /** @var int 没有绑定微信小程序 */
+    const NO_BIND_WECHAT_MINI_PROGRAM = 9002038;
+    /** @var int 没有绑定支付宝 */
+    const NO_BIND_ALIPAY = 9002039;
     /** @var int 没有设置密码 */
     const NO_SET_PASSWORD = 9002035;
+    /** @var int 没有设置支付密码 */
+    const NO_SET_PAY_PASSWORD = 9002036;
 
     /** @var int 数据存储错误 */
     const STORAGE_ERROR = 9003001;
