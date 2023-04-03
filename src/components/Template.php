@@ -34,12 +34,13 @@ class Template
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param string|null $filename
-     * @param int $flag
+     * @param string|null $filename 模板文件名（含路径，不含后缀，模板文件只能为html文件）
+     * @param int $flag 使用标识
+     * @param array $variables 当前作用域的变量，一般通过get_defined_vars()获取
      * @return false|string|void
      * @lasttime: 2022/9/27 21:14
      */
-    public function template(?string $filename = null, int $flag = TEMPLATE_DISPLAY)
+    public function template(?string $filename = null, int $flag = TEMPLATE_DISPLAY, array $variables = [])
     {
         global $_B;
 
@@ -115,14 +116,16 @@ class Template
         if (YII_DEBUG || !is_file($compile) || filemtime($source) > filemtime($compile)) {
             $this->template_compile($source, $compile);
         }
+
+        $variables = !empty($variables) && is_array($variables) ? $variables : [];
         switch ($flag) {
             case TEMPLATE_DISPLAY:
             default:
-                extract($GLOBALS, EXTR_SKIP);
+                extract($variables + $GLOBALS, EXTR_SKIP);
                 include $compile;
                 return $compile;
             case TEMPLATE_FETCH:
-                extract($GLOBALS, EXTR_SKIP);
+                extract($variables + $GLOBALS, EXTR_SKIP);
                 ob_flush();
                 ob_clean();
                 ob_start();
