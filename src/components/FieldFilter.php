@@ -88,10 +88,10 @@ class FieldFilter
         $config = $this->getConfig();
         switch ($config[$field]) {
             case 'json':
-                $value = json_encode($value);
+                $value = stripslashes(json_encode($value, JSON_UNESCAPED_UNICODE));
                 break;
             case 'json&base64':
-                $value = json_encode($value);
+                $value = stripslashes(json_encode($value, JSON_UNESCAPED_UNICODE));
                 $value = !empty($value) ? base64_encode($value) : '';
                 break;
             case 'serialize':
@@ -125,7 +125,7 @@ class FieldFilter
     {
         // 如果值是数组类型时json_encode处理
         if (is_array($value)) {
-            return json_encode($value, JSON_UNESCAPED_UNICODE);
+            return stripslashes(json_encode($value, JSON_UNESCAPED_UNICODE));
         }
         // 如果字段布尔类型强制转换成数字
         if (is_bool($value)) {
