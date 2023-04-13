@@ -4,6 +4,7 @@ namespace Jcbowen\JcbaseYii2\components;
 
 
 use Yii;
+use Yii\redis\Connection;
 
 /**
  * Class Redis
@@ -84,17 +85,17 @@ class Redis
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param $key
-     * @return array|false|mixed|Yii\redis\Connection|null
+     * @param mixed $default
+     * @return mixed
      * @lasttime 2022/9/26 12:23
      */
-    public function get($key)
+    public function get($key, $default = null)
     {
         $redis = $this->getConnection();
         if (Util::isError($redis)) return $redis;
 
         $value = $redis->get($key);
-        if (empty($value)) return $value;
-        return Util::unserializer($value);
+        return isset($value) && !empty($redis) ? Util::unserializer($value) : $default;
     }
 
     /**
