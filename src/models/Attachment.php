@@ -10,6 +10,7 @@ use Jcbowen\JcbaseYii2\components\ActiveRecord;
  * @property int $id
  * @property int|null $group_id 分组ID
  * @property int $uid 上传用户
+ * @property int $mid 上传会员
  * @property int $type 附件类型
  * @property int $size 附件尺寸
  * @property int $width 图片宽度(像素)
@@ -38,7 +39,7 @@ class Attachment extends ActiveRecord
     public function rules()
     {
         return [
-            [['group_id', 'uid', 'type', 'size', 'width', 'height', 'is_display'], 'integer'],
+            [['group_id', 'uid', 'mid', 'type', 'size', 'width', 'height', 'is_display'], 'integer'],
             [['deleted_at', 'updated_at', 'created_at'], 'safe'],
             [['md5'], 'string', 'max' => 32],
             [['filename', 'attachment'], 'string', 'max' => 255],
@@ -54,6 +55,7 @@ class Attachment extends ActiveRecord
             'id'         => 'ID',
             'group_id'   => '分组ID',
             'uid'        => '上传用户',
+            'mid'        => '上传会员',
             'type'       => '附件类型',
             'size'       => '附件尺寸',
             'width'      => '图片宽度(像素)',

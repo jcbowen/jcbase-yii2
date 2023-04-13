@@ -38,6 +38,7 @@ class File extends Model
         'id'         => 'id', // 主键，递增ID
         'group_id'   => 'group_id', // 分组ID
         'uid'        => 'uid', // 上传用户
+        'mid'        => 'mid', // 上传会员
         'type'       => 'type', // 附件类型
         'size'       => 'size', // 附件尺寸
         'width'      => 'width', // 图片宽度(像素)
@@ -816,6 +817,7 @@ class File extends Model
         $newData = [
             $this->attachmentFieldsMap['group_id']   => $data['group_id'],
             $this->attachmentFieldsMap['uid']        => intval($_B['uid']),
+            $this->attachmentFieldsMap['mid']        => intval($_B['mid']),
             $this->attachmentFieldsMap['type']       => $data['type'],
             $this->attachmentFieldsMap['size']       => $data['size'],
             $this->attachmentFieldsMap['width']      => $data['width'],
@@ -828,11 +830,20 @@ class File extends Model
             $this->attachmentFieldsMap['created_at'] => $time
         ];
 
+        /** @var ActiveRecord $model */
         $model = new $this->attachmentModel();
 
-        if ($model->load($newData, '') && $model->save()) {
-            return Yii::$app->db->getLastInsertID();
+        // 根据$model的getAttributes获取$attachmentModel的所有字段
+        $modelFields = $model->getAttributes();
+
+        // 验证字段是否都存在，不存在就unset
+        foreach ($newData as $key => $value) {
+            if (!array_key_exists($key, $modelFields))
+                unset($newData[$key]);
         }
+
+        if ($model->load($newData, '') && $model->save())
+            return Yii::$app->db->getLastInsertID();
 
         $errors = $model->errors;
         if (!empty($errors)) {
