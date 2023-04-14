@@ -216,7 +216,7 @@ class Template
         $str = preg_replace('/{\/loop}/', '<?php } } ?>', $str);
         $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)}/', '<?php echo $1; ?>', $str);
         $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff\[\]\'\"\$]*)}/', '<?php echo $1; ?>', $str);
-        $str = preg_replace('/{media\s+(\S+)}/', '<?php echo tomedia($1); ?>', $str);
+        $str = preg_replace('/{media\s+(\S+)}/', '<?php echo \Jcbowen\JcbaseYii2\components\Util::tomedia($1); ?>', $str);
         $str = preg_replace_callback('/<\?php([^?]+)?>/', "\Jcbowen\JcbaseYii2\components\Template::templateAddQuote", $str);
         $str = preg_replace('/<jc_tpl_php>(.+?)<\/jc_tpl_php>/', '<?php include (new \Jcbowen\JcbaseYii2\components\Template)->template($1, TEMPLATE_INCLUDEPATH); ?>', $str);
         $str = preg_replace('/{template\s+(.+?)}/', '<?php include (new \Jcbowen\JcbaseYii2\components\Template)->template($1, TEMPLATE_INCLUDEPATH); ?>', $str);
