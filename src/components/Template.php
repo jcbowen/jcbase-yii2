@@ -2,8 +2,10 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
+use Jcbowen\JcbaseYii2\base\WebController;
 use Yii;
 use yii\base\Exception;
+use yii\base\InvalidArgumentException;
 use yii\helpers\FileHelper;
 
 /**
@@ -15,16 +17,32 @@ use yii\helpers\FileHelper;
  * @lasttime: 2022/9/27 21:23
  * @package Jcbowen\JcbaseYii2\components
  */
-class Template
+class Template extends \yii\base\Component
 {
+    /** @var string 应用路径 */
     public $appPath = '';
+    /** @var string jcbase源码路径 */
     public $jcbaseSrcPath = '';
 
+    /** @var array 传递的变量(需要作用到模板文件中的变量；一般通过get_defined_vars()获取) */
+    public $variables = [];
+    /** @var WebController web控制器 */
+    public $controller;
+
     /**
-     * Template constructor.
+     * {@inheritdoc}
      */
-    public function __construct()
+    public function init()
     {
+        parent::init();
+
+        $this->variables = !empty($this->variables) && is_array($this->variables) ? $this->variables : [];
+
+        if (isset($this->controller) && !$this->controller instanceof WebController) {
+            throw new InvalidArgumentException('Template组件的controller属性必须是WebController的实例');
+        }
+
+        // 初始化
         $this->appPath       = Yii::getAlias('@app');
         $this->jcbaseSrcPath = Yii::getAlias('@vendor/jcbowen/jcbase-yii2/src');
     }
@@ -36,11 +54,11 @@ class Template
      *
      * @param string|null $filename 模板文件名（含路径，不含后缀，模板文件只能为html文件）
      * @param int $flag 使用标识
-     * @param array $variables 当前作用域的变量，一般通过get_defined_vars()获取
      * @return false|string|void
+     * @throws Exception
      * @lasttime: 2022/9/27 21:14
      */
-    public function template(?string $filename = null, int $flag = TEMPLATE_DISPLAY, array $variables = [])
+    public function template(?string $filename = null, int $flag = TEMPLATE_DISPLAY)
     {
         global $_B;
 
@@ -117,15 +135,14 @@ class Template
             $this->template_compile($source, $compile);
         }
 
-        $variables = !empty($variables) && is_array($variables) ? $variables : [];
         switch ($flag) {
             case TEMPLATE_DISPLAY:
             default:
-                extract($variables + $GLOBALS, EXTR_SKIP);
+                extract($this->variables + $GLOBALS, EXTR_SKIP);
                 include $compile;
                 return $compile;
             case TEMPLATE_FETCH:
-                extract($variables + $GLOBALS, EXTR_SKIP);
+                extract($this->variables + $GLOBALS, EXTR_SKIP);
                 ob_flush();
                 ob_clean();
                 ob_start();
@@ -146,11 +163,11 @@ class Template
      *
      * @param string|null $filename 模板文件名（含路径，不含后缀，模板文件只能为html文件）
      * @param int $flag 使用标识
-     * @param array $variables 当前作用域的变量，一般通过get_defined_vars()获取
      * @return false|string|void
+     * @throws Exception
      * @lasttime: 2022/9/27 21:10
      */
-    public function vTpl(?string $filename = 'index', int $flag = TEMPLATE_DISPLAY, array $variables = [])
+    public function vTpl(?string $filename = 'index', int $flag = TEMPLATE_DISPLAY)
     {
         $filename = $filename ?: 'index';
 
@@ -169,15 +186,14 @@ class Template
             $this->template_compile($source, $compile);
         }
 
-        $variables = !empty($variables) && is_array($variables) ? $variables : [];
         switch ($flag) {
             case TEMPLATE_DISPLAY:
             default:
-                extract($variables + $GLOBALS, EXTR_SKIP);
+                extract($this->variables + $GLOBALS, EXTR_SKIP);
                 include $compile;
                 return $compile;
             case TEMPLATE_FETCH:
-                extract($variables + $GLOBALS, EXTR_SKIP);
+                extract($this->variables + $GLOBALS, EXTR_SKIP);
                 ob_flush();
                 ob_clean();
                 ob_start();
@@ -190,19 +206,37 @@ class Template
         }
     }
 
-    public function template_compile($from, $to)
+    /**
+     * 模板编译
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $from 模板文件
+     * @param string $to 编译文件
+     * @throws Exception
+     * @lasttime: 2023/4/15 9:50 AM
+     */
+    public function template_compile(string $from, string $to)
     {
         $path = dirname($to);
-        if (!is_dir($path)) {
-            try {
-                FileHelper::createDirectory($path);
-            } catch (Exception $e) {
-            }
-        }
+        if (!is_dir($path))
+            FileHelper::createDirectory($path);
+
         $content = $this->template_parse(file_get_contents($from));
         file_put_contents($to, $content);
     }
 
+    /**
+     * 模板解析
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $str
+     * @return string
+     * @lasttime: 2023/4/15 9:50 AM
+     */
     public function template_parse($str): string
     {
         $str = preg_replace('/<!--{(.+?)}-->/s', '{$1}', $str);
@@ -218,13 +252,58 @@ class Template
         $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff\[\]\'\"\$]*)}/', '<?php echo $1; ?>', $str);
         $str = preg_replace('/{media\s+(\S+)}/', '<?php echo \Jcbowen\JcbaseYii2\components\Util::tomedia($1); ?>', $str);
         $str = preg_replace_callback('/<\?php([^?]+)?>/', "\Jcbowen\JcbaseYii2\components\Template::templateAddQuote", $str);
-        $str = preg_replace('/<jc_tpl_php>(.+?)<\/jc_tpl_php>/', '<?php include (new \Jcbowen\JcbaseYii2\components\Template)->template($1, TEMPLATE_INCLUDEPATH); ?>', $str);
-        $str = preg_replace('/{template\s+(.+?)}/', '<?php include (new \Jcbowen\JcbaseYii2\components\Template)->template($1, TEMPLATE_INCLUDEPATH); ?>', $str);
+        $str = preg_replace(
+            '/<jc_tpl_php>(.+?)<\/jc_tpl_php>/',
+            '<?php include (new \Jcbowen\JcbaseYii2\components\Template(["controller" => $this->controller, "variables" => $this->variables]))->template($1, TEMPLATE_INCLUDEPATH); ?>',
+            $str
+        );
+        $str = preg_replace(
+            '/{template\s+(.+?)}/',
+            '<?php include (new \Jcbowen\JcbaseYii2\components\Template(["controller" => $this->controller, "variables" => $this->variables]))->template($1, TEMPLATE_INCLUDEPATH); ?>',
+            $str
+        );
         $str = preg_replace('/{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)}/', '<?php echo $1; ?>', $str);
         $str = str_replace('{##', '{', $str);
-        return /*"<?php defined('IN_JC') or exit('Access Denied');?>" .*/ str_replace('##}', '}', $str);
+        $str = str_replace('##}', '}', $str);
+
+        // 如果初始化的时候传递了controller，那么就可以使用controller的方法
+        if ($this->controller instanceof WebController) {
+            if (Util::strExists($str, '{controllerCall')) {
+                $str = preg_replace('/{controllerCall\s+(\S+)}/',
+                    '<?php call_user_func([$this->controller, \'$1\']); ?>',
+                    $str);
+                $str = preg_replace('/{controllerCall\s+(\S+)\s+(\S+)}/',
+                    '<?php call_user_func_array([$this->controller, \'$1\'], [$2]); ?>',
+                    $str);
+                $str = preg_replace('/{controllerCall\s+(\S+)\s+(\S+)\s+(\S+)}/',
+                    '<?php call_user_func_array([$this->controller, \'$1\'], [$2, $3]); ?>',
+                    $str);
+            }
+            if (Util::strExists($str, '{controller')) {
+                $str = preg_replace('/{controller\s+(\S+)}/',
+                    '<?php echo call_user_func([$this->controller, \'$1\']); ?>',
+                    $str);
+                $str = preg_replace('/{controller\s+(\S+)\s+(\S+)}/',
+                    '<?php echo call_user_func_array([$this->controller, \'$1\'], [$2]); ?>',
+                    $str);
+                $str = preg_replace('/{controller\s+(\S+)\s+(\S+)\s+(\S+)}/',
+                    '<?php echo call_user_func_array([$this->controller, \'$1\'], [$2, $3]); ?>',
+                    $str);
+            }
+        }
+
+        return /*"<?php defined('IN_JC') or exit('Access Denied');?>" .*/ $str;
     }
 
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $matches
+     * @return array|string|string[]
+     * @lasttime: 2023/4/15 9:49 AM
+     */
     public static function templateAddQuote($matches)
     {
         $code = "<?php $matches[1] ?>";
