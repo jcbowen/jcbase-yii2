@@ -2,6 +2,8 @@
 
 namespace Jcbowen\JcbaseYii2\components\sdk\Aop;
 
+use Jcbowen\JcbaseYii2\components\sdk\Aop\request\AlipayTradeAppPayRequest;
+
 require_once 'AopEncrypt.php';
 
 class AopClient
@@ -290,8 +292,8 @@ class AopClient
 
     /**
      * 生成用于调用收银台SDK的字符串
-     * @param $request SDK接口的请求参数对象
-     * @param $appAuthToken 三方应用授权token
+     * @param AlipayTradeAppPayRequest $request SDK接口的请求参数对象
+     * @param ?string $appAuthToken 三方应用授权token
      * @return string
      */
     public function sdkExecute($request, $appAuthToken = null)
