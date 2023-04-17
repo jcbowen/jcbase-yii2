@@ -62,7 +62,7 @@ class AliPay extends Component
     /**
      * @var string 支付宝服务器主动通知商户服务器里指定的页面http/https路径。
      */
-    public $notifyUrl;
+    public $notifyUrl = '';
 
     /**
      * @var string 商户网站唯一订单号。由商家自定义，64个字符以内，仅支持字母、数字、下划线且需保证在商户端不重复。
@@ -121,7 +121,7 @@ class AliPay extends Component
             $this->errors[] = '应用私钥文件不存在';
             return $this;
         }
-        $this->notifyUrl = Yii::$app->params[$channel . "Config"]['alipay']['notifyUrl'];
+        $this->notifyUrl = $this->notifyUrl ?: Yii::$app->params[$channel . "Config"]['alipay']['notifyUrl'];
 
         // 获取应用私钥和支付宝公钥
         $rsaPrivateKey      = file_get_contents($this->rsaPrivateKeyFile);
