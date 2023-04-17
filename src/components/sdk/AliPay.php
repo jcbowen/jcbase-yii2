@@ -8,6 +8,7 @@ use Jcbowen\JcbaseYii2\components\Safe;
 use Jcbowen\JcbaseYii2\components\sdk\Aop\AopClient;
 use Jcbowen\JcbaseYii2\components\sdk\Aop\request\AlipayTradeAppPayRequest;
 use Jcbowen\JcbaseYii2\components\sdk\Aop\request\AlipayTradeCloseRequest;
+use Jcbowen\JcbaseYii2\components\sdk\Aop\request\AlipayTradeFastpayRefundQueryRequest;
 use Jcbowen\JcbaseYii2\components\sdk\Aop\request\AlipayTradeQueryRequest;
 use Jcbowen\JcbaseYii2\components\sdk\Aop\request\AlipayTradeRefundRequest;
 use Jcbowen\JcbaseYii2\components\Util;
@@ -51,7 +52,7 @@ class AliPay extends Component
     /**
      * @var string 请求使用的编码格式，如utf-8,gbk,gb2312等
      */
-    public $charset = 'utf-8';
+    public $charset = 'UTF-8';
 
     /**
      * @var string 返回数据格式
@@ -275,10 +276,10 @@ class AliPay extends Component
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @return array
+     * @return string
      * @lasttime: 2023/3/10 12:15
      */
-    private function APP(): array
+    private function APP(): string
     {
         $check = $this->checkTransactionsError();
         if (Util::isError($check))
@@ -297,17 +298,7 @@ class AliPay extends Component
 
         $result = $this->instance->sdkExecute($request);
 
-        $responseNode = str_replace(".", "_", $request->getApiMethodName()) . "_response";
-        $resultCode   = $result->$responseNode->code;
-        if (!empty($resultCode) && $resultCode == 10000) {
-
-            if (isset($result->$responseNode->trade_no))
-                $this->trade_no = $result->$responseNode->trade_no;
-
-            return ArrayHelper::toArray($result);
-        } else {
-            return Util::error($resultCode, $result->$responseNode->sub_msg, ArrayHelper::toArray($result));
-        }
+        return $result;
     }
 
     /**
@@ -316,10 +307,10 @@ class AliPay extends Component
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @return array
+     * @return string
      * @lasttime: 2023/4/17 1:13 PM
      */
-    public function pay(): array
+    public function pay(): string
     {
         $payChannel = $this->payChannel;
         return $this->$payChannel();
@@ -353,12 +344,17 @@ class AliPay extends Component
         $request->setBizContent($json);
         $result = $this->instance->execute($request);
 
+        $result       = ArrayHelper::toArray($result);
         $responseNode = str_replace(".", "_", $request->getApiMethodName()) . "_response";
-        $resultCode   = $result->$responseNode->code;
+        $resultCode   = $result[$responseNode]['code'];
         if (!empty($resultCode) && $resultCode == 10000) {
-            return ArrayHelper::toArray($result);
+            return Util::error(ErrCode::SUCCESS, 'success', $result[$responseNode], [
+                'sign' => $result['sign'],
+            ]);
         } else {
-            return Util::error($resultCode, $result->$responseNode->sub_msg, ArrayHelper::toArray($result));
+            return Util::error($resultCode, $result[$responseNode]['sub_msg'], $result[$responseNode], [
+                'sign' => $result['sign'],
+            ]);
         }
     }
 
@@ -390,12 +386,17 @@ class AliPay extends Component
         $request->setBizContent($json);
         $result = $this->instance->execute($request);
 
+        $result       = ArrayHelper::toArray($result);
         $responseNode = str_replace(".", "_", $request->getApiMethodName()) . "_response";
-        $resultCode   = $result->$responseNode->code;
+        $resultCode   = $result[$responseNode]['code'];
         if (!empty($resultCode) && $resultCode == 10000) {
-            return ArrayHelper::toArray($result);
+            return Util::error(ErrCode::SUCCESS, 'success', $result[$responseNode], [
+                'sign' => $result['sign'],
+            ]);
         } else {
-            return Util::error($resultCode, $result->$responseNode->sub_msg, ArrayHelper::toArray($result));
+            return Util::error($resultCode, $result[$responseNode]['sub_msg'], $result[$responseNode], [
+                'sign' => $result['sign'],
+            ]);
         }
     }
 
@@ -447,12 +448,62 @@ class AliPay extends Component
         $request->setBizContent($json);
         $result = $this->instance->execute($request);
 
+        $result       = ArrayHelper::toArray($result);
         $responseNode = str_replace(".", "_", $request->getApiMethodName()) . "_response";
-        $resultCode   = $result->$responseNode->code;
+        $resultCode   = $result[$responseNode]['code'];
         if (!empty($resultCode) && $resultCode == 10000) {
-            return ArrayHelper::toArray($result);
+            return Util::error(ErrCode::SUCCESS, 'success', $result[$responseNode], [
+                'sign' => $result['sign'],
+            ]);
         } else {
-            return Util::error($resultCode, $result->$responseNode->sub_msg, ArrayHelper::toArray($result));
+            return Util::error($resultCode, $result[$responseNode]['sub_msg'], $result[$responseNode], [
+                'sign' => $result['sign'],
+            ]);
+        }
+    }
+
+    /**
+     * 退款查询
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $outRequestNo 退款请求号。请求退款接口时，传入的退款请求号，如果在退款请求时未传入，则该值为创建交易时的商户订单号。
+     * @param string $trade_no 支付宝交易号。和商户订单号 out_trade_no 不能同时为空。
+     * @return array
+     * @throws \Exception
+     * @lasttime: 2023/4/17 4:12 PM
+     */
+    public function queryRefund(string $outRequestNo = '', string $trade_no = ''): array
+    {
+        $trade_no = $trade_no ?: $this->trade_no;
+        if (empty($trade_no) && empty($this->outTradeNo))
+            return Util::error(ErrCode::PARAMETER_ERROR, 'trade_no和out_trade_no不能同时为空');
+
+        $object = new stdClass();
+        if (!empty($trade_no))
+            $object->trade_no = $trade_no;
+        if (empty($object->trade_no) && !empty($this->outTradeNo))
+            $object->out_trade_no = $this->outTradeNo;
+
+        $object->out_request_no = $outRequestNo ?: $this->outTradeNo;
+
+        $json    = json_encode($object);
+        $request = new AlipayTradeFastpayRefundQueryRequest();
+        $request->setBizContent($json);
+        $result = $this->instance->execute($request);
+
+        $result       = ArrayHelper::toArray($result);
+        $responseNode = str_replace(".", "_", $request->getApiMethodName()) . "_response";
+        $resultCode   = $result[$responseNode]['code'];
+        if (!empty($resultCode) && $resultCode == 10000) {
+            return Util::error(ErrCode::SUCCESS, 'success', $result[$responseNode], [
+                'sign' => $result['sign'],
+            ]);
+        } else {
+            return Util::error($resultCode, $result[$responseNode]['sub_msg'], $result[$responseNode], [
+                'sign' => $result['sign'],
+            ]);
         }
     }
 }
