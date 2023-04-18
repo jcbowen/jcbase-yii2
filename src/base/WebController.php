@@ -174,7 +174,7 @@ class WebController extends Controller
     // 输出成功信息
     public function success($data = [], string $errmsg = '', array $params = [], string $returnType = 'exit')
     {
-        return $this->result(ErrCode::SUCCESS, $errmsg, $data, $params, $returnType);
+        return $this->result(ErrCode::SUCCESS, $errmsg ?: 'ok', $data, $params, $returnType);
     }
 
     /**
