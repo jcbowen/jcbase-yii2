@@ -2,6 +2,7 @@
 
 namespace Jcbowen\JcbaseYii2\components\sdk;
 
+use Exception;
 use Jcbowen\JcbaseYii2\components\Content;
 use Jcbowen\JcbaseYii2\components\ErrCode;
 use Jcbowen\JcbaseYii2\components\Safe;
@@ -315,7 +316,7 @@ class AliPay extends Component
      *
      * @param string $trade_no 支付宝订单号，如果为空，则通过商户订单号查询
      * @return array
-     * @throws \Exception
+     * @throws Exception
      * @lasttime: 2023/4/17 1:27 PM
      */
     public function query(string $trade_no = ''): array
@@ -357,7 +358,7 @@ class AliPay extends Component
      *
      * @param string $trade_no 支付宝订单号，如果为空，则通过商户订单号查询
      * @return array
-     * @throws \Exception
+     * @throws Exception
      * @lasttime: 2023/4/17 1:31 PM
      */
     public function close(string $trade_no = ''): array
@@ -403,7 +404,7 @@ class AliPay extends Component
      * @param string|null $outRequestNo 退款请求号。标识一次退款请求，需要保证在交易号下唯一，如需部分退款，则此参数必传。注：针对同一次退款请求，如果调用接口失败或异常了，重试时需要保证退款请求号不能变更，防止该笔交易重复退款。支付宝会保证同样的退款请求号多次请求只会退一次。
      * @param string $trade_no 支付宝交易号。和商户订单号 out_trade_no 不能同时为空。
      * @return array
-     * @throws \Exception
+     * @throws Exception
      * @lasttime: 2023/4/17 1:58 PM
      */
     public function refund(float $refundAmount, float $totalAmount = 0.00, ?string $refundReason = '', ?string $outRequestNo = null, string $trade_no = ''): array
@@ -462,7 +463,7 @@ class AliPay extends Component
      * @param string $outRequestNo 退款请求号。请求退款接口时，传入的退款请求号，如果在退款请求时未传入，则该值为创建交易时的商户订单号。
      * @param string $trade_no 支付宝交易号。和商户订单号 out_trade_no 不能同时为空。
      * @return array
-     * @throws \Exception
+     * @throws Exception
      * @lasttime: 2023/4/17 4:12 PM
      */
     public function queryRefund(string $outRequestNo = '', string $trade_no = ''): array
