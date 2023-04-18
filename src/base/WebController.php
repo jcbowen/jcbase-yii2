@@ -53,11 +53,12 @@ class WebController extends Controller
             Yii::$app->params['domain']['attachment'] = Yii::$app->params['domain']['attachment_local'];
 
         //----- 默认参数，及将参数配置写到全局变量中 -----/
-        $_B['page']       = ['title' => 'jcsoft'];
-        $_B['params']     = ArrayHelper::merge((array)$_B['params'], Yii::$app->params);
-        $_B['JcClient']   = Yii::$app->request->headers->get('JcClient', '') ?: Yii::$app->request->headers->get('jcclient', '') ?: CLIENT_UNKNOWN; // 客户端类型
-        $_B['EnvVersion'] = Yii::$app->request->headers->get('EnvVersion', '') ?: Yii::$app->request->headers->get('envversion', '') ?: 'production'; // 开发环境 development, production
-        $_B['RELEASE']    = Yii::$app->request->headers->get('RELEASE', '') ?: Yii::$app->request->headers->get('release', '') ?: '0.0.1'; // 版本号
+        $_B['page']        = ['title' => 'jcsoft'];
+        $_B['params']      = ArrayHelper::merge((array)$_B['params'], Yii::$app->params);
+        $_B['JcClient']    = Yii::$app->request->headers->get('JcClient', '') ?: Yii::$app->request->headers->get('jcclient', '') ?: CLIENT_UNKNOWN; // 客户端类型
+        $_B['EnvVersion']  = Yii::$app->request->headers->get('EnvVersion', '') ?: Yii::$app->request->headers->get('envversion', '') ?: 'production'; // 开发环境 development, production
+        $_B['release']     = Yii::$app->request->headers->get('RELEASE', '') ?: Yii::$app->request->headers->get('release', '') ?: '0.0.1'; // 版本号
+        $_B['releaseCode'] = Yii::$app->request->headers->get('releaseCode', '') ?: Yii::$app->request->headers->get('releasecode', '') ?: '1'; // 版本编码
 
         // ----- 全局变量$_GPC赋值 -----/
         $_GPC     = $_GPC ?? [];
