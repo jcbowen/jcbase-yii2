@@ -60,18 +60,22 @@ class ActiveRecord extends \yii\db\ActiveRecord
         return $query;
     }
 
+    /**
+     * 清理缓存
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return false|int
+     * @lasttime: 2023/4/18 9:53 PM
+     */
     public static function clearCache()
     {
         return ModelCacheDependency::clear(static::class);
     }
 
     /**
-     * 自动更新时间
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @return array
-     * @lasttime: 2021/4/25 11:30 下午
+     * {@inheritdoc}
      */
     public function behaviors(): array
     {
@@ -91,7 +95,7 @@ class ActiveRecord extends \yii\db\ActiveRecord
             $value                                                   = true;
         }
         if ($value) {
-            $behaviorsDef['class'] = TimestampBehavior::className();
+            $behaviorsDef['class'] = TimestampBehavior::class;
             $behaviorsDef['value'] = date('Y-m-d H:i:s');
         }
 
