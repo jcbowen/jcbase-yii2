@@ -92,11 +92,6 @@ class AliPay extends Component
     public $instance;
 
     /**
-     * @var string 支付渠道，一般指的是支付宝支付客户端类型 APP:App
-     */
-    public $payChannel = 'App';
-
-    /**
      * @var array 错误信息
      */
     public $errors = [];
@@ -106,22 +101,19 @@ class AliPay extends Component
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param string $channel 支付宝支付客户端类型 APP:App
      * @return $this
      * @lasttime 2022/11/10 01:12
      */
-    public function build(string $channel = 'App'): AliPay
+    public function build(): AliPay
     {
-        $this->payChannel = Safe::gpcBelong($channel, ['App'], 'App');
-
-        $this->appId                  = Yii::$app->params[$this->payChannel . "Config"]['alipay']['app_id'];
-        $this->rsaPrivateKeyFile      = Yii::getAlias(Yii::$app->params[$this->payChannel . "Config"]['alipay']['rsaPrivateKeyFile'] ?? "@common/pay/alipay/$this->appId/rsa_private_key.txt");
-        $this->alipayRsaPublicKeyFile = Yii::getAlias(Yii::$app->params[$this->payChannel . "Config"]['alipay']['alipayRsaPublicKeyFile'] ?? "@common/pay/alipay/$this->appId/alipay_rsa_public_key.txt");
+        $this->appId                  = Yii::$app->params['alipay']['app_id'];
+        $this->rsaPrivateKeyFile      = Yii::getAlias(Yii::$app->params['alipay']['rsaPrivateKeyFile'] ?? "@common/pay/alipay/$this->appId/rsa_private_key.txt");
+        $this->alipayRsaPublicKeyFile = Yii::getAlias(Yii::$app->params['alipay']['alipayRsaPublicKeyFile'] ?? "@common/pay/alipay/$this->appId/alipay_rsa_public_key.txt");
         if (!file_exists($this->rsaPrivateKeyFile)) {
             $this->errors[] = '应用私钥文件不存在';
             return $this;
         }
-        $this->notifyUrl = $this->notifyUrl ?: Yii::$app->params[$channel . "Config"]['alipay']['notifyUrl'];
+        $this->notifyUrl = $this->notifyUrl ?: Yii::$app->params['alipay']['notifyUrl'];
 
         // 获取应用私钥和支付宝公钥
         $rsaPrivateKey      = file_get_contents($this->rsaPrivateKeyFile);
@@ -279,7 +271,7 @@ class AliPay extends Component
      * @return string
      * @lasttime: 2023/3/10 12:15
      */
-    private function APP(): string
+    private function appPay(): string
     {
         $check = $this->checkTransactionsError();
         if (Util::isError($check))
@@ -296,9 +288,7 @@ class AliPay extends Component
         $request->setNotifyUrl($this->notifyUrl ?: '');
         $request->setBizContent($json);
 
-        $result = $this->instance->sdkExecute($request);
-
-        return $result;
+        return $this->instance->sdkExecute($request);
     }
 
     /**
@@ -307,13 +297,14 @@ class AliPay extends Component
      * @author Bowen
      * @email bowen@jiuchet.com
      *
+     * @param string $payProduct
      * @return string
      * @lasttime: 2023/4/17 1:13 PM
      */
-    public function pay(): string
+    public function pay(string $payProduct = 'wap'): string
     {
-        $payChannel = $this->payChannel;
-        return $this->$payChannel();
+        $payProduct = Safe::gpcBelong($payProduct, ['app'], 'app') . 'Pay';
+        return $this->$payProduct();
     }
 
     /**
