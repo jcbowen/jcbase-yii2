@@ -71,7 +71,7 @@ class AliPay extends Component
     public $outTradeNo;
 
     /**
-     * @var array 订单总金额，单位为元，精确到小数点后两位，取值范围[0.01,100000000]，金额不能为0
+     * @var float 订单总金额，单位为元，精确到小数点后两位，取值范围[0.01,100000000]，金额不能为0
      */
     public $totalAmount = 0.00;
 
@@ -148,11 +148,10 @@ class AliPay extends Component
     public function totalAmount($total = 0): AliPay
     {
         // 如果不包含浮点数，意味着是整数，需要转换为元
-        if (Util::strExists($total, '.') === false) {
+        if (Util::strExists($total, '.') === false)
             $this->totalAmount = bcdiv($total, 100, 2);
-        } else {
-            $this->totalAmount = Util::round_money($total);
-        }
+
+        $this->totalAmount = Util::round_money($total);
 
         return $this;
     }
@@ -254,9 +253,6 @@ class AliPay extends Component
         if ($this->totalAmount <= 0)
             $this->errors[] = '金额必须大于0';
 
-        if (!Util::strExists($this->totalAmount, '.'))
-            $this->errors[] = '订单金额(单位元)必须为保留两位小数的浮点数';
-
         if (!empty($this->errors))
             return Util::error(ErrCode::PARAMETER_ERROR, 'errors', $this->errors);
 
@@ -269,10 +265,10 @@ class AliPay extends Component
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @return string
+     * @return string|array
      * @lasttime: 2023/3/10 12:15
      */
-    private function appPay(): string
+    private function appPay()
     {
         $check = $this->checkTransactionsError();
         if (Util::isError($check))
@@ -299,10 +295,10 @@ class AliPay extends Component
      * @email bowen@jiuchet.com
      *
      * @param string $payProduct
-     * @return string
+     * @return string|array
      * @lasttime: 2023/4/17 1:13 PM
      */
-    public function pay(string $payProduct = 'wap'): string
+    public function pay(string $payProduct = 'wap')
     {
         $payProduct = Safe::gpcBelong($payProduct, ['app'], 'app') . 'Pay';
         return $this->$payProduct();
