@@ -3,7 +3,9 @@
 namespace Jcbowen\JcbaseYii2\components;
 
 use ReflectionFunction;
+use Yii;
 use yii\base\InvalidArgumentException;
+use yii\helpers\ArrayHelper;
 
 /**
  * Class PaymentNotifyData
@@ -159,9 +161,10 @@ class PaymentNotifyData extends Component
         // 如果platform没有值则根据$this->parseData判断是支付宝的还是微信的
         if ($this->platform === 'alipay' || (empty($this->platform) && !empty($this->decryptData['notify_type']) && $this->decryptData['notify_type'] === 'trade_status_sync')) {
             $this->platform = 'alipay';
-        } elseif ($this->platform === 'wechatPay' || (empty($this->platform) && !empty($this->decryptData['mchid']) && !empty($this->decryptData['appid']))) {
+        } elseif ($this->platform === 'wechatPay' || (empty($this->platform) && !empty($this->decryptData['mchid']) && !empty($this->rawData['event_type']))) {
             $this->platform = 'wechatPay';
         } else {
+            Yii::error(ArrayHelper::toArray($this), 'invalidPaymentPlatform');
             throw new InvalidArgumentException('无法识别的支付平台');
         }
 
@@ -244,6 +247,7 @@ class PaymentNotifyData extends Component
             $this->amountRefund     = bcmul($decryptData['refund_fee'], 100);
             $this->amountRefundReal = bcmul($decryptData['send_back_fee'], 100);
         } else {
+            Yii::error(ArrayHelper::toArray($this), 'invalidAlipayPaymentStatus');
             throw new InvalidArgumentException('暂不支持的支付宝支付状态');
         }
     }
@@ -279,6 +283,7 @@ class PaymentNotifyData extends Component
             } elseif ($this->rawData['resource']['original_type'] === 'refund') {
                 $this->eventType = 'refund';
             } else {
+                Yii::error(ArrayHelper::toArray($this), 'invalidWechatPaymentStatus');
                 throw new InvalidArgumentException('暂不支持的微信支付状态');
             }
         }
@@ -289,6 +294,7 @@ class PaymentNotifyData extends Component
             } elseif ($this->decryptData['refund_status'] === 'SUCCESS') {
                 $this->eventType = 'refund';
             } else {
+                Yii::error(ArrayHelper::toArray($this), 'invalidWechatPaymentStatus');
                 throw new InvalidArgumentException('暂不支持的微信支付状态');
             }
         }
