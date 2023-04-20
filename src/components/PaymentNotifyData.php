@@ -172,6 +172,9 @@ class PaymentNotifyData extends Component
         $parseMethod = 'parse' . ucfirst($this->platform);
         $this->$parseMethod($this->decryptData);
 
+        // 提示模式下输出解析数据
+        Yii::debug(ArrayHelper::toArray($this), 'PaymentNotifyDataParse');
+
         return $this;
     }
 
@@ -237,18 +240,17 @@ class PaymentNotifyData extends Component
 
         $this->amountTotal = bcmul($decryptData['total_amount'], 100);
 
-        // 判断是支付还是退款
-        if ($decryptData['trade_status'] === 'TRADE_SUCCESS') {
-            $this->eventType = 'pay';
-        } elseif ($decryptData['trade_status'] === 'TRADE_CLOSED') {
+        // 如果退款金额大于0则为退款
+        if (floatval($decryptData['refund_fee']) > 0)
             $this->eventType = 'refund';
+        else
+            $this->eventType = 'pay';
 
+        // 如果是退款则需要解析退款数据
+        if ($this->eventType === 'refund') {
             $this->outRefundNo      = $decryptData['out_biz_no'] ?? '';
             $this->amountRefund     = bcmul($decryptData['refund_fee'], 100);
             $this->amountRefundReal = bcmul($decryptData['send_back_fee'], 100);
-        } else {
-            Yii::error(ArrayHelper::toArray($this), 'invalidAlipayPaymentStatus');
-            throw new InvalidArgumentException('暂不支持的支付宝支付状态');
         }
     }
 
@@ -299,7 +301,7 @@ class PaymentNotifyData extends Component
             }
         }
 
-        // 判断是支付还是退款
+        // 如果是退款，就解析退款数据
         if ($this->eventType === 'refund') {
             $this->outRefundNo         = $decryptData['out_refund_no'];
             $this->refundNo            = $decryptData['refund_id'];
