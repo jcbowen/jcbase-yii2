@@ -177,6 +177,16 @@ class Redis
         return $redis->del(...$keys);
     }
 
+    /**
+     * redis->exists
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param ...$keys
+     * @return mixed
+     * @lasttime: 2023/4/21 4:39 PM
+     */
     public function exists(...$keys)
     {
         $redis = $this->getConnection();
@@ -184,7 +194,7 @@ class Redis
     }
 
     /**
-     * 延长到期时间
+     * redis->expire
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -277,5 +287,22 @@ class Redis
         $redis = $this->getConnection();
         if (Util::isError($redis)) return $redis;
         return $redis->keys($pattern);
+    }
+
+    /**
+     * redis->ttl
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $key
+     * @return mixed
+     * @lasttime: 2023/4/21 4:32 PM
+     */
+    public function ttl($key)
+    {
+        $redis = $this->getConnection();
+        if (Util::isError($redis)) return $redis;
+        return $redis->ttl($key);
     }
 }
