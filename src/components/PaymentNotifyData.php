@@ -2,6 +2,8 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
+use Jcbowen\JcbaseYii2\base\ComponentArrayAccess;
+use ReflectionException;
 use ReflectionFunction;
 use Yii;
 use yii\base\InvalidArgumentException;
@@ -16,7 +18,7 @@ use yii\helpers\ArrayHelper;
  * @lasttime: 2023/4/19 9:06 AM
  * @package frontend\components
  */
-class PaymentNotifyData extends Component
+class PaymentNotifyData extends ComponentArrayAccess
 {
     /** @var string 支付平台，目前仅支持alipay wechatPay */
     public $platform;
@@ -197,7 +199,7 @@ class PaymentNotifyData extends Component
 
         try {
             $reflection = new ReflectionFunction($decryptCallback);
-        } catch (\ReflectionException $e) {
+        } catch (ReflectionException $e) {
             throw new InvalidArgumentException('请传递正确的解密回调函数');
         }
 
