@@ -131,7 +131,7 @@ class ActiveRecord extends \yii\db\ActiveRecord
      */
     private function filterFields($fields)
     {
-        $config = Yii::$app->params['model_filter_field'];
+        $config = Yii::$app->params['model_filter_field'] ?? [];
         if (!empty($config)) {
             $className = static::class;
 
