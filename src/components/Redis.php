@@ -4,7 +4,8 @@ namespace Jcbowen\JcbaseYii2\components;
 
 
 use Yii;
-use Yii\redis\Connection;
+use yii\base\BaseObject;
+use yii\base\InvalidArgumentException;
 
 /**
  * Class Redis
@@ -14,7 +15,7 @@ use Yii\redis\Connection;
  * @lasttime 2022/9/26 12:22
  * @package Jcbowen\JcbaseYii2\components
  */
-class Redis
+class Redis extends BaseObject
 {
     /** @var string */
     public $componentName = 'redis';
@@ -26,14 +27,21 @@ class Redis
     public $errors = [];
 
     /**
-     * @param string $name 在配置中的components里的键名
+     * @param string $name Yii\redis\Connection配置中在components里的键名
+     * @param array $config
+     * {@inheritdoc}
      */
-    public function __construct(string $name = '')
+    public function __construct(string $name = '', array $config = [])
     {
         $this->componentName = $name ?: $this->componentName;
 
-        $componentName    = $this->componentName;
-        $this->connection = Yii::$app->$componentName;
+        $componentName = $this->componentName;
+        if (method_exists(Yii::$app, $componentName))
+            $this->connection = Yii::$app->$componentName;
+        else
+            throw new InvalidArgumentException("未找到{$componentName}的component配置");
+
+        parent::__construct($config);
     }
 
     /**
