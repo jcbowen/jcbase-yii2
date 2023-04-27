@@ -3,6 +3,7 @@
 namespace Jcbowen\JcbaseYii2\components;
 
 use Jcbowen\JcbaseYii2\components\jobs\FileRemoteUpload;
+use Jcbowen\JcbaseYii2\config\struct\FileStruct;
 use Yii;
 use yii\base\Exception;
 use yii\base\Model;
@@ -432,7 +433,7 @@ class File extends Model
                 'filename'   => $row['filename'],
                 'attachment' => $row['attachment'],
                 'url'        => Util::toMedia($row['attachment']),
-                'is_image'   => $row['type'] == ATTACH_TYPE_IMAGE ? 1 : 0,
+                'is_image'   => $row['type'] == FileStruct::ATTACH_TYPE_IMAGE ? 1 : 0,
                 'size'       => $row['size'],
                 'filesize'   => $this->storageUnitConversion($row['size']),
                 'width'      => $row['width'],
@@ -557,20 +558,20 @@ class File extends Model
         switch ($type) {
             case 'image':
             case 'thumb':
-                $int_type = ATTACH_TYPE_IMAGE;
+                $int_type = FileStruct::ATTACH_TYPE_IMAGE;
                 break;
             case 'audio':
             case 'voice':
-                $int_type = ATTACH_TYPE_VOICE;
+                $int_type = FileStruct::ATTACH_TYPE_VOICE;
                 break;
             case 'office':
-                $int_type = ATTACH_TYPE_OFFICE;
+                $int_type = FileStruct::ATTACH_TYPE_OFFICE;
                 break;
             case 'zip':
-                $int_type = ATTACH_TYPE_ZIP;
+                $int_type = FileStruct::ATTACH_TYPE_ZIP;
                 break;
             case 'video':
-                $int_type = ATTACH_TYPE_VIDEO;
+                $int_type = FileStruct::ATTACH_TYPE_VIDEO;
                 break;
         }
 
@@ -582,7 +583,7 @@ class File extends Model
             'filename'   => $this->name,
             'attachment' => $path,
             'url'        => Util::toMedia($path),
-            'is_image'   => $int_type == ATTACH_TYPE_IMAGE ? 1 : 0,
+            'is_image'   => $int_type == FileStruct::ATTACH_TYPE_IMAGE ? 1 : 0,
             'size'       => $this->size,
             'width'      => 0,
             'height'     => 0,
@@ -593,7 +594,7 @@ class File extends Model
         $size             = filesize($fullName);
         $info['filesize'] = $this->storageUnitConversion($size);
 
-        if ($int_type == ATTACH_TYPE_IMAGE) {
+        if ($int_type == FileStruct::ATTACH_TYPE_IMAGE) {
             $size           = getimagesize($fullName);
             $info['width']  = $size[0];
             $info['height'] = $size[1];
