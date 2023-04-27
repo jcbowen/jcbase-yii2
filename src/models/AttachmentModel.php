@@ -19,16 +19,16 @@ use Jcbowen\JcbaseYii2\components\ActiveRecord;
  * @property string|null $filename 附件名
  * @property string|null $attachment 附件相对路径
  * @property int $is_display 是否在选择器中显示
- * @property string $deleted_at 删除时间
  * @property string $updated_at 更新时间
  * @property string $created_at 上传时间
+ * @property string $deleted_at 删除时间
  */
-class Attachment extends ActiveRecord
+class AttachmentModel extends ActiveRecord
 {
     /**
      * {@inheritdoc}
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return '{{%attachment}}';
     }
@@ -36,11 +36,11 @@ class Attachment extends ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['group_id', 'uid', 'mid', 'type', 'size', 'width', 'height', 'is_display'], 'integer'],
-            [['deleted_at', 'updated_at', 'created_at'], 'safe'],
+            [['updated_at', 'created_at', 'deleted_at'], 'safe'],
             [['md5'], 'string', 'max' => 32],
             [['filename', 'attachment'], 'string', 'max' => 255],
         ];
@@ -49,7 +49,7 @@ class Attachment extends ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'id'         => 'ID',
@@ -64,9 +64,9 @@ class Attachment extends ActiveRecord
             'filename'   => '附件名',
             'attachment' => '附件相对路径',
             'is_display' => '是否在选择器中显示',
-            'deleted_at' => '删除时间',
             'updated_at' => '更新时间',
             'created_at' => '上传时间',
+            'deleted_at' => '删除时间',
         ];
     }
 }

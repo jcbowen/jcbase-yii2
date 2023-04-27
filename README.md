@@ -51,7 +51,7 @@ return [
     ],
     'jcFile' => [
         'attachmentRoot'      => '@frontend/web', // 附件本地存储根目录(不包含附件目录名，默认为：@webroot)
-        'attachmentModel'     => 'Jcbowen\JcbaseYii2\models\Attachment', // 附件表模型，表中字段与默认字段名称不一致时需配置attachmentFieldsMap
+        'attachmentModel'     => 'Jcbowen\JcbaseYii2\models\AttachmentModel', // 附件表模型，表中字段与默认字段名称不一致时需配置attachmentFieldsMap
         'attachmentFieldsMap' => [ // 附件表字段映射，默认为空，表示使用默认字段名称
             'id'         => 'id', // 主键，递增ID
             'group_id'   => 'group_id', // 分组ID

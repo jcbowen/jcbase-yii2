@@ -12,7 +12,7 @@ use OSS\OssClient;
 use OSS\Core\OssException;
 
 // 提供魔术方法
-use Jcbowen\JcbaseYii2\models\Attachment;
+use Jcbowen\JcbaseYii2\models\AttachmentModel;
 
 class File extends Model
 {
@@ -22,9 +22,9 @@ class File extends Model
     //----------- 储存配置参数 ---------/
 
     /**
-     * @var Attachment 远程附件数据模型类
+     * @var AttachmentModel 远程附件数据模型类
      */
-    public $attachmentModel = 'Jcbowen\JcbaseYii2\models\Attachment';
+    public $attachmentModel = 'Jcbowen\JcbaseYii2\models\AttachmentModel';
 
     /**
      * @var array 远程附件表数据模型字段变更模型（传递过来的配置）
