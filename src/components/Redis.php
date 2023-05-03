@@ -35,11 +35,8 @@ class Redis extends BaseObject
     {
         $this->componentName = $name ?: $this->componentName;
 
-        $componentName = $this->componentName;
-        if (method_exists(Yii::$app, $componentName))
-            $this->connection = Yii::$app->$componentName;
-        else
-            throw new InvalidArgumentException("未找到{$componentName}的component配置");
+        $componentName    = $this->componentName;
+        $this->connection = Yii::$app->$componentName;
 
         parent::__construct($config);
     }
