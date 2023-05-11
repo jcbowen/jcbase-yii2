@@ -893,10 +893,12 @@ trait CurdActionTrait
         $type  = trim($data['type']); // 字段值的类型
         $value = $data['value']; // 字段值
 
-        // 验证是否传入了字段名，且字段名是否有效
-        if (empty($field) || !array_key_exists($field, $this->modelAttributes))
-            return (new Util)->result(ErrCode::PARAMETER_ERROR, '参数错误，请传入有效的字段名');
+        // 检查字段名的有效性
+        $result = $this->setValueCheckField($field);
+        if (Util::isError($result))
+            return (new Util)->resultError($result);
 
+        // 根据字段值的类型，对字段值进行格式化
         if ($type === 'int')
             $value = intval($value);
         elseif ($type === 'float')
@@ -965,6 +967,24 @@ trait CurdActionTrait
     public function getSetValueFormData()
     {
         return $this->getFormData();
+    }
+
+    /**
+     * 设置某个字段时，检查传入的字段是否有效
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param string $field
+     * @return array|bool
+     * @lasttime: 2022/9/10 08:32
+     */
+    public function setValueCheckField(string $field)
+    {
+        // 验证是否传入了字段名，且字段名是否有效
+        if (empty($field) || !array_key_exists($field, $this->modelAttributes))
+            return Util::error(ErrCode::PARAMETER_ERROR, '参数错误，请传入有效的字段名');
+
+        return true;
     }
 
     /**
