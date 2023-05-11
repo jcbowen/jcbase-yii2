@@ -917,7 +917,8 @@ trait CurdActionTrait
         if (!$model)
             return (new Util)->result(ErrCode::NOT_EXIST, '数据不存在或已被删除');
 
-        if ($model->$field === $value)
+        // 存在该属性的时候，才进行验证值是否发生变化
+        if (array_key_exists($field, $this->modelAttributes) && $model->$field === $value)
             return (new Util)->result(ErrCode::SUCCESS, '值未发生改变，请确认修改内容');
 
         $res = $this->getSetValueRecord($model);
