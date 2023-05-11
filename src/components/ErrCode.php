@@ -10,17 +10,25 @@ namespace Jcbowen\JcbaseYii2\components;
  * @lasttime: 2022/7/18 9:35 AM
  * @package Jcbowen\JcbaseYii2\components
  */
-// 9001 为服务器错误
-// 9002 为客户端错误
-// 9003 未定义错误方的错误
+// 9001 为服务端逻辑运行相关错误
+// 9002 为客户端逻辑运行相关错误
+// 9003 三方服务的错误（如：MySQL、redis连接等）
+// 2 开头一般为不同的成功状态
 class ErrCode
 {
     /** @var int 操作成功 */
     const SUCCESS = 0;
     /** @var int 未知错误 */
     const UNKNOWN = 1;
-    /** @var int 网络错误 */
-    const NETWORK_ERROR = 2;
+
+    /** @var int 响应成功 */
+    const SUCCESS_RESPONSE = 200;
+    /** @var int 新建或修改成功 */
+    const SUCCESS_CHANGE = 2001;
+    /** @var int 成功进入后台队列 */
+    const SUCCESS_QUEUE = 2002;
+    /** @var int 删除成功 */
+    const SUCCESS_DELETE = 2004;
 
     /** @var int 系统繁忙 */
     const SYSTEM_BUSY = 9001001;
@@ -169,6 +177,8 @@ class ErrCode
     const DATABASE_TRANSACTION_RELEASE_SAVEPOINT_ERROR = 9003025;
     /** @var int 数据库事务回滚到释放保存点错误 */
     const DATABASE_TRANSACTION_ROLLBACK_TO_RELEASE_SAVEPOINT_ERROR = 9003026;
+    /** @var int 网络错误(未指定服务端还是客户端) */
+    const NETWORK_ERROR = 9003502;
 
     /** @var int 其他错误 */
     const OTHER = 9999999;
