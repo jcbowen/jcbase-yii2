@@ -333,6 +333,75 @@ class Util
     }
 
     /**
+     * 根据指定的parentIdKey将数组转树形结构
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array $arr 二维数组
+     * @param int|string $parentId 父级id
+     * @param string $parentIdKey 父级id的key
+     * @param string $childrenKey 将子级放入的key
+     * @return array
+     * @lasttime: 2023/5/14 5:59 PM
+     */
+    public static function arrayToTree(array $arr = [], $parentId = 0, string $parentIdKey = 'parent_id', string $childrenKey = 'children'): array
+    {
+        if (empty($arr))
+            return [];
+
+        $tree = [];
+        foreach ($arr as $item) {
+            // 非二维数组或为空，直接跳过
+            if (!is_array($item) || empty($item)) continue;
+            // 匹配父级id
+            if ($item[$parentIdKey] == $parentId) {
+                $children = self::arrayToTree($arr, $item['id']);
+                if (!empty($children)) {
+                    $item[$childrenKey] = $children;
+                }
+                $tree[] = $item;
+            }
+        }
+
+        return $tree;
+    }
+
+    /**
+     * 根据指定的parentIdKey将数组转树形结构
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array $tree 树形结构的多维数组
+     * @param string $sortKey 根据指定的key进行排序
+     * @param string $childrenKey 子级所在的key
+     * @return array
+     * @lasttime: 2023/5/14 5:59 PM
+     */
+    public static function treeToArray(array $tree = [], string $sortKey = '', string $childrenKey = 'children'): array
+    {
+        if (empty($tree))
+            return [];
+
+        $arr = [];
+        foreach ($tree as $item) {
+            $children = $item[$childrenKey] ?? [];
+            unset($item[$childrenKey]);
+            $arr[] = $item;
+            if (!empty($children)) {
+                $arr = array_merge($arr, self::treeToArray($children));
+            }
+        }
+
+        if (!empty($sortKey)) {
+            ArrayHelper::multisort($arr, $sortKey);
+        }
+
+        return $arr;
+    }
+
+    /**
      * 将 XML 字符串解释为对象
      *
      * @author Bowen
@@ -794,7 +863,7 @@ class Util
      * @return string
      * @lasttime: 2021/12/28 1:24 下午
      */
-    public static function myEncrypt(string $data, string $key = 'jcsoft.aes_key__', string $iv = 'jcsoft.aes_iv___'): string
+    public static function myEncrypt(string $data, string $key = 'jcbase.aes_key__', string $iv = 'jcbase.aes_iv___'): string
     {
         return base64_encode(AES::encrypt($data, $key, $iv));
     }
@@ -810,7 +879,7 @@ class Util
      * @return string
      * @lasttime: 2021/12/28 1:24 下午
      */
-    public static function myDecrypt(string $encode, string $key = 'jcsoft.aes_key__', string $iv = 'jcsoft.aes_iv___'): string
+    public static function myDecrypt(string $encode, string $key = 'jcbase.aes_key__', string $iv = 'jcbase.aes_iv___'): string
     {
         return AES::decrypt(base64_decode($encode), $key, $iv);
     }
@@ -1153,9 +1222,9 @@ class Util
         global $_GPC;
         $type = Safe::gpcString($_GPC['captchaType']);
         if (empty($type)) {
-            return $this->result(ErrCode::PARAMETER_EMPTY, '验证码类型不能为空');
+            return $this->result(ErrCode::PARAMETER_ERROR, '验证码类型不能为空');
         }
-        $c            = Yii::createObject('Jcbowen\JcbaseYii2\components\captcha\CaptchaAction', [
+        $c            = Yii::createObject(\Jcbowen\JcbaseYii2\components\captcha\CaptchaAction::class, [
             '__' . $type,
             $controller
         ]);
@@ -1181,12 +1250,12 @@ class Util
         global $_GPC;
 
         $type = Safe::gpcString($_GPC['captchaType']);
-        if (empty($type)) return $this->result(ErrCode::PARAMETER_EMPTY, '验证码类型不能为空');
+        if (empty($type)) return $this->result(ErrCode::PARAMETER_ERROR, '验证码类型不能为空');
 
         $code = trim($code);
         $code = Safe::gpcString($code);
         $code = strtolower($code);
-        if (empty($code)) return $this->result(ErrCode::PARAMETER_EMPTY, '验证码不能为空');
+        if (empty($code)) return $this->result(ErrCode::PARAMETER_ERROR, '验证码不能为空');
         $verifyCode = $this->getCaptcha($controller);
         if ($verifyCode == $code) {
             return true;
@@ -1204,9 +1273,9 @@ class Util
     {
         global $_GPC;
         $type = Safe::gpcString($_GPC['captchaType']);
-        if (empty($type)) return $this->result(ErrCode::PARAMETER_EMPTY, '验证码类型不能为空');
+        if (empty($type)) return $this->result(ErrCode::PARAMETER_ERROR, '验证码类型不能为空');
 
-        $c = Yii::createObject('yii\captcha\CaptchaAction', ['__' . $type, $controller]);
+        $c = Yii::createObject(yii\captcha\CaptchaAction::class, ['__' . $type, $controller]);
         return $c->getVerifyCode();
     }
 
