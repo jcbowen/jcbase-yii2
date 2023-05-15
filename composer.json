@@ -36,7 +36,8 @@
     "ext-gd": "*",
     "ext-simplexml": "*",
     "ext-bcmath": "*",
-    "ext-libxml": "*"
+    "ext-libxml": "*",
+    "ext-pdo": "*"
   },
   "extra": {
     "branch-alias": {

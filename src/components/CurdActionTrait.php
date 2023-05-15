@@ -2,6 +2,7 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
+use PDO;
 use Yii;
 use yii\db\ActiveQuery;
 use yii\db\Exception;
@@ -502,17 +503,17 @@ trait CurdActionTrait
             $row = $row->asArray();
 
         // 获取缓存配置
-        $mysql_attr_use_buffered_query = Yii::$app->db->pdo->getAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY);
+        $mysql_attr_use_buffered_query = Yii::$app->db->pdo->getAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY);
         // 批量查询时，如果开启了缓存，则关闭缓存
         if ($mysql_attr_use_buffered_query !== false)
-            Yii::$app->db->pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+            Yii::$app->db->pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
         $list = [];
         foreach ($row->each($fetchSize) as $item) {
             $list[] = $this->allEach($item);
         }
         // 还原缓存配置
         if ($mysql_attr_use_buffered_query !== false)
-            Yii::$app->db->pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, $mysql_attr_use_buffered_query);
+            Yii::$app->db->pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, $mysql_attr_use_buffered_query);
 
         $total = $row->count();
 
