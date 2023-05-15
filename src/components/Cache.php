@@ -99,7 +99,7 @@ class Cache extends \yii\base\Component
      */
     public static function keygen(string $key = ''): string
     {
-        return 'jcsoft_' . md5(self::$prefix . '_' . $key);
+        return 'jcbase_' . md5(self::$prefix . '_' . $key);
     }
 
     // ----- 动态调用 ----- /

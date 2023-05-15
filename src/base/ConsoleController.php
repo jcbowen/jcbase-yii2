@@ -28,7 +28,7 @@ class ConsoleController extends Controller
         parent::init();
 
         //----- 默认参数，及将参数配置写到全局变量中 -----/
-        $_B['page']   = ['title' => 'jcsoft'];
+        $_B['page']   = ['title' => 'jcbase'];
         $_B['params'] = ArrayHelper::merge((array)$_B['params'], Yii::$app->params);
     }
 }
