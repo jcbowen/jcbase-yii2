@@ -250,10 +250,10 @@ trait CurdActionTrait
         ]);
     }
 
-    //---------- 无分页列表查询(适用于选择器) ----------/
+    //---------- 根据时间分页的列表查询(适用于下拉加载等有可能因数据插入导致分页数据重复问题的情况) ----------/
 
     /**
-     * 滚动分页数据加载(最大输出1000条数据)
+     * 根据时间分页的列表查询(最大输出1000条数据)
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -308,7 +308,7 @@ trait CurdActionTrait
     }
 
     /**
-     * 无分页列表查询条件
+     * 根据时间分页的列表查询条件
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -321,7 +321,7 @@ trait CurdActionTrait
     }
 
     /**
-     * 无分页列表查询过滤条件
+     * 根据时间分页的列表查询过滤条件
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -347,7 +347,7 @@ trait CurdActionTrait
     }
 
     /**
-     * 无分页列表查询的链式查询
+     * 根据时间分页的列表查询的链式查询
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -361,7 +361,7 @@ trait CurdActionTrait
     }
 
     /**
-     * 设置无分页列表查询返回的字段
+     * 设置根据时间分页的列表查询返回的字段
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -374,7 +374,7 @@ trait CurdActionTrait
     }
 
     /**
-     * 获取无分页列表查询排序
+     * 获取根据时间分页的列表查询排序
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -395,7 +395,7 @@ trait CurdActionTrait
     }
 
     /**
-     * 查询无分页列表时是否调用asArray()
+     * 根据时间分页的列表查询时是否调用asArray()
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -409,7 +409,7 @@ trait CurdActionTrait
     }
 
     /**
-     * 遍历无分页列表查询数据
+     * 遍历根据时间分页的列表查询数据
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -436,7 +436,7 @@ trait CurdActionTrait
     }
 
     /**
-     * 滚动分页数据加载返回数据
+     * 根据时间分页的列表查询返回数据
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -452,6 +452,189 @@ trait CurdActionTrait
     {
         return (new Util)->result(ErrCode::SUCCESS, 'ok', $list, [
             'maxTime' => $maxTime, 'minTime' => $minTime, 'page_size' => $pageSize
+        ]);
+    }
+
+    //---------- 批处理列表查询（一般用于需要一次性输出所有数据的情况） ----------/
+
+    /**
+     * 批处理列表查询数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @return Response|string
+     * @lasttime: 2022/3/13 9:55 上午
+     */
+    public function actionAll()
+    {
+        global $_GPC;
+
+        $this->checkInit();
+
+        $fields      = $this->getAllFields();
+        $where       = $this->getAllWhere();
+        $filterWhere = $this->getAllFilterWhere();
+        $order       = $this->getAllOrder();
+
+        $fetchSize   = intval($_GPC['fetch_size']);
+        $fetchSize   = $fetchSize <= 0 ? 100 : $fetchSize;
+        $showDeleted = intval($_GPC['show_deleted']);
+
+        /** @var ActiveQuery $row */
+        $row = call_user_func($this->modelClass . '::find');
+        $row = $row->select($fields);
+
+        // 用于补充查询
+        $result = $this->getAllRow($row);
+        if (isset($result) && Util::isError($result))
+            return (new Util)->resultError($result);
+
+        // 仅在存在deleted_at字段时才进行软删除过滤
+        if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
+            $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
+
+        if (!empty($where)) $row = $row->andWhere($where);
+        $row = $row->andFilterWhere($filterWhere);
+
+        if (!empty($order)) $row = $row->addOrderBy($order);
+
+        if ($this->allAsArray())
+            $row = $row->asArray();
+
+        // 获取缓存配置
+        $mysql_attr_use_buffered_query = Yii::$app->db->pdo->getAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY);
+        // 批量查询时，如果开启了缓存，则关闭缓存
+        if ($mysql_attr_use_buffered_query !== false)
+            Yii::$app->db->pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+        $list = [];
+        foreach ($row->each($fetchSize) as $item) {
+            $list[] = $this->allEach($item);
+        }
+        // 还原缓存配置
+        if ($mysql_attr_use_buffered_query !== false)
+            Yii::$app->db->pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, $mysql_attr_use_buffered_query);
+
+        $total = $row->count();
+
+        return $this->allReturn($list, $total);
+    }
+
+    /**
+     * 批处理列表查询条件
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @return array|string
+     * @lasttime: 2022/3/13 10:53 上午
+     */
+    public function getAllWhere()
+    {
+        return [];
+    }
+
+    /**
+     * 批处理列表查询过滤条件
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @return array
+     * @lasttime: 2022/3/13 10:52 上午
+     */
+    public function getAllFilterWhere(): array
+    {
+        return [];
+    }
+
+    /**
+     * 批处理列表查询链式查询
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param ActiveQuery $row
+     * @return mixed
+     * @lasttime: 2022/3/18 11:11 下午
+     */
+    public function getAllRow(ActiveQuery &$row)
+    {
+        return $row;
+    }
+
+    /**
+     * 批处理列表查询返回的字段
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @return string|array
+     * @lasttime: 2022/3/13 10:51 上午
+     */
+    public function getAllFields()
+    {
+        return $this->modelTableName . '.*';
+    }
+
+    /**
+     * 批处理列表查询排序
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @return string|array
+     * @lasttime: 2022/3/13 10:51 上午
+     */
+    public function getAllOrder()
+    {
+        return '';
+    }
+
+    /**
+     * 批处理列表查询时是否调用asArray()
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return bool
+     * @lasttime: 2022/12/20 1:45 PM
+     */
+    public function allAsArray(): bool
+    {
+        return true;
+    }
+
+    /**
+     * 批处理列表查询数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param $item
+     * @return mixed
+     * @lasttime: 2022/3/13 10:50 上午
+     */
+    public function allEach($item)
+    {
+        if (!$this->listAsArray()) {
+            if (method_exists($item, 'toArray')) $item = $item->toArray();
+        } else {
+            (new FieldFilter)->set([
+                'modelClass' => $this->modelClass,
+            ])->de($item);
+        }
+
+        return $item;
+    }
+
+    /**
+     * 批处理列表查询返回数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param $total
+     * @param $list
+     * @return Response|string
+     * @lasttime: 2022/3/13 10:34 上午
+     */
+    public function allReturn($list, $total)
+    {
+        return (new Util)->result(ErrCode::SUCCESS, 'ok', $list, [
+            'count' => $total
         ]);
     }
 
