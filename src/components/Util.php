@@ -7,7 +7,7 @@ use Yii;
 use yii\base\ExitException;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
-use Yii\redis\Connection;
+use yii\redis\Connection;
 use yii\web\Response;
 
 /**
@@ -418,7 +418,7 @@ class Util
     public static function simplexml_load_string($string, string $class_name = 'SimpleXMLElement', int $options = 0, string $ns = '', bool $is_prefix = false)
     {
         libxml_disable_entity_loader();
-        if (preg_match('/(\<\!DOCTYPE|\<\!ENTITY)/i', $string))
+        if (preg_match('/(<!DOCTYPE|<!ENTITY)/i', $string))
             return false;
 
         $string = preg_replace('/[\\x00-\\x08\\x0b-\\x0c\\x0e-\\x1f\\x7f]/', '', $string);
@@ -1217,7 +1217,7 @@ class Util
      * @throws InvalidConfigException
      * @lasttime: 2021/12/20 10:00 上午
      */
-    public function showCaptcha(Yii\web\Controller $controller)
+    public function showCaptcha(yii\web\Controller $controller)
     {
         global $_GPC;
         $type = Safe::gpcString($_GPC['captchaType']);
@@ -1245,7 +1245,7 @@ class Util
      * @return bool
      * @throws InvalidConfigException 控制器中的使用示例 verifyCaptcha($code, new \backend\controllers\utility\CaptchaController('utility/captcha', $this->module));
      */
-    public function verifyCaptcha(string $code, Yii\web\Controller $controller)
+    public function verifyCaptcha(string $code, yii\web\Controller $controller)
     {
         global $_GPC;
 
@@ -1269,7 +1269,7 @@ class Util
      * @return string
      * @throws InvalidConfigException 控制器中的使用示例 getCaptcha(new \backend\controllers\utility\CaptchaController('utility/captcha', $this->module));
      */
-    public function getCaptcha(Yii\web\Controller $controller)
+    public function getCaptcha(yii\web\Controller $controller)
     {
         global $_GPC;
         $type = Safe::gpcString($_GPC['captchaType']);
