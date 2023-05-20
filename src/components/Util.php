@@ -6,8 +6,10 @@ use SimpleXMLElement;
 use Yii;
 use yii\base\ExitException;
 use yii\base\InvalidConfigException;
+use yii\captcha\CaptchaAction;
 use yii\helpers\ArrayHelper;
 use yii\redis\Connection;
+use yii\web\Controller;
 use yii\web\Response;
 
 /**
@@ -1212,12 +1214,12 @@ class Util
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param yii\web\Controller $controller
+     * @param Controller $controller
      * @return array|string|Response
      * @throws InvalidConfigException
      * @lasttime: 2021/12/20 10:00 上午
      */
-    public function showCaptcha(yii\web\Controller $controller)
+    public function showCaptcha(Controller $controller)
     {
         global $_GPC;
         $type = Safe::gpcString($_GPC['captchaType']);
@@ -1241,11 +1243,11 @@ class Util
     /**
      * 验证传入的验证码是否正确
      * @param string $code 传入的验证码
-     * @param yii\web\Controller $controller
+     * @param Controller $controller
      * @return bool
      * @throws InvalidConfigException 控制器中的使用示例 verifyCaptcha($code, new \backend\controllers\utility\CaptchaController('utility/captcha', $this->module));
      */
-    public function verifyCaptcha(string $code, yii\web\Controller $controller)
+    public function verifyCaptcha(string $code, Controller $controller)
     {
         global $_GPC;
 
@@ -1265,17 +1267,17 @@ class Util
 
     /**
      * 获取图形验证码
-     * @param yii\web\Controller $controller
+     * @param Controller $controller
      * @return string
      * @throws InvalidConfigException 控制器中的使用示例 getCaptcha(new \backend\controllers\utility\CaptchaController('utility/captcha', $this->module));
      */
-    public function getCaptcha(yii\web\Controller $controller)
+    public function getCaptcha(Controller $controller)
     {
         global $_GPC;
         $type = Safe::gpcString($_GPC['captchaType']);
         if (empty($type)) return $this->result(ErrCode::PARAMETER_ERROR, '验证码类型不能为空');
 
-        $c = Yii::createObject(yii\captcha\CaptchaAction::class, ['__' . $type, $controller]);
+        $c = Yii::createObject(CaptchaAction::class, ['__' . $type, $controller]);
         return $c->getVerifyCode();
     }
 

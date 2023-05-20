@@ -5,7 +5,7 @@ namespace Jcbowen\JcbaseYii2\components;
 
 use Yii;
 use yii\base\BaseObject;
-use yii\base\InvalidArgumentException;
+use yii\redis\Connection;
 
 /**
  * Class Redis
@@ -20,14 +20,14 @@ class Redis extends BaseObject
     /** @var string */
     public $componentName = 'redis';
 
-    /** @var yii\redis\Connection|null */
+    /** @var Connection|null */
     public $connection = null;
 
     /** @var array */
     public $errors = [];
 
     /**
-     * @param string $name Yii\redis\Connection配置中在components里的键名
+     * @param string $name \yii\redis\Connection 配置中在components里的键名
      * @param array $config
      * {@inheritdoc}
      */
@@ -72,12 +72,12 @@ class Redis extends BaseObject
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @return false|Yii\redis\Connection
+     * @return false|Connection
      * @lasttime 2022/9/26 09:06
      */
     public function getConnection()
     {
-        if (!$this->connection instanceof yii\redis\Connection) {
+        if (!$this->connection instanceof Connection) {
             $this->errors[] = "redis配置有误，未查找到{$this->componentName}的component配置";
             return false;
         }
@@ -112,7 +112,7 @@ class Redis extends BaseObject
      * @param $value
      * @param int $expire
      * @param ...$options
-     * @return false|mixed|Yii\redis\Connection|null
+     * @return false|mixed|Connection|null
      * @lasttime 2022/9/26 12:24
      */
     public function set($key, $value, int $expire = 0, ...$options)
@@ -135,7 +135,7 @@ class Redis extends BaseObject
      * @param $key
      * @param $seconds
      * @param $value
-     * @return false|mixed|Yii\redis\Connection|null
+     * @return false|mixed|Connection|null
      * @lasttime: 2022/10/14 15:21
      */
     public function setex($key, $seconds, $value)
@@ -152,7 +152,7 @@ class Redis extends BaseObject
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param ...$key
-     * @return array|false|Yii\redis\Connection|null
+     * @return array|false|Connection|null
      * @lasttime 2022/9/26 12:24
      */
     public function mget(...$key)
@@ -224,7 +224,7 @@ class Redis extends BaseObject
      *
      * @param $key
      * @param ...$values
-     * @return false|mixed|Yii\redis\Connection|null
+     * @return false|mixed|Connection|null
      * @lasttime: 2023/1/17 4:39 PM
      */
     public function lpush($key, ...$values)
@@ -245,7 +245,7 @@ class Redis extends BaseObject
      * @email bowen@jiuchet.com
      *
      * @param $key
-     * @return false|mixed|Yii\redis\Connection|null
+     * @return false|mixed|Connection|null
      * @lasttime: 2023/1/17 4:40 PM
      */
     public function rpop($key)
@@ -264,7 +264,7 @@ class Redis extends BaseObject
      *
      * @param $key
      * @param $value
-     * @return false|mixed|Yii\redis\Connection|null
+     * @return false|mixed|Connection|null
      * @lasttime: 2023/1/17 4:40 PM
      */
     public function setnx($key, $value)
