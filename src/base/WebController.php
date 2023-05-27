@@ -172,10 +172,25 @@ class WebController extends Controller
         return $this->result($errCode, $errmsg, $data, $params, 'return');
     }
 
-    // 输出成功信息
-    public function success($data = [], string $errmsg = '', array $params = [], string $returnType = 'exit')
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param mixed $data 正确数据（当传入字符串，且msg参数为空时，可以作为提示信息）
+     * @param string $msg 提示信息
+     * @param array $params 额外参数
+     * @param string $returnType
+     * @return string|Response
+     * @lasttime: 2023/5/27 4:47 PM
+     */
+    public function success($data = [], string $msg = '', array $params = [], string $returnType = 'exit')
     {
-        return $this->result(ErrCode::SUCCESS, $errmsg ?: 'ok', $data, $params, $returnType);
+        if (is_string($data) && empty($msg)) {
+            $msg  = $data;
+            $data = [];
+        }
+        return $this->result(ErrCode::SUCCESS, $msg ?: 'ok', $data, $params, $returnType);
     }
 
     /**
