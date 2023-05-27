@@ -8,6 +8,8 @@ use yii\base\ExitException;
 use yii\base\InvalidConfigException;
 use yii\captcha\CaptchaAction;
 use yii\helpers\ArrayHelper;
+use yii\helpers\ReplaceArrayValue;
+use yii\helpers\UnsetArrayValue;
 use yii\redis\Connection;
 use yii\web\Controller;
 use yii\web\Response;
@@ -401,6 +403,44 @@ class Util
         }
 
         return $arr;
+    }
+
+    /**
+     * 递归合并数组，与yii2的ArrayHelper::merge()不同的是，如果遇到int类型的key，会将后面的值覆盖前面的值
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $a
+     * @param $b
+     * @return mixed|null
+     * @lasttime: 2023/5/24 11:08
+     */
+    public static function merge($a, $b)
+    {
+        $args = func_get_args();
+        $res  = array_shift($args);
+        while (!empty($args)) {
+            foreach (array_shift($args) as $k => $v) {
+                if ($v instanceof UnsetArrayValue) {
+                    unset($res[$k]);
+                } elseif ($v instanceof ReplaceArrayValue) {
+                    $res[$k] = $v->value;
+                } elseif (is_int($k)) {
+                    if (array_key_exists($k, $res)) {
+                        $res[$k] = $v;
+                    } else {
+                        $res[] = $v;
+                    }
+                } elseif (is_array($v) && isset($res[$k]) && is_array($res[$k])) {
+                    $res[$k] = static::merge($res[$k], $v);
+                } else {
+                    $res[$k] = $v;
+                }
+            }
+        }
+
+        return $res;
     }
 
     /**
