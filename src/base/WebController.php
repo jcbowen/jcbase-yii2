@@ -114,8 +114,11 @@ class WebController extends Controller
 
         if ($type == 'sql') $label = 'warning';
 
-        include (new Template)->template('common/message', TEMPLATE_INCLUDEPATH);
-        return (new Util)->resultHtml();
+        $html = (new Template([
+            'controller' => $this,
+            'variables'  => get_defined_vars(),
+        ]))->template('common/message', TEMPLATE_FETCH);
+        return (new Util)->resultHtml($html);
     }
 
     /**
