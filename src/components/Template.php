@@ -23,6 +23,10 @@ class Template extends \yii\base\Component
     public $appPath = '';
     /** @var string jcbase源码路径 */
     public $jcbaseSrcPath = '';
+    /** @var string 模板文件根目录 */
+    public $viewPath = '';
+    /** @var string 编译文件根目录 */
+    public $compilePath = '';
 
     /** @var array 传递的变量(需要作用到模板文件中的变量；一般通过get_defined_vars()获取) */
     public $variables = [];
@@ -45,6 +49,8 @@ class Template extends \yii\base\Component
         // 初始化
         $this->appPath       = Yii::getAlias('@app');
         $this->jcbaseSrcPath = Yii::getAlias('@vendor/jcbowen/jcbase-yii2/src');
+        $this->viewPath      = $this->appPath . '/views';
+        $this->compilePath   = $this->appPath . '/runtime/tpl';
     }
 
     /**
@@ -67,28 +73,28 @@ class Template extends \yii\base\Component
         $doesNotExist   = [];
 
         // 根据当前模版的指定文件名查找
-        $source  = $this->appPath . "/views/{$_B['template']}/$filename.html";
-        $compile = $this->appPath . "/runtime/tpl/{$_B['template']}/$filename.tpl.php";
+        $source  = "$this->viewPath/{$_B['template']}/$filename.html";
+        $compile = "$this->compilePath/{$_B['template']}/$filename.tpl.php";
 
         // 根据当前模版的index文件查找
         if (!is_file($source)) {
             $doesNotExist[] = $source;
-            $source         = $this->appPath . "/views/{$_B['template']}/$filename/index.html";
-            $compile        = $this->appPath . "/runtime/tpl/{$_B['template']}/$filename/index.tpl.php";
+            $source         = "$this->viewPath/{$_B['template']}/$filename/index.html";
+            $compile        = "$this->compilePath/{$_B['template']}/$filename/index.tpl.php";
         }
 
         // 根据默认模版的指定文件名查找
         if (!is_file($source)) {
             $doesNotExist[] = $source;
-            $source         = $this->appPath . "/views/default/$filename.html";
-            $compile        = $this->appPath . "/runtime/tpl/default/$filename.tpl.php";
+            $source         = "$this->viewPath/default/$filename.html";
+            $compile        = "$this->compilePath/default/$filename.tpl.php";
         }
 
         // 根据默认模版的index文件查找
         if (!is_file($source)) {
             $doesNotExist[] = $source;
-            $source         = $this->appPath . "/views/default/$filename/index.html";
-            $compile        = $this->appPath . "/runtime/tpl/default/$filename/index.tpl.php";
+            $source         = "$this->viewPath/default/$filename/index.html";
+            $compile        = "$this->compilePath/default/$filename/index.tpl.php";
         }
 
         // ----- 查找jcbase中是否有默认模板，Begin ----- /
