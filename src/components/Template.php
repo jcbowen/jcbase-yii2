@@ -44,7 +44,7 @@ class Template extends \yii\base\Component
 
         if (isset($this->controller) && !$this->controller instanceof WebController)
             throw new InvalidArgumentException('Template组件的controller属性必须是WebController的实例');
-        
+
         // 初始化
         $this->appPath       = $this->appPath ? Yii::getAlias(rtrim($this->appPath, '/')) : Yii::getAlias('@app');
         $this->jcbaseSrcPath = $this->jcbaseSrcPath ? Yii::getAlias(rtrim($this->jcbaseSrcPath, '/')) : Yii::getAlias('@vendor/jcbowen/jcbase-yii2/src');
@@ -259,12 +259,12 @@ class Template extends \yii\base\Component
         $str = preg_replace_callback('/<\?php([^?]+)?>/', "\Jcbowen\JcbaseYii2\components\Template::templateAddQuote", $str);
         $str = preg_replace(
             '/<jc_tpl_php>(.+?)<\/jc_tpl_php>/',
-            '<?php include (new \Jcbowen\JcbaseYii2\components\Template(["controller" => $this->controller, "variables" => $this->variables]))->template($1, TEMPLATE_INCLUDEPATH); ?>',
+            '<?php include (new \Jcbowen\JcbaseYii2\components\Template(["controller" => $this->controller, "variables" => $this->variables, "viewPath" => $this->viewPath, "compilePath" => $this->compilePath]))->template($1, TEMPLATE_INCLUDEPATH); ?>',
             $str
         );
         $str = preg_replace(
             '/{template\s+(.+?)}/',
-            '<?php include (new \Jcbowen\JcbaseYii2\components\Template(["controller" => $this->controller, "variables" => $this->variables]))->template($1, TEMPLATE_INCLUDEPATH); ?>',
+            '<?php include (new \Jcbowen\JcbaseYii2\components\Template(["controller" => $this->controller, "variables" => $this->variables, "viewPath" => $this->viewPath, "compilePath" => $this->compilePath]))->template($1, TEMPLATE_INCLUDEPATH); ?>',
             $str
         );
         $str = preg_replace('/{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)}/', '<?php echo $1; ?>', $str);
