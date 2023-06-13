@@ -255,8 +255,8 @@ class Template extends \yii\base\Component
         $str = preg_replace('/{\/loop}/', '<?php } } ?>', $str);
         $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)}/', '<?php echo $1; ?>', $str);
         $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff\[\]\'\"\$]*)}/', '<?php echo $1; ?>', $str);
-        $str = preg_replace('/{media\s+(\S+)}/', '<?php echo \Jcbowen\JcbaseYii2\components\Util::tomedia($1); ?>', $str);
-        $str = preg_replace_callback('/<\?php([^?]+)?>/', "\Jcbowen\JcbaseYii2\components\Template::templateAddQuote", $str);
+        $str = preg_replace('/{toMedia\s+(\S+)}/', '<?php echo \Jcbowen\JcbaseYii2\components\Util::toMedia($1); ?>', $str);
+        $str = preg_replace_callback('/<\?php([^\?]+)\?>/s', "\Jcbowen\JcbaseYii2\components\Template::templateAddQuote", $str);
         $str = preg_replace(
             '/<jc_tpl_php>(.+?)<\/jc_tpl_php>/',
             '<?php include (new \Jcbowen\JcbaseYii2\components\Template(["controller" => $this->controller, "variables" => $this->variables, "viewPath" => $this->viewPath, "compilePath" => $this->compilePath]))->template($1, TEMPLATE_INCLUDEPATH); ?>',
@@ -267,7 +267,7 @@ class Template extends \yii\base\Component
             '<?php include (new \Jcbowen\JcbaseYii2\components\Template(["controller" => $this->controller, "variables" => $this->variables, "viewPath" => $this->viewPath, "compilePath" => $this->compilePath]))->template($1, TEMPLATE_INCLUDEPATH); ?>',
             $str
         );
-        $str = preg_replace('/{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)}/', '<?php echo $1; ?>', $str);
+        $str = preg_replace('/{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)}/s', '<?php echo $1; ?>', $str);
         $str = str_replace('{##', '{', $str);
         $str = str_replace('##}', '}', $str);
 
@@ -312,7 +312,8 @@ class Template extends \yii\base\Component
     public static function templateAddQuote($matches)
     {
         $code = "<?php $matches[1] ?>";
-        $code = preg_replace('/\[([a-zA-Z0-9_\-.\x7f-\xff]+)](?![a-zA-Z0-9_\-.\x7f-\xff\[\]]*[\'"])/', "['$1']", $code);
+        $code = preg_replace('/\[([a-zA-Z0-9_\-\.\x7f-\xff]+)\](?![a-zA-Z0-9_\-\.\x7f-\xff\[\]]*[\'"])/s', "['$1']", $code);
+
         return str_replace('\\\"', '\"', $code);
     }
 }
