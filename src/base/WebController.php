@@ -53,12 +53,13 @@ class WebController extends Controller
             Yii::$app->params['domain']['attachment'] = Yii::$app->params['domain']['attachment_local'];
 
         //----- 默认参数，及将参数配置写到全局变量中 -----/
-        $_B['page']        = ['title' => 'jcbase'];
-        $_B['params']      = ArrayHelper::merge((array)$_B['params'], Yii::$app->params);
-        $_B['JcClient']    = Yii::$app->request->headers->get('JcClient', '') ?: Yii::$app->request->headers->get('jcclient', '') ?: CLIENT_UNKNOWN; // 客户端类型
-        $_B['EnvVersion']  = Yii::$app->request->headers->get('EnvVersion', '') ?: Yii::$app->request->headers->get('envversion', '') ?: 'production'; // 开发环境 development, production
-        $_B['release']     = Yii::$app->request->headers->get('RELEASE', '') ?: Yii::$app->request->headers->get('release', '') ?: '0.0.1'; // 版本号
-        $_B['releaseCode'] = Yii::$app->request->headers->get('releaseCode', '') ?: Yii::$app->request->headers->get('releasecode', '') ?: '1'; // 版本编码
+        $_B['page']         = ['title' => 'jcbase'];
+        $_B['params']       = ArrayHelper::merge((array)$_B['params'], Yii::$app->params);
+        $_B['JcClient']     = Yii::$app->request->headers->get('JcClient', '') ?: Yii::$app->request->headers->get('jcclient', '') ?: CLIENT_UNKNOWN; // 客户端类型
+        $_B['JcClientList'] = CLIENT_LIST;
+        $_B['EnvVersion']   = Yii::$app->request->headers->get('EnvVersion', '') ?: Yii::$app->request->headers->get('envversion', '') ?: 'production'; // 开发环境 development, production
+        $_B['release']      = Yii::$app->request->headers->get('RELEASE', '') ?: Yii::$app->request->headers->get('release', '') ?: '0.0.1'; // 版本号
+        $_B['releaseCode']  = Yii::$app->request->headers->get('releaseCode', '') ?: Yii::$app->request->headers->get('releasecode', '') ?: '1'; // 版本编码
 
         // ----- 全局变量$_GPC赋值 -----/
         $_GPC     = $_GPC ?? [];
@@ -113,8 +114,11 @@ class WebController extends Controller
 
         if ($type == 'sql') $label = 'warning';
 
-        include (new Template)->template('common/message', TEMPLATE_INCLUDEPATH);
-        return (new Util)->resultHtml();
+        $html = (new Template([
+            'controller' => $this,
+            'variables'  => get_defined_vars(),
+        ]))->template('common/message', TEMPLATE_FETCH);
+        return (new Util)->resultHtml($html);
     }
 
     /**

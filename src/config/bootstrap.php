@@ -28,7 +28,7 @@ const ATTACH_TYPE_ZIP    = 6;
 // IN_CLIENT 默认为 false
 defined("IN_CLIENT") or define("IN_CLIENT", false);
 
-// 客户端类型
+// 客户端类型(30~49属于自定义客户端，请勿在本文件使用)
 const CLIENT_UNKNOWN               = 0;
 const CLIENT_ANDROID               = 1;
 const CLIENT_IOS                   = 2;
