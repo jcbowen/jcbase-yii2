@@ -47,10 +47,10 @@ class Template extends \yii\base\Component
         }
 
         // 初始化
-        $this->appPath       = Yii::getAlias('@app');
-        $this->jcbaseSrcPath = Yii::getAlias('@vendor/jcbowen/jcbase-yii2/src');
-        $this->viewPath      = $this->appPath . '/views';
-        $this->compilePath   = $this->appPath . '/runtime/tpl';
+        $this->appPath       = $this->appPath ? Yii::getAlias($this->appPath) : Yii::getAlias('@app');
+        $this->jcbaseSrcPath = $this->jcbaseSrcPath ? Yii::getAlias($this->jcbaseSrcPath) : Yii::getAlias('@vendor/jcbowen/jcbase-yii2/src');
+        $this->viewPath      = $this->viewPath ? Yii::getAlias($this->viewPath) : $this->appPath . '/views';
+        $this->compilePath   = $this->compilePath ? Yii::getAlias($this->compilePath) : $this->appPath . '/runtime/tpl';
     }
 
     /**
