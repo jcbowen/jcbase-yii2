@@ -23,7 +23,7 @@ class Template extends \yii\base\Component
     public $appPath = '';
     /** @var string jcbase源码路径 */
     public $jcbaseSrcPath = '';
-    /** @var string 模板文件根目录 */
+    /** @var string 模板文件根目录（模板目录的上级目录） */
     public $viewPath = '';
     /** @var string 编译文件根目录 */
     public $compilePath = '';
@@ -42,15 +42,14 @@ class Template extends \yii\base\Component
 
         $this->variables = !empty($this->variables) && is_array($this->variables) ? $this->variables : [];
 
-        if (isset($this->controller) && !$this->controller instanceof WebController) {
+        if (isset($this->controller) && !$this->controller instanceof WebController)
             throw new InvalidArgumentException('Template组件的controller属性必须是WebController的实例');
-        }
-
+        
         // 初始化
-        $this->appPath       = $this->appPath ? Yii::getAlias($this->appPath) : Yii::getAlias('@app');
-        $this->jcbaseSrcPath = $this->jcbaseSrcPath ? Yii::getAlias($this->jcbaseSrcPath) : Yii::getAlias('@vendor/jcbowen/jcbase-yii2/src');
-        $this->viewPath      = $this->viewPath ? Yii::getAlias($this->viewPath) : $this->appPath . '/views';
-        $this->compilePath   = $this->compilePath ? Yii::getAlias($this->compilePath) : $this->appPath . '/runtime/tpl';
+        $this->appPath       = $this->appPath ? Yii::getAlias(rtrim($this->appPath, '/')) : Yii::getAlias('@app');
+        $this->jcbaseSrcPath = $this->jcbaseSrcPath ? Yii::getAlias(rtrim($this->jcbaseSrcPath, '/')) : Yii::getAlias('@vendor/jcbowen/jcbase-yii2/src');
+        $this->viewPath      = $this->viewPath ? Yii::getAlias(rtrim($this->viewPath, '/')) : $this->appPath . '/views';
+        $this->compilePath   = $this->compilePath ? Yii::getAlias(rtrim($this->compilePath, '/')) : $this->appPath . '/runtime/tpl';
     }
 
     /**
