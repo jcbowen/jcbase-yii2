@@ -256,6 +256,8 @@ class Template extends Component
         $str = preg_replace('/{loop\s+(\S+)\s+(\S+)}/', '<?php if(is_array($1)) { foreach($1 as $2) { ?>', $str);
         $str = preg_replace('/{loop\s+(\S+)\s+(\S+)\s+(\S+)}/', '<?php if(is_array($1)) { foreach($1 as $2 => $3) { ?>', $str);
         $str = preg_replace('/{\/loop}/', '<?php } } ?>', $str);
+        $str = preg_replace('/{for\s+(.+?)}/', '<?php for($1) { ?>', $str);
+        $str = preg_replace('/{\/for}/', '<?php } ?>', $str);
         $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)}/', '<?php echo $1; ?>', $str);
         $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff\[\]\'\"\$]*)}/', '<?php echo $1; ?>', $str);
         $str = preg_replace('/{toMedia\s+(\S+)}/', '<?php echo \Jcbowen\JcbaseYii2\components\Util::toMedia($1); ?>', $str);
