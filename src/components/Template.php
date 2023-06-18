@@ -19,6 +19,8 @@ use yii\helpers\FileHelper;
  */
 class Template extends \yii\base\Component
 {
+    /** @var string 模板文件后缀 */
+    public $suffix = 'html';
     /** @var string 应用路径 */
     public $appPath = '';
     /** @var string jcbase源码路径 */
@@ -72,27 +74,27 @@ class Template extends \yii\base\Component
         $doesNotExist   = [];
 
         // 根据当前模版的指定文件名查找
-        $source  = "$this->viewPath/{$_B['template']}/$filename.html";
+        $source  = "$this->viewPath/{$_B['template']}/$filename.$this->suffix";
         $compile = "$this->compilePath/{$_B['template']}/$filename.tpl.php";
 
         // 根据当前模版的index文件查找
         if (!is_file($source)) {
             $doesNotExist[] = $source;
-            $source         = "$this->viewPath/{$_B['template']}/$filename/index.html";
+            $source         = "$this->viewPath/{$_B['template']}/$filename/index.$this->suffix";
             $compile        = "$this->compilePath/{$_B['template']}/$filename/index.tpl.php";
         }
 
         // 根据默认模版的指定文件名查找
         if (!is_file($source)) {
             $doesNotExist[] = $source;
-            $source         = "$this->viewPath/default/$filename.html";
+            $source         = "$this->viewPath/default/$filename.$this->suffix";
             $compile        = "$this->compilePath/default/$filename.tpl.php";
         }
 
         // 根据默认模版的index文件查找
         if (!is_file($source)) {
             $doesNotExist[] = $source;
-            $source         = "$this->viewPath/default/$filename/index.html";
+            $source         = "$this->viewPath/default/$filename/index.$this->suffix";
             $compile        = "$this->compilePath/default/$filename/index.tpl.php";
         }
 
@@ -100,28 +102,28 @@ class Template extends \yii\base\Component
         // 根据当前模版的指定文件名查找
         if (!is_file($source)) {
             $doesNotExist[] = $source;
-            $source         = $this->jcbaseSrcPath . "/views/{$_B['template']}/$filename.html";
+            $source         = $this->jcbaseSrcPath . "/views/{$_B['template']}/$filename.$this->suffix";
             $compile        = $this->appPath . "/runtime/jcbase/tpl/{$_B['template']}/$filename.tpl.php";
         }
 
         // 根据当前模版的index文件查找
         if (!is_file($source)) {
             $doesNotExist[] = $source;
-            $source         = $this->jcbaseSrcPath . "/views/{$_B['template']}/$filename/index.html";
+            $source         = $this->jcbaseSrcPath . "/views/{$_B['template']}/$filename/index.$this->suffix";
             $compile        = $this->appPath . "/runtime/jcbase/tpl/{$_B['template']}/$filename/index.tpl.php";
         }
 
         // 根据默认模版的指定文件名查找
         if (!is_file($source)) {
             $doesNotExist[] = $source;
-            $source         = $this->jcbaseSrcPath . "/views/default/$filename.html";
+            $source         = $this->jcbaseSrcPath . "/views/default/$filename.$this->suffix";
             $compile        = $this->appPath . "/runtime/jcbase/tpl/default/$filename.tpl.php";
         }
 
         // 根据默认模版的index文件查找
         if (!is_file($source)) {
             $doesNotExist[] = $source;
-            $source         = $this->jcbaseSrcPath . "/views/default/$filename/index.html";
+            $source         = $this->jcbaseSrcPath . "/views/default/$filename/index.$this->suffix";
             $compile        = $this->appPath . "/runtime/jcbase/tpl/default/$filename/index.tpl.php";
         }
         // ----- 查找jcbase中是否有默认模板，End ----- /
@@ -176,12 +178,12 @@ class Template extends \yii\base\Component
     {
         $filename = $filename ?: 'index';
 
-        $source  = $this->appPath . "/web/$filename.html";
+        $source  = $this->appPath . "/web/$filename.$this->suffix";
         $compile = $this->appPath . "/runtime/vtpl/$filename.tpl.php";
 
-        // if (!is_file($source)) $source = $this->appPath . "/web/$filename/index.html";
-        // if (!is_file($source)) $source = $this->appPath . "/web/dist/$filename/index.html";
-        if (!is_file($source)) $source = $this->appPath . "/web/dist/$filename.html";
+        // if (!is_file($source)) $source = $this->appPath . "/web/$filename/index.$this->suffix";
+        // if (!is_file($source)) $source = $this->appPath . "/web/dist/$filename/index.$this->suffix";
+        if (!is_file($source)) $source = $this->appPath . "/web/dist/$filename.$this->suffix";
 
         if (!is_file($source)) {
             if (YII_DEBUG) exit("template source '$source' is not exist!");
@@ -259,12 +261,12 @@ class Template extends \yii\base\Component
         $str = preg_replace_callback('/<\?php([^\?]+)\?>/s', "\Jcbowen\JcbaseYii2\components\Template::templateAddQuote", $str);
         $str = preg_replace(
             '/<jc_tpl_php>(.+?)<\/jc_tpl_php>/',
-            '<?php include (new \Jcbowen\JcbaseYii2\components\Template(["controller" => $this->controller, "variables" => $this->variables, "viewPath" => $this->viewPath, "compilePath" => $this->compilePath]))->template($1, TEMPLATE_INCLUDEPATH); ?>',
+            '<?php include (new \Jcbowen\JcbaseYii2\components\Template(["controller" => $this->controller, "variables" => $this->variables, "viewPath" => $this->viewPath, "compilePath" => $this->compilePath, "suffix" => $this->suffix]))->template($1, TEMPLATE_INCLUDEPATH); ?>',
             $str
         );
         $str = preg_replace(
             '/{template\s+(.+?)}/',
-            '<?php include (new \Jcbowen\JcbaseYii2\components\Template(["controller" => $this->controller, "variables" => $this->variables, "viewPath" => $this->viewPath, "compilePath" => $this->compilePath]))->template($1, TEMPLATE_INCLUDEPATH); ?>',
+            '<?php include (new \Jcbowen\JcbaseYii2\components\Template(["controller" => $this->controller, "variables" => $this->variables, "viewPath" => $this->viewPath, "compilePath" => $this->compilePath, "suffix" => $this->suffix]))->template($1, TEMPLATE_INCLUDEPATH); ?>',
             $str
         );
         $str = preg_replace('/{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)}/s', '<?php echo $1; ?>', $str);
