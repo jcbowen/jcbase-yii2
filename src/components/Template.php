@@ -4,6 +4,7 @@ namespace Jcbowen\JcbaseYii2\components;
 
 use Jcbowen\JcbaseYii2\base\WebController;
 use Yii;
+use yii\base\Component;
 use yii\base\Exception;
 use yii\base\InvalidArgumentException;
 use yii\helpers\FileHelper;
@@ -17,7 +18,7 @@ use yii\helpers\FileHelper;
  * @lasttime: 2022/9/27 21:23
  * @package Jcbowen\JcbaseYii2\components
  */
-class Template extends \yii\base\Component
+class Template extends Component
 {
     /** @var string 模板文件后缀 */
     public $suffix = 'html';
