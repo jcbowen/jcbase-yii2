@@ -261,6 +261,9 @@ class Template extends Component
         $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)}/', '<?php echo $1; ?>', $str);
         $str = preg_replace('/{(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff\[\]\'\"\$]*)}/', '<?php echo $1; ?>', $str);
         $str = preg_replace('/{toMedia\s+(\S+)}/', '<?php echo \Jcbowen\JcbaseYii2\components\Util::toMedia($1); ?>', $str);
+        $str = preg_replace('/{t\s+(\S+)\s+(\S+)}/', '<?php echo \Yii::t($1, $2); ?>', $str);
+        $str = preg_replace('/{t\s+(\S+)\s+(\S+)\s+(\S+)}/', '<?php echo \Yii::t($1, $2, $3); ?>', $str);
+        $str = preg_replace('/{t\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)}/', '<?php echo \Yii::t($1, $2, $3, $4); ?>', $str);
         $str = preg_replace_callback('/<\?php([^\?]+)\?>/s', "\Jcbowen\JcbaseYii2\components\Template::templateAddQuote", $str);
         $str = preg_replace(
             '/<jc_tpl_php>(.+?)<\/jc_tpl_php>/',
