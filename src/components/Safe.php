@@ -241,8 +241,8 @@ class Safe
     public static function badStrReplace($string)
     {
         if (empty($string)) return '';
-        $badstr = ["\0", "%00", "%3C", "%3E", '<?', '<%', '<?php', '{php', '{if', '{loop', '../'];
-        $newstr = ['_', '_', '&lt;', '&gt;', '_', '_', '_', '_', '_', '_', '.._'];
+        $badstr = ["\0", "%00", "%3C", "%3E", '<?', '<%', '<?php', '{php', '{if', '{foreach', '{for', '../'];
+        $newstr = ['_', '_', '&lt;', '&gt;', '_', '_', '_', '_', '_', '_', '_', '.._'];
         $string = str_replace($badstr, $newstr, $string);
 
         return $string;

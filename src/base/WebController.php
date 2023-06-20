@@ -11,6 +11,7 @@ use Jcbowen\JcbaseYii2\components\Util;
 use Yii;
 use yii\base\InvalidArgumentException;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Url;
 use yii\web\BadRequestHttpException;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -87,8 +88,7 @@ class WebController extends Controller
     {
         global $_B;
         if ($redirect == 'refresh') {
-            $_B['siteRoot'] = Util::getSiteRoot();
-            $redirect       = $_B['siteRoot'] . '.' . $_B['script_name'] . '?' . $_SERVER['QUERY_STRING'];
+            $redirect = Url::to('', true);
         }
         if ($redirect == 'referer') {
             $redirect = Util::getReferer();
