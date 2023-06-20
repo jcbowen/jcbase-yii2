@@ -107,7 +107,7 @@ trait CurdActionTrait
         // 用于补充查询
         $result = $this->getListRow($row);
         if (isset($result) && Util::isError($result))
-            return (new Util)->resultError($result);
+            return $this->resultError($result);
 
         // 仅在存在deleted_at字段时才进行软删除过滤
         if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
@@ -246,7 +246,7 @@ trait CurdActionTrait
      */
     public function listReturn($list, $total, $page, $pageSize)
     {
-        return (new Util)->result(ErrCode::SUCCESS, 'ok', $list, [
+        return static::result(ErrCode::SUCCESS, 'ok', $list, [
             'count' => $total, 'page' => $page, 'page_size' => $pageSize
         ]);
     }
@@ -284,7 +284,7 @@ trait CurdActionTrait
         // 用于补充查询
         $result = $this->getLoaderRow($row);
         if (isset($result) && Util::isError($result))
-            return (new Util)->resultError($result);
+            return static::resultError($result);
 
         // 仅在存在deleted_at字段时才进行软删除过滤
         if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
@@ -451,7 +451,7 @@ trait CurdActionTrait
      */
     public function loaderReturn($list, $pageSize, $minTime, $maxTime)
     {
-        return (new Util)->result(ErrCode::SUCCESS, 'ok', $list, [
+        return static::result(ErrCode::SUCCESS, 'ok', $list, [
             'maxTime' => $maxTime, 'minTime' => $minTime, 'page_size' => $pageSize
         ]);
     }
@@ -488,7 +488,7 @@ trait CurdActionTrait
         // 用于补充查询
         $result = $this->getAllRow($row);
         if (isset($result) && Util::isError($result))
-            return (new Util)->resultError($result);
+            return static::resultError($result);
 
         // 仅在存在deleted_at字段时才进行软删除过滤
         if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
@@ -634,7 +634,7 @@ trait CurdActionTrait
      */
     public function allReturn($list, $total)
     {
-        return (new Util)->result(ErrCode::SUCCESS, 'ok', $list, [
+        return static::result(ErrCode::SUCCESS, 'ok', $list, [
             'count' => $total
         ]);
     }
@@ -665,13 +665,13 @@ trait CurdActionTrait
 
         $result = $this->getDetailRow($row);
         if (isset($result) && Util::isError($result))
-            return (new Util)->resultError($result);
+            return static::resultError($result);
 
         if ($this->detailAsArray())
             $row = $row->asArray();
         $detail = $row->one();
 
-        if (empty($detail)) return (new Util)->result(ErrCode::NOT_EXIST, '查询数据不存在或已被删除');
+        if (empty($detail)) return static::result(ErrCode::NOT_EXIST, '查询数据不存在或已被删除');
 
         $detail = $this->detail($detail);
 
@@ -718,7 +718,7 @@ trait CurdActionTrait
     {
         $id = intval($data[$this->pkId]);
         if (empty($id))
-            return (new Util)->result(ErrCode::PARAMETER_ERROR, "{$this->pkId}不能为空");
+            return static::result(ErrCode::PARAMETER_ERROR, "{$this->pkId}不能为空");
 
         $where   = ['and'];
         $where[] = [$this->modelTableName . '.' . $this->pkId => $id];
@@ -772,7 +772,7 @@ trait CurdActionTrait
      */
     public function detailReturn($detail)
     {
-        return (new Util)->result(ErrCode::SUCCESS, 'ok', $detail);
+        return static::result(ErrCode::SUCCESS, 'ok', $detail);
     }
 
     //---------- 新增数据 ----------/
@@ -794,14 +794,14 @@ trait CurdActionTrait
         // 获取新增数据
         $data = $this->getCreateFormData();
         if (empty($data))
-            return (new Util)->result(ErrCode::PARAMETER_ERROR, '数据不能为空');
+            return static::result(ErrCode::PARAMETER_ERROR, '数据不能为空');
 
         if ($data instanceof Response) return $data;
 
         // 新增前
         $result_before = $this->createBefore($data);
         if (Util::isError($result_before))
-            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '添加失败，请稍后再试');
+            return static::result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '添加失败，请稍后再试');
 
         // 如果在createBefore中补充了主键值，则转给更新方法来处理
         if (!empty($data[$this->pkId])) return $this->actionUpdate($data);
@@ -812,7 +812,7 @@ trait CurdActionTrait
         $result = $this->toSave($this->modelInstance, $data);
         if (Util::isError($result)) {
             $tr->rollBack();
-            return (new Util)->resultError($result);
+            return static::resultError($result);
         }
 
         $id = Yii::$app->db->getLastInsertID();
@@ -821,7 +821,7 @@ trait CurdActionTrait
         $result = $this->createAfter($id, $data);
         if (Util::isError($result)) {
             $tr->rollBack();
-            return (new Util)->resultError($result);
+            return static::resultError($result);
         }
 
         try {
@@ -835,7 +835,7 @@ trait CurdActionTrait
 
         // 如果是通过Util::error输出的成功信息，则应该根据成功信息进行输出
         if (!empty($result) && is_array($result) && $result['errcode'] == ErrCode::SUCCESS)
-            return (new Util)->result(ErrCode::SUCCESS, $result['errmsg'], $result['data']);
+            return static::result(ErrCode::SUCCESS, $result['errmsg'], $result['data']);
 
         return $this->createReturn($id);
     }
@@ -927,18 +927,18 @@ trait CurdActionTrait
 
         $id = intval($data[$this->pkId]);
         if (empty($id))
-            return (new Util)->result(ErrCode::UNKNOWN, "{$this->pkId}不能为空");
+            return static::result(ErrCode::UNKNOWN, "{$this->pkId}不能为空");
 
         // 查询数据是否存在
         $where = $this->getUpdateWhere($data);
         if (!$model = call_user_func($this->modelClass . '::findOne', $where))
-            return (new Util)->result(ErrCode::NOT_EXIST, '更新数据不存在');
+            return static::result(ErrCode::NOT_EXIST, '更新数据不存在');
 
         // 更新前
         $result_before = $this->updateBefore($model, $data);
         if (Util::isError($result_before)) {
             $result_before['errmsg'] = $result_before['errmsg'] ?: '更新前发现错误，请稍后再试';
-            return (new Util)->resultError($result_before);
+            return static::resultError($result_before);
         }
 
         // 开启事务
@@ -947,14 +947,14 @@ trait CurdActionTrait
         $result = $this->toSave($model, $data);
         if (Util::isError($result)) {
             $tr->rollBack();
-            return (new Util)->resultError($result);
+            return static::resultError($result);
         }
 
         // 更新后
         $result_after = $this->updateAfter($id, $data);
         if (Util::isError($result_after)) {
             $tr->rollBack();
-            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '更新失败，请稍后再试');
+            return static::result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '更新失败，请稍后再试');
         }
 
         try {
@@ -982,7 +982,7 @@ trait CurdActionTrait
     {
         $id = intval($data[$this->pkId]);
         if (empty($id))
-            return (new Util)->result(ErrCode::PARAMETER_ERROR, "{$this->pkId}不能为空");
+            return static::result(ErrCode::PARAMETER_ERROR, "{$this->pkId}不能为空");
 
         $where   = ['and'];
         $where[] = [$this->pkId => $id];
@@ -1071,7 +1071,7 @@ trait CurdActionTrait
 
         $id = intval($data[$this->pkId]);
         if (empty($id))
-            return (new Util)->result(ErrCode::PARAMETER_ERROR, "$this->pkId 不能为空");
+            return static::result(ErrCode::PARAMETER_ERROR, "$this->pkId 不能为空");
 
         $field = Safe::gpcString(trim($data['field'])); // 字段名
         $type  = trim($data['type']); // 字段值的类型
@@ -1080,7 +1080,7 @@ trait CurdActionTrait
         // 检查字段名的有效性
         $result = $this->setValueCheckField($field);
         if (Util::isError($result))
-            return (new Util)->resultError($result);
+            return static::resultError($result);
 
         // 根据字段值的类型，对字段值进行格式化
         if ($type === 'int')
@@ -1099,39 +1099,39 @@ trait CurdActionTrait
 
         $model = call_user_func($this->modelClass . '::findOne', $this->getSetValueQueryWhere($id));
         if (!$model)
-            return (new Util)->result(ErrCode::NOT_EXIST, '数据不存在或已被删除');
+            return static::result(ErrCode::NOT_EXIST, '数据不存在或已被删除');
 
         // 存在该属性的时候，才进行验证值是否发生变化
         if (array_key_exists($field, $this->modelAttributes) && $model->$field === $value)
-            return (new Util)->result(ErrCode::SUCCESS, '值未发生改变，请确认修改内容');
+            return static::result(ErrCode::SUCCESS, '值未发生改变，请确认修改内容');
 
         $res = $this->getSetValueRecord($model);
         if (Util::isError($res))
-            return (new Util)->resultError($res);
+            return static::resultError($res);
 
         $tr = Yii::$app->db->beginTransaction();
 
         $changeData = $this->getSetValueChangeData($field, $value, $model);
         if (Util::isError($changeData))
-            return (new Util)->resultError($changeData);
+            return static::resultError($changeData);
 
         $result = $this->toSave($model, $changeData);
         if (Util::isError($result)) {
             $tr->rollBack();
-            return (new Util)->resultError($result);
+            return static::resultError($result);
         }
 
         $result_after = $this->setValueAfter($id, $field, $value);
         if (Util::isError($result_after)) {
             $tr->rollBack();
-            return (new Util)->resultError($result_after);
+            return static::resultError($result_after);
         }
 
         try {
             $tr->commit();
         } catch (Exception $e) {
             $tr->rollBack();
-            return (new Util)->result(ErrCode::DATABASE_TRANSACTION_COMMIT_ERROR, '系统繁忙，请稍后再试', [
+            return static::result(ErrCode::DATABASE_TRANSACTION_COMMIT_ERROR, '系统繁忙，请稍后再试', [
                 'errcode' => $e->getCode(),
                 'errmsg'  => $e->getMessage(),
             ]);
@@ -1253,7 +1253,7 @@ trait CurdActionTrait
      */
     public function setValueReturn($value, $field, $id)
     {
-        return (new Util)->result(ErrCode::SUCCESS, '设置成功', ['value' => $value]);
+        return static::result(ErrCode::SUCCESS, '设置成功', ['value' => $value]);
     }
 
     //---------- 变更通用 ----------/
@@ -1321,7 +1321,7 @@ trait CurdActionTrait
      */
     public function saveReturn($id)
     {
-        return (new Util)->result(ErrCode::SUCCESS, ($this->isCreate ? '添加' : '更新') . '成功', [$this->pkId => $id]);
+        return static::result(ErrCode::SUCCESS, ($this->isCreate ? '添加' : '更新') . '成功', [$this->pkId => $id]);
     }
 
     /**
@@ -1352,7 +1352,7 @@ trait CurdActionTrait
             if (empty($id)) unset($ids[$i]);
 
         if (empty($ids))
-            return (new Util)->result(ErrCode::PARAMETER_ERROR, '参数缺失，请重试');
+            return static::result(ErrCode::PARAMETER_ERROR, '参数缺失，请重试');
 
         // 设置删除数据的select字段
         $fields = $this->getDeleteFields();
@@ -1372,14 +1372,14 @@ trait CurdActionTrait
             ->all();
 
         if (empty($delArr))
-            return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
+            return static::result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
 
         $delIds = ArrayHelper::getColumn($delArr, $this->pkId);
 
         // 删除前
         $result_before = $this->deleteBefore($delArr, $delIds);
         if (Util::isError($result_before))
-            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
+            return static::result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
 
         $tr = Yii::$app->db->beginTransaction();
 
@@ -1388,14 +1388,14 @@ trait CurdActionTrait
 
         if (!call_user_func("$this->modelClass::updateAll", $condition, $where)) {
             $tr->rollBack();
-            return (new Util)->result(ErrCode::STORAGE_ERROR, '删除失败，未知错误');
+            return static::result(ErrCode::STORAGE_ERROR, '删除失败，未知错误');
         }
 
         // 删除后
         $result_after = $this->deleteAfter($delIds);
         if (Util::isError($result_after)) {
             $tr->rollBack();
-            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
+            return static::result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
         }
 
         try {
@@ -1403,7 +1403,7 @@ trait CurdActionTrait
             call_user_func($this->modelClass . '::clearCache');
         } catch (Exception $e) {
             $tr->rollBack();
-            return (new Util)->result(ErrCode::DATABASE_TRANSACTION_COMMIT_ERROR, '事务提交失败，请重试', [
+            return static::result(ErrCode::DATABASE_TRANSACTION_COMMIT_ERROR, '事务提交失败，请重试', [
                 'errcode' => $e->getCode(),
                 'errmsg'  => $e->getMessage(),
             ]);
@@ -1496,7 +1496,7 @@ trait CurdActionTrait
      */
     public function deleteReturn(array $delIds, array $delArr)
     {
-        return (new Util)->result(ErrCode::SUCCESS, '删除成功', ['delIds' => $delIds]);
+        return static::result(ErrCode::SUCCESS, '删除成功', ['delIds' => $delIds]);
     }
 
     //---------- 恢复删除的数据 ----------/
@@ -1520,7 +1520,7 @@ trait CurdActionTrait
             if (empty($id)) unset($ids[$i]);
 
         if (empty($ids))
-            return (new Util)->result(ErrCode::PARAMETER_ERROR, '参数缺失，请重试');
+            return static::result(ErrCode::PARAMETER_ERROR, '参数缺失，请重试');
 
         // 设置恢复数据的select字段
         $fields = $this->getRestoreFields();
@@ -1539,12 +1539,12 @@ trait CurdActionTrait
         $itemIds = ArrayHelper::getColumn($items, $this->pkId);
 
         if (empty($itemIds))
-            return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
+            return static::result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
 
         // 删除前
         $result_before = $this->restoreBefore($items, $itemIds);
         if (Util::isError($result_before))
-            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '恢复数据失败，请稍后再试');
+            return static::result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '恢复数据失败，请稍后再试');
 
 
         $transaction = Yii::$app->db->beginTransaction();
@@ -1553,14 +1553,14 @@ trait CurdActionTrait
 
         if (!call_user_func("$this->modelClass::updateAll", $condition, $where)) {
             $transaction->rollBack();
-            return (new Util)->result(ErrCode::UNKNOWN, '恢复失败，未知错误');
+            return static::result(ErrCode::UNKNOWN, '恢复失败，未知错误');
         }
 
         // 删除后
         $result_after = $this->restoreAfter($itemIds);
         if (Util::isError($result_after)) {
             $transaction->rollBack();
-            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '恢复数据失败，请稍后再试');
+            return static::result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '恢复数据失败，请稍后再试');
         }
 
         try {
@@ -1658,7 +1658,7 @@ trait CurdActionTrait
      */
     public function restoreReturn(array $restoreIds, array $restoreArr)
     {
-        return (new Util)->result(ErrCode::SUCCESS, '恢复成功', ['restoreIds' => $restoreIds]);
+        return static::result(ErrCode::SUCCESS, '恢复成功', ['restoreIds' => $restoreIds]);
     }
 
     //---------- 真实删除数据 ----------/
@@ -1682,7 +1682,7 @@ trait CurdActionTrait
             if (empty($id)) unset($ids[$i]);
 
         if (empty($ids))
-            return (new Util)->result(ErrCode::PARAMETER_ERROR, '参数缺失，请重试');
+            return static::result(ErrCode::PARAMETER_ERROR, '参数缺失，请重试');
 
         $fields = $this->getRemoveFields();
 
@@ -1699,25 +1699,25 @@ trait CurdActionTrait
         $itemIds = ArrayHelper::getColumn($items, $this->pkId);
 
         if (empty($itemIds))
-            return (new Util)->result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
+            return static::result(ErrCode::NOT_EXIST, '当前操作的数据不存在或已被删除');
 
         // 删除前
         $result_before = $this->removeBefore($items, $itemIds);
         if (Util::isError($result_before))
-            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
+            return static::result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
 
         $transaction = Yii::$app->db->beginTransaction();
 
         if (!call_user_func("$this->modelClass::deleteAll", $where)) {
             $transaction->rollBack();
-            return (new Util)->result(ErrCode::UNKNOWN, '删除失败，未知错误');
+            return static::result(ErrCode::UNKNOWN, '删除失败，未知错误');
         }
 
         // 删除后
         $result_after = $this->removeAfter($itemIds);
         if (Util::isError($result_after)) {
             $transaction->rollBack();
-            return (new Util)->result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
+            return static::result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
         }
 
         try {
@@ -1801,10 +1801,62 @@ trait CurdActionTrait
      */
     public function removeReturn(array $removeIds, array $removeArr)
     {
-        return (new Util)->result(ErrCode::SUCCESS, '永久删除成功', ['removeIds' => $removeIds]);
+        return static::result(ErrCode::SUCCESS, '永久删除成功', ['removeIds' => $removeIds]);
     }
 
     // ---------- 其他 ----------/
+
+    /**
+     * 将error数组转换Response输出
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param mixed $error
+     * @return string|Response
+     * @lasttime: 2023/1/13 1:35 PM
+     */
+    public static function resultError($error = [])
+    {
+        return (new Util)->resultError($error);
+    }
+
+    /**
+     * 输出json结构数据到Response中
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string|integer $errCode
+     * @param string $errmsg
+     * @param mixed $data
+     * @param array $params
+     * @param string $returnType
+     * @return string|Response
+     * @lasttime: 2022/8/28 23:17
+     */
+    public static function result($errCode = ErrCode::UNKNOWN, string $errmsg = '', $data = [], array $params = [], string $returnType = 'exit')
+    {
+        return (new Util)->result($errCode, $errmsg, $data, $params, $returnType);
+    }
+
+    /**
+     * 输出json字符串
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string|integer $errCode
+     * @param string $errmsg
+     * @param mixed $data
+     * @param array $params
+     * @return string|Response
+     * @lasttime: 2023/1/13 1:33 PM
+     */
+    public static function result_r($errCode = '0', string $errmsg = '', $data = [], array $params = [])
+    {
+        return static::result($errCode, $errmsg, $data, $params, 'return');
+    }
 
     /**
      * 检查查询语句中是否包含指定字段

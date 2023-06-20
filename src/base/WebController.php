@@ -153,10 +153,10 @@ class WebController extends Controller
      * @return string|Response
      * @lasttime: 2022/8/28 23:17
      */
-    public function result($errCode = '0', string $errmsg = '', $data = [], array $params = [], string $returnType = 'exit')
+    /*public function result($errCode = '0', string $errmsg = '', $data = [], array $params = [], string $returnType = 'exit')
     {
         return (new Util)->result($errCode, $errmsg, $data, $params, $returnType);
-    }
+    }*/
 
     /**
      * 输出json字符串
@@ -171,10 +171,10 @@ class WebController extends Controller
      * @return string|Response
      * @lasttime: 2023/1/13 1:33 PM
      */
-    public function result_r($errCode = '0', string $errmsg = '', $data = [], array $params = [])
+    /*public function result_r($errCode = '0', string $errmsg = '', $data = [], array $params = [])
     {
         return $this->result($errCode, $errmsg, $data, $params, 'return');
-    }
+    }*/
 
     /**
      *
@@ -207,8 +207,8 @@ class WebController extends Controller
      * @return string|Response
      * @lasttime: 2023/1/13 1:35 PM
      */
-    public function resultError($error = [])
+    /*public function resultError($error = [])
     {
         return (new Util)->resultError($error);
-    }
+    }*/
 }

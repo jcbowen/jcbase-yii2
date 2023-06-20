@@ -1062,7 +1062,7 @@ class Util
     public function resultError($error = [])
     {
         if (empty($error))
-            return (new self)->result(ErrCode::UNKNOWN, '数据不存在或已被删除');
+            return $this->result(ErrCode::UNKNOWN, '数据不存在或已被删除');
 
         if ($error instanceof Response)
             return $error;
@@ -1070,7 +1070,7 @@ class Util
         $params = array_filter($error, function ($key) {
             return !in_array($key, ['errcode', 'errmsg', 'data']);
         }, ARRAY_FILTER_USE_KEY);
-        return (new self)->result($error['errcode'], $error['errmsg'], $error['data'], $params);
+        return $this->result($error['errcode'], $error['errmsg'], $error['data'], $params);
     }
 
     /**
