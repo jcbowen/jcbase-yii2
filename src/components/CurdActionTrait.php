@@ -12,7 +12,14 @@ use yii\helpers\ArrayHelper;
 use RuntimeException;
 
 /**
- * 增删改查
+ * Trait CurdActionTrait
+ * 增删改查操作
+ *
+ * @method string|Response result($errCode = ErrCode::UNKNOWN, string $errmsg = '', $data = [], array $params = [], string $returnType = 'exit')
+ * @method string|Response result_r($errCode = '0', string $errmsg = '', $data = [], array $params = [])
+ * @method string|Response resultError($error = [])
+ *
+ * @package Jcbowen\JcbaseYii2\components
  */
 trait CurdActionTrait
 {
