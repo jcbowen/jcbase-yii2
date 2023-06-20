@@ -39,7 +39,7 @@ class Cache extends \yii\base\Component
      */
     public static function get(string $key = '')
     {
-        return Util::redisGet(self::keygen($key));
+        return Util::redisGet(static::keygen($key));
     }
 
     /**
@@ -55,8 +55,8 @@ class Cache extends \yii\base\Component
      */
     public static function set(string $key = '', $value = null, $expire = null)
     {
-        $expire = $expire ?? self::$expire;
-        return Util::redisSet(self::keygen($key), $value, $expire);
+        $expire = $expire ?? static::$expire;
+        return Util::redisSet(static::keygen($key), $value, $expire);
     }
 
     /**
@@ -70,7 +70,7 @@ class Cache extends \yii\base\Component
      */
     public static function del(string $key)
     {
-        return Util::redisDel(self::keygen($key));
+        return Util::redisDel(static::keygen($key));
     }
 
     /**
@@ -85,7 +85,7 @@ class Cache extends \yii\base\Component
      */
     public static function exists(string $key)
     {
-        return Util::redisExists(self::keygen($key));
+        return Util::redisExists(static::keygen($key));
     }
 
     /**
@@ -99,59 +99,59 @@ class Cache extends \yii\base\Component
      */
     public static function keygen(string $key = ''): string
     {
-        return 'jcbase_' . md5(self::$prefix . '_' . $key);
+        return 'jcbase_' . md5(static::$prefix . '_' . $key);
     }
 
     // ----- 动态调用 ----- /
     public function init()
     {
         parent::init();
-        self::$prefix = $this->config['prefix'] ?? self::$prefix;
-        self::$expire = $this->config['expire'] ?? self::$expire;
+        static::$prefix = $this->config['prefix'] ?? static::$prefix;
+        static::$expire = $this->config['expire'] ?? static::$expire;
     }
 
     public function setPrefix(string $prefix)
     {
-        self::$prefix = $prefix;
+        static::$prefix = $prefix;
     }
 
     public function getPrefix(): string
     {
-        return self::$prefix;
+        return static::$prefix;
     }
 
     public function setExpire(int $expire)
     {
-        self::$expire = $expire;
+        static::$expire = $expire;
     }
 
     public function getExpire()
     {
-        return self::$expire;
+        return static::$expire;
     }
 
     public function getValue($key)
     {
-        return self::get($key);
+        return static::get($key);
     }
 
     public function setValue($key, $value, $expire = null)
     {
-        return self::set($key, $value, $expire);
+        return static::set($key, $value, $expire);
     }
 
     public function delValue($key)
     {
-        return self::del($key);
+        return static::del($key);
     }
 
     public function existsValue($key)
     {
-        return self::exists($key);
+        return static::exists($key);
     }
 
     public function getKey($key): string
     {
-        return self::keygen($key);
+        return static::keygen($key);
     }
 }
