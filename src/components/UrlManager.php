@@ -63,21 +63,31 @@ class UrlManager extends BaseObject implements UrlRuleInterface
         $action = array_pop($pathInfo_arr);
         $method = $this->makeAction($action);
         $path   = implode('\\', $pathInfo_arr);
-        // 常规
+        // 常规(将倒数第二个目录作为控制器名)
         $controller = $this->makeController($path);
         if (count($pathInfo_arr) > 0 && method_exists($controller, $method)) {
             $pathInfo_arr[] = $action;
             $route          = $this->isModule ? $this->moduleName . '/' . implode('/', $pathInfo_arr) : $pathInfo;
             return [$route, $_GPC];
         }
-        // 将接口写到IndexController中时，隐藏index
-        $controller = $this->makeController($path, true, $pathInfo);
+
+        // 将index作为控制器名
+        $backup_pathInfo = $pathInfo;
+        $controller      = $this->makeController($path, 'index', $pathInfo);
         if (method_exists($controller, $method)) {
-            $pathInfo_arr[] = $action;
-            $route          = $pathInfo;
-//            $route          = $this->isModule ? $this->moduleName . '/' . implode('/', $pathInfo_arr) : $pathInfo;
+            $route = $pathInfo;
             return [$route, $_GPC];
         }
+        $pathInfo = $backup_pathInfo; // 匹配失败，恢复pathInfo
+
+        // 将最后一个目录作为控制器名，index作为action
+        $backup_pathInfo = $pathInfo;
+        $controller      = $this->makeController($path, 'suffix', $pathInfo);
+        if (method_exists($controller, 'actionIndex')) {
+            $route = $pathInfo;
+            return [$route, $_GPC];
+        }
+        $pathInfo = $backup_pathInfo; // 匹配失败，恢复pathInfo
 
         return false;
     }
@@ -96,19 +106,20 @@ class UrlManager extends BaseObject implements UrlRuleInterface
      * @author Bowen
      * @email bowen@jiuchet.com
      * @TIMESTAMP: 2021/4/16 11:37 下午
-     * @param bool $hasIndex
-     * @param string $pathInfo
      * @param $path
+     * @param string $type 生成类型，可选值：index、suffix
+     * @param string $pathInfo
      * @return string
      */
-    private function makeController($path, bool $hasIndex = false, string &$pathInfo = ''): string
+    private function makeController($path, string $type = '', string &$pathInfo = ''): string
     {
         $defaultRoute = self::getDefaultRoute();
         $nameSpace    = !$this->isModule ?
             Yii::$app->controllerNamespace :
             Yii::$app->getModule($this->moduleName)->controllerNamespace;
 
-        if ($hasIndex) {
+        // 将index作为控制器名
+        if ($type == 'index') {
             $controller     = rtrim($nameSpace . '\\' . $path, '\\') . '\\' . ucfirst($defaultRoute) . 'Controller';
             $pathInfo_arr   = explode('/', $pathInfo);
             $action         = array_splice($pathInfo_arr, -1)[0];
@@ -116,7 +127,15 @@ class UrlManager extends BaseObject implements UrlRuleInterface
             $pathInfo_arr[] = $action;
             $pathInfo       = implode('/', $pathInfo_arr);
             return $controller;
-
+        } elseif ($type == 'suffix') { // 将最后一个目录作为控制器名，index作为action
+            $pathInfo_arr = explode('/', $pathInfo);
+            // 获取最后一个目录
+            $controller_name = array_pop($pathInfo_arr);
+            $controller      = rtrim($nameSpace . '\\' . $path, '\\') . '\\' . ucfirst($controller_name) . 'Controller';
+            $pathInfo_arr[]  = $controller_name; // 还原pathInfo_arr
+            $pathInfo_arr[]  = 'index'; // 补充action
+            $pathInfo        = implode('/', $pathInfo_arr);
+            return $controller;
         }
         if (empty($path)) $path = $defaultRoute;
         $path_arr        = explode('\\', $path);
