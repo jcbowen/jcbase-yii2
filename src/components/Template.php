@@ -281,28 +281,38 @@ class Template extends Component
 
         // 如果初始化的时候传递了controller，那么就可以使用controller的方法
         if ($this->controller instanceof WebController) {
-            if (Util::strExists($str, '{controllerCall')) {
-                $str = preg_replace('/{controllerCall\s+(\S+)}/',
-                    '<?php call_user_func([$this->controller, \'$1\']); ?>',
-                    $str);
-                $str = preg_replace('/{controllerCall\s+(\S+)\s+(\S+)}/',
-                    '<?php call_user_func_array([$this->controller, \'$1\'], [$2]); ?>',
-                    $str);
-                $str = preg_replace('/{controllerCall\s+(\S+)\s+(\S+)\s+(\S+)}/',
-                    '<?php call_user_func_array([$this->controller, \'$1\'], [$2, $3]); ?>',
-                    $str);
-            }
-            if (Util::strExists($str, '{controller')) {
-                $str = preg_replace('/{controller\s+(\S+)}/',
-                    '<?php echo call_user_func([$this->controller, \'$1\']); ?>',
-                    $str);
-                $str = preg_replace('/{controller\s+(\S+)\s+(\S+)}/',
-                    '<?php echo call_user_func_array([$this->controller, \'$1\'], [$2]); ?>',
-                    $str);
-                $str = preg_replace('/{controller\s+(\S+)\s+(\S+)\s+(\S+)}/',
-                    '<?php echo call_user_func_array([$this->controller, \'$1\'], [$2, $3]); ?>',
-                    $str);
-            }
+            // 只调用控制器中的方法
+            $str = preg_replace('/{controllerCall\s+(\S+)}/',
+                '<?php call_user_func([$this->controller, \'$1\']); ?>',
+                $str);
+            $str = preg_replace('/{controllerCall\s+(\S+)\s+(\S+)}/',
+                '<?php call_user_func_array([$this->controller, \'$1\'], [$2]); ?>',
+                $str);
+            $str = preg_replace('/{controllerCall\s+(\S+)\s+(\S+)\s+(\S+)}/',
+                '<?php call_user_func_array([$this->controller, \'$1\'], [$2, $3]); ?>',
+                $str);
+
+            // 调用控制器中的方法，并赋值给变量
+            $str = preg_replace('/{controllerVar\s+(\S+)s+(\S+)}/',
+                '<?php $$1 = call_user_func([$this->controller, \'$2\']); ?>',
+                $str);
+            $str = preg_replace('/{controllerVar\s+(\S+)\s+(\S+)\s+(\S+)}/',
+                '<?php $$1 = call_user_func_array([$this->controller, \'$2\'], [$3]); ?>',
+                $str);
+            $str = preg_replace('/{controllerVar\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)}/',
+                '<?php $$1 = call_user_func_array([$this->controller, \'$2\'], [$3, $4]); ?>',
+                $str);
+
+            // 调用控制器中的方法，并直接echo
+            $str = preg_replace('/{controller\s+(\S+)}/',
+                '<?php echo call_user_func([$this->controller, \'$1\']); ?>',
+                $str);
+            $str = preg_replace('/{controller\s+(\S+)\s+(\S+)}/',
+                '<?php echo call_user_func_array([$this->controller, \'$1\'], [$2]); ?>',
+                $str);
+            $str = preg_replace('/{controller\s+(\S+)\s+(\S+)\s+(\S+)}/',
+                '<?php echo call_user_func_array([$this->controller, \'$1\'], [$2, $3]); ?>',
+                $str);
         }
 
         return /*"<?php defined('IN_JC') or exit('Access Denied');?>" .*/ $str;
