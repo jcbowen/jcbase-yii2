@@ -406,6 +406,41 @@ class Util
     }
 
     /**
+     * 根据指定的key查找树形结构中的节点
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array $tree
+     * @param $value
+     * @param string $key
+     * @param string $childrenKey
+     * @return array
+     * @lasttime: 2023/6/23 3:38 PM
+     */
+    public static function findNodeInTree(array $tree = [], $value = '', string $key = 'id', string $childrenKey = 'children'): array
+    {
+        if (empty($tree))
+            return [];
+
+        $node = [];
+        foreach ($tree as $item) {
+            if ($item[$key] == $value) {
+                $node = $item;
+                break;
+            }
+            $children = $item[$childrenKey] ?? [];
+            if (!empty($children)) {
+                $node = self::findNodeInTree($children, $value, $key, $childrenKey);
+                if (!empty($node))
+                    break;
+            }
+        }
+
+        return $node;
+    }
+
+    /**
      * 递归合并数组，与yii2的ArrayHelper::merge()不同的是，如果遇到int类型的key，会将后面的值覆盖前面的值
      *
      * @author Bowen
