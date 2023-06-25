@@ -302,6 +302,9 @@ class Template extends Component
             $str = preg_replace('/{controllerVar\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)}/',
                 '<?php $$1 = call_user_func_array([$this->controller, \'$2\'], [$3, $4]); ?>',
                 $str);
+            $str = preg_replace('/{controllerVar\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)}/',
+                '<?php $$1 = call_user_func_array([$this->controller, \'$2\'], [$3, $4, $5]); ?>',
+                $str);
 
             // 调用控制器中的方法，并直接echo
             $str = preg_replace('/{controller\s+(\S+)}/',
