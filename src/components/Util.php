@@ -391,7 +391,7 @@ class Util
         $arr = [];
         foreach ($tree as $item) {
             $children = $item[$childrenKey] ?? [];
-            unset($item[$childrenKey]);
+            if (isset($item[$childrenKey])) unset($item[$childrenKey]);
             $arr[] = $item;
             if (!empty($children)) {
                 $arr = array_merge($arr, self::treeToArray($children));
@@ -411,10 +411,10 @@ class Util
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param array $tree
-     * @param $value
-     * @param string $key
-     * @param string $childrenKey
+     * @param array $tree 树形结构的多维数组
+     * @param mixed $value 要查找的值
+     * @param string $key 要查找的key
+     * @param string $childrenKey 子级所在的key
      * @return array
      * @lasttime: 2023/6/23 3:38 PM
      */
