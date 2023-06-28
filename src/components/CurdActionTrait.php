@@ -807,8 +807,10 @@ trait CurdActionTrait
 
         // 新增前
         $result_before = $this->createBefore($data);
-        if (Util::isError($result_before))
-            return static::result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '添加失败，请稍后再试');
+        if (Util::isError($result_before)) {
+            $result_before['errmsg'] = $result_before['errmsg'] ?: '添加失败，请稍后再试';
+            return static::resultError($result_before);
+        }
 
         // 如果在createBefore中补充了主键值，则转给更新方法来处理
         if (!empty($data[$this->pkId])) return $this->actionUpdate($data);
