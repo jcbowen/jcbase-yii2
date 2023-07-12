@@ -237,7 +237,7 @@ class Util
         if (isset($_SERVER['SERVER_PORT']) && ('443' == $_SERVER['SERVER_PORT']))
             return true;
         // 使用了阿里云CDN的情况下判断
-        if (Yii::$app->request->getHeaders()->get('X-Client-Scheme') == 'https')
+        if ($_SERVER['HTTP_X_CLIENT_SCHEME'] == 'https')
             return true;
         // 反向代理的情况下判断，需要在nginx反向代理中配置【proxy_set_header   X-Forwarded-Proto $scheme;】
         if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && ('https' == $_SERVER['HTTP_X_FORWARDED_PROTO']))
