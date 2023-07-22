@@ -811,6 +811,16 @@ class File extends Model
         return true;
     }
 
+    /**
+     * 保存附件记录到数据库
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $data
+     * @return array|string
+     * @lasttime: 2023/7/22 14:48
+     */
     public function saveDb($data)
     {
         global $_B, $_GPC;
