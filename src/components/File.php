@@ -37,6 +37,8 @@ class File extends Model
      */
     private $attachmentFieldsMapDefault = [
         'id'         => 'id', // 主键，递增ID
+        'sid'        => 'sid', // 附件所属站点
+        'sid_sub'    => 'sid_sub', // 附件所属子站点
         'group_id'   => 'group_id', // 分组ID
         'uid'        => 'uid', // 上传用户
         'mid'        => 'mid', // 上传会员
@@ -816,7 +818,9 @@ class File extends Model
         $time = date('Y-m-d H:i:s');
 
         $newData = [
-            $this->attachmentFieldsMap['group_id']   => $data['group_id'],
+            $this->attachmentFieldsMap['sid']        => intval($data['sid']),
+            $this->attachmentFieldsMap['sid_sub']    => intval($data['sid_sub']),
+            $this->attachmentFieldsMap['group_id']   => intval($data['group_id']),
             $this->attachmentFieldsMap['uid']        => intval($_B['uid']),
             $this->attachmentFieldsMap['mid']        => intval($_B['mid']),
             $this->attachmentFieldsMap['type']       => $data['type'],
