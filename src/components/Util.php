@@ -874,7 +874,7 @@ class Util
      */
     public static function isError($data): bool
     {
-        if (empty($data) || (is_array($data) && array_key_exists('errcode', $data) && $data['errcode'] != 0))
+        if (empty($data) || (is_array($data) && array_key_exists('errcode', $data) && $data['errcode'] != ErrCode::SUCCESS))
             return true;
         else
             return false;
