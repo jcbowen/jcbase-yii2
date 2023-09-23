@@ -800,8 +800,10 @@ trait CurdActionTrait
 
         // 获取新增数据
         $data = $this->getCreateFormData();
-        if (empty($data))
-            return static::result(ErrCode::PARAMETER_ERROR, '数据不能为空');
+        if (Util::isError($data)) {
+            $data['errmsg'] = $data['errmsg'] ?: '数据不能为空';
+            return static::resultError($data);
+        }
 
         if ($data instanceof Response) return $data;
 
@@ -931,6 +933,10 @@ trait CurdActionTrait
 
         // 获取更新数据
         $data = $data ?? $this->getUpdateFormData();
+        if (Util::isError($data)) {
+            $data['errmsg'] = $data['errmsg'] ?: '数据不能为空';
+            return static::resultError($data);
+        }
 
         if ($data instanceof Response) return $data;
 
