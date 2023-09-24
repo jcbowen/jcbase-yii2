@@ -13,7 +13,9 @@ namespace Jcbowen\JcbaseYii2\components;
  */
 class Cache extends \yii\base\Component
 {
-    // 缓存key的前缀，避免项目冲突，推荐使用项目名
+    /**
+     * @var string 缓存key的前缀，避免项目冲突，推荐使用项目名
+     */
     public static $prefix = 'jcbase';
 
     /**
