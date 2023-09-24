@@ -139,13 +139,14 @@ class Util
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param bool $local_path
-     * @param bool $is_cache
-     * @param $src
+     *
+     * @param string|null $src 附件路径
+     * @param bool $local_path 本地附件路径
+     * @param bool $is_cache 是否缓存
      * @return string
      * @lasttime: 2022/3/19 5:45 下午
      */
-    public static function toMedia($src, bool $local_path = false, bool $is_cache = true): string
+    public static function toMedia(?string $src, bool $local_path = false, bool $is_cache = true): string
     {
         $src = trim($src);
 
@@ -186,12 +187,13 @@ class Util
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param $src
+     * @param string|null $src 附件路径
      * @return false|mixed|string
      * @lasttime: 2022/9/12 17:52
      */
-    public static function removeMediaDomain($src)
+    public static function removeMediaDomain(?string $src)
     {
+        if (empty($src)) return '';
         if (self::startsWith($src, Yii::$app->params['domain']['attachment_local']) || self::startsWith($src, Yii::$app->params['domain']['attachment'])) {
             $type = 'images';
             foreach (File::$fileTypes as $item) {
