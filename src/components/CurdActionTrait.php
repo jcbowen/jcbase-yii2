@@ -261,6 +261,11 @@ trait CurdActionTrait
     //---------- 根据时间分页的列表查询(适用于下拉加载等有可能因数据插入导致分页数据重复问题的情况) ----------/
 
     /**
+     * @var string loader接口使用的时间字段名
+     */
+    public $loaderTimeField = 'created_at';
+
+    /**
      * 根据时间分页的列表查询(最大输出1000条数据)
      *
      * @author Bowen
@@ -345,11 +350,11 @@ trait CurdActionTrait
 
         // minTime和maxTime都不为空时，查询时间区间内的数据
         if (!empty($maxTime) && !empty($minTime))
-            return ['between', $this->modelTableName . '.created_at', $minTime, $maxTime];
+            return ['between', $this->modelTableName . '.' . $this->loaderTimeField, $minTime, $maxTime];
         // 只传minTime意味着时间为倒叙，所以只查询小于minTime的数据
-        if (!empty($minTime)) return ['<', $this->modelTableName . '.created_at', $minTime];
+        if (!empty($minTime)) return ['<', $this->modelTableName . '.' . $this->loaderTimeField, $minTime];
         // 只传maxTime意味着时间为正序，所以只查询大于maxTime的数据
-        if (!empty($maxTime)) return ['>', $this->modelTableName . '.created_at', $maxTime];
+        if (!empty($maxTime)) return ['>', $this->modelTableName . '.' . $this->loaderTimeField, $maxTime];
 
         return [];
     }
@@ -397,9 +402,9 @@ trait CurdActionTrait
         if (!isset($_GPC['minTime']) && !isset($_GPC['maxTime'])) return [];
         // 只传maxTime时，正序
         if (isset($_GPC['maxTime']) && !isset($_GPC['minTime']))
-            return [$this->modelTableName . '.created_at' => SORT_ASC];
+            return [$this->modelTableName . '.' . $this->loaderTimeField => SORT_ASC];
 
-        return [$this->modelTableName . '.created_at' => SORT_DESC];
+        return [$this->modelTableName . '.' . $this->loaderTimeField => SORT_DESC];
     }
 
     /**
@@ -437,8 +442,8 @@ trait CurdActionTrait
             ])->de($item);
         }
 
-        if (empty($maxTime) || $item['created_at'] > $maxTime) $maxTime = $item['created_at'];
-        if (empty($minTime) || $item['created_at'] < $minTime) $minTime = $item['created_at'];
+        if (empty($maxTime) || $item[$this->loaderTimeField] > $maxTime) $maxTime = $item[$this->loaderTimeField];
+        if (empty($minTime) || $item[$this->loaderTimeField] < $minTime) $minTime = $item[$this->loaderTimeField];
 
         return $item;
     }
