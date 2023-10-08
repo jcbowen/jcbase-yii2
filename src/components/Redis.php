@@ -115,7 +115,7 @@ class Redis extends BaseObject
      */
     public function parse(&$string)
     {
-        if (empty($value) || !is_string($string)) return;
+        if (empty($string) || !is_string($string)) return;
         $string = $this->valueType === 'serialize' ? Util::unserializer($string) : @json_decode($string, true);
     }
 
