@@ -642,6 +642,23 @@ class Util
     }
 
     /**
+     * 判断字符串是否为json
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param mixed $string
+     * @return bool
+     * @lasttime: 2023/10/9 12:26 AM
+     */
+    public static function is_json($string)
+    {
+        if (!is_string($string)) return false;
+        json_decode($string);
+        return (json_last_error() == JSON_ERROR_NONE);
+    }
+
+    /**
      * 判断字符串是否包含字串
      *
      * @author Bowen
