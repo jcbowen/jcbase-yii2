@@ -20,6 +20,9 @@ class Redis extends BaseObject
     /** @var string */
     public $componentName = 'redis';
 
+    /** @var string 存储的值的类型： serialize | json */
+    public $valueType = 'serialize';
+
     /** @var Connection|null */
     public $connection = null;
 
@@ -85,6 +88,38 @@ class Redis extends BaseObject
     }
 
     /**
+     * 将值转换为字符串
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param mixed $value
+     * @return void
+     * @lasttime: 2023/10/8 11:07 PM
+     */
+    public function stringify(&$value)
+    {
+        if (empty($value) || !is_array($value)) return;
+        $value = $this->valueType === 'serialize' ? serialize($value) : stripslashes(json_encode($value, JSON_UNESCAPED_UNICODE));
+    }
+
+    /**
+     * 解析字符串
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $string
+     * @return void
+     * @lasttime: 2023/10/8 11:07 PM
+     */
+    public function parse(&$string)
+    {
+        if (empty($value) || !is_string($string)) return;
+        $string = $this->valueType === 'serialize' ? Util::unserializer($string) : @json_decode($string, true);
+    }
+
+    /**
      * redis->get
      *
      * @author Bowen
@@ -100,7 +135,9 @@ class Redis extends BaseObject
         if (Util::isError($redis)) return $redis;
 
         $value = $redis->get($key);
-        return isset($value) && !empty($redis) ? Util::unserializer($value) : $default;
+        $this->parse($value);
+
+        return $value ?: $default;
     }
 
     /**
@@ -120,7 +157,7 @@ class Redis extends BaseObject
         $redis = $this->getConnection();
         if (Util::isError($redis)) return $redis;
 
-        if (is_array($value)) $value = serialize($value);
+        $this->stringify($value);
         $result = $redis->set($key, $value, ...$options);
         if (!empty($expire)) $redis->expire($key, $expire);
         return $result;
@@ -142,7 +179,7 @@ class Redis extends BaseObject
     {
         $redis = $this->getConnection();
         if (Util::isError($redis)) return $redis;
-        if (is_array($value)) $value = serialize($value);
+        $this->stringify($value);
         return $redis->setex($key, $seconds, $value);
     }
 
@@ -163,7 +200,10 @@ class Redis extends BaseObject
         if (Util::isError($redis)) return $redis;
 
         $list = (array)$redis->mget(...$key);
-        foreach ($list as &$item) $item = Util::unserializer($item);
+
+        foreach ($list as &$item)
+            $this->parse($item);
+
         return $list;
     }
 
@@ -233,7 +273,7 @@ class Redis extends BaseObject
         if (Util::isError($redis)) return $redis;
 
         foreach ($values as &$value)
-            if (is_array($value)) $value = serialize($value);
+            $this->stringify($value);
 
         return $redis->lpush($key, ...$values);
     }
@@ -253,7 +293,8 @@ class Redis extends BaseObject
         $redis = $this->getConnection();
         if (Util::isError($redis)) return $redis;
         $value = $redis->rpop($key);
-        return Util::unserializer($value);
+        $this->parse($value);
+        return $value;
     }
 
     /**
@@ -272,7 +313,7 @@ class Redis extends BaseObject
         $redis = $this->getConnection();
         if (Util::isError($redis)) return $redis;
 
-        if (is_array($value)) $value = serialize($value);
+        $this->stringify($value);
 
         return $redis->setnx($key, $value);
     }
