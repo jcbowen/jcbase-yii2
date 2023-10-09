@@ -442,6 +442,30 @@ class Util
         return $node;
     }
 
+
+    /**
+     * 回调处理树形结构的最后一层
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array $tree 树形结构的多维数组
+     * @param callable|null $fn 匿名回调函数
+     * @param string $childrenKey 子级所在的key
+     * @lasttime: 2023/10/9 9:40 PM
+     */
+    public static function treeLastCallback(array &$tree = [], ?callable $fn = null, string $childrenKey = 'children')
+    {
+        if (empty($tree) || !is_callable($fn)) return;
+
+        foreach ($tree as &$item)
+            if (!empty($item[$childrenKey]))
+                static::treeLastCallback($item[$childrenKey], $fn, $childrenKey);
+            else {
+                $item = $fn($item);
+            }
+    }
+
     /**
      * 递归合并数组，与yii2的ArrayHelper::merge()不同的是，如果遇到int类型的key，会将后面的值覆盖前面的值
      *
