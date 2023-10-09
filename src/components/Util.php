@@ -362,7 +362,7 @@ class Util
             if (!is_array($item) || empty($item)) continue;
             // 匹配父级id
             if ($item[$parentIdKey] == $parentId) {
-                $children = self::arrayToTree($arr, $item['id']);
+                $children = self::arrayToTree($arr, $item['id'], $parentIdKey, $childrenKey);
                 if (!empty($children)) {
                     $item[$childrenKey] = $children;
                 }
@@ -396,7 +396,7 @@ class Util
             if (isset($item[$childrenKey])) unset($item[$childrenKey]);
             $arr[] = $item;
             if (!empty($children)) {
-                $arr = array_merge($arr, self::treeToArray($children));
+                $arr = array_merge($arr, self::treeToArray($children, $sortKey, $childrenKey));
             }
         }
 
