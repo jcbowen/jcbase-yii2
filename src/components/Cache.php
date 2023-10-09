@@ -24,6 +24,16 @@ class Cache extends \yii\base\Component
     public static $expire = 0;
 
     /**
+     * @var string \yii\redis\Connection 配置中在components里的键名
+     */
+    public static $componentName = 'redis';
+
+    /**
+     * @var string redis存储的值的类型： serialize | json
+     */
+    public static $valueType = 'serialize';
+
+    /**
      * @var array
      * - prefix: string, 缓存key的前缀，避免项目冲突，推荐使用项目名
      * - expire: int, 默认缓存时间，单位秒
@@ -31,17 +41,39 @@ class Cache extends \yii\base\Component
     public $config = [];
 
     /**
+     * 获取redis实例
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return Redis
+     * @lasttime: 2023/10/9 2:49 PM
+     */
+    public static function getRedis(): Redis
+    {
+        static $redis = null;
+        if ($redis === null) {
+            $redis = new Redis(static::$componentName, [
+                'valueType' => static::$valueType,
+            ]);
+        }
+        return $redis;
+    }
+
+    /**
      *
      * @author Bowen
      * @email bowen@jiuchet.com
      *
      * @param string $key
-     * @return array|mixed|string
-     * @lasttime: 2022/10/5 21:24
+     * @return mixed
+     * @lasttime: 2023/10/9 2:52 PM
      */
     public static function get(string $key = '')
     {
-        return Util::redisGet(static::keygen($key));
+        $redis = static::getRedis();
+        if (Util::isError($redis)) return $redis;
+        return $redis->get(static::keygen($key));
     }
 
     /**
@@ -53,12 +85,14 @@ class Cache extends \yii\base\Component
      * @param array|string $value
      * @param int|string|null $expire
      * @return mixed
-     * @lasttime: 2022/10/5 21:25
+     * @lasttime: 2023/10/9 2:53 PM
      */
     public static function set(string $key = '', $value = null, $expire = null)
     {
         $expire = $expire ?? static::$expire;
-        return Util::redisSet(static::keygen($key), $value, $expire);
+        $redis  = static::getRedis();
+        if (Util::isError($redis)) return $redis;
+        return $redis->set(static::keygen($key), $value, $expire);
     }
 
     /**
@@ -72,7 +106,9 @@ class Cache extends \yii\base\Component
      */
     public static function del(string $key)
     {
-        return Util::redisDel(static::keygen($key));
+        $redis = static::getRedis();
+        if (Util::isError($redis)) return $redis;
+        return $redis->del(static::keygen($key));
     }
 
     /**
@@ -87,7 +123,9 @@ class Cache extends \yii\base\Component
      */
     public static function exists(string $key)
     {
-        return Util::redisExists(static::keygen($key));
+        $redis = static::getRedis();
+        if (Util::isError($redis)) return $redis;
+        return $redis->exists(static::keygen($key));
     }
 
     /**
@@ -132,26 +170,41 @@ class Cache extends \yii\base\Component
         return static::$expire;
     }
 
+    /**
+     * @deprecated use \jcbowen\JcbaseYii2\components\Cache::get($key)
+     */
     public function getValue($key)
     {
         return static::get($key);
     }
 
+    /**
+     * @deprecated use \jcbowen\JcbaseYii2\components\Cache::set($key, $value, $expire)
+     */
     public function setValue($key, $value, $expire = null)
     {
         return static::set($key, $value, $expire);
     }
 
+    /**
+     * @deprecated use \jcbowen\JcbaseYii2\components\Cache::del($key)
+     */
     public function delValue($key)
     {
         return static::del($key);
     }
 
+    /**
+     * @deprecated use \jcbowen\JcbaseYii2\components\Cache::exists($key)
+     */
     public function existsValue($key)
     {
         return static::exists($key);
     }
 
+    /**
+     * @deprecated use \jcbowen\JcbaseYii2\components\Cache::keygen($key)
+     */
     public function getKey($key): string
     {
         return static::keygen($key);
