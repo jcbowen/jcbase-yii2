@@ -480,6 +480,7 @@ class Util
      */
     public static function removeTreeNode(array &$tree = [], callable $fn = null, string $childrenKey = 'children')
     {
+        if (empty($tree) || !is_callable($fn)) return;
         // 遍历每个节点
         foreach ($tree as $key => &$node) {
             // 检查回调函数的返回值
