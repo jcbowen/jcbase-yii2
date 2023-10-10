@@ -442,9 +442,8 @@ class Util
         return $node;
     }
 
-
     /**
-     * 回调处理树形结构的最后一层
+     * 将树形结构的最底层返回给回调函数
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -454,16 +453,48 @@ class Util
      * @param string $childrenKey 子级所在的key
      * @lasttime: 2023/10/9 9:40 PM
      */
-    public static function treeLastCallback(array &$tree = [], ?callable $fn = null, string $childrenKey = 'children')
+    public static function treeLast(array &$tree = [], callable $fn = null, string $childrenKey = 'children')
     {
         if (empty($tree) || !is_callable($fn)) return;
 
         foreach ($tree as &$item)
             if (!empty($item[$childrenKey]))
-                static::treeLastCallback($item[$childrenKey], $fn, $childrenKey);
+                static::treeLast($item[$childrenKey], $fn, $childrenKey);
             else {
                 $item = $fn($item);
             }
+    }
+
+    /**
+     * 根据回调函数移除树形结构节点
+     *
+     * 函数会遍历每个节点，并执行回调函数。如果回调函数返回 true，则从树形结构中移除该节点。一旦执行了一次移除，函数将从头开始遍历树形结构，以便处理可能被移除的节点的父节点
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array $tree 树形结构的多维数组
+     * @param callable|null $fn 匿名回调函数
+     * @param string $childrenKey 子级所在的key
+     * @lasttime: 2023/10/10 11:18 PM
+     */
+    public static function removeTreeNode(array &$tree = [], callable $fn = null, string $childrenKey = 'children')
+    {
+        // 遍历每个节点
+        foreach ($tree as $key => &$node) {
+            // 检查回调函数的返回值
+            if ($fn && $fn($node)) {
+                // 从原树形结构中移除该节点
+                unset($tree[$key]);
+                // 重新从头开始遍历
+                static::removeTreeNode($tree, $fn, $childrenKey);
+                break;
+            }
+
+            // 递归遍历子节点
+            if (isset($node[$childrenKey]) && is_array($node[$childrenKey]))
+                static::removeTreeNode($node[$childrenKey], $fn, $childrenKey);
+        }
     }
 
     /**
@@ -1434,5 +1465,15 @@ class Util
     public static function round_money($money, int $decimals = 2): float
     {
         return round(floatval($money), $decimals);
+    }
+
+    // ----- 弃用方法 ----- //
+
+    /**
+     * @deprecated use Util::treeLast
+     */
+    public static function treeLastCallback(array $tree = [], callable $fn = null, string $childrenKey = 'children')
+    {
+        static::treeLast($tree, $fn, $childrenKey);
     }
 }
