@@ -63,8 +63,8 @@ class Util
         global $_B;
         if (!empty($_B['siteRoot'])) return $_B['siteRoot'];
 
-        $_B['siteRoot'] = self::getHostInfo();
-        if (!self::endsWith($_B['siteRoot'], '/')) $_B['siteRoot'] .= '/';
+        $_B['siteRoot'] = static::getHostInfo();
+        if (!static::endsWith($_B['siteRoot'], '/')) $_B['siteRoot'] .= '/';
 
         return $_B['siteRoot'];
     }
@@ -112,7 +112,7 @@ class Util
         $_SERVER['HTTP_REFERER'] = $_SERVER['HTTP_REFERER'] ?: '';
 
         $_B['referer'] = !empty($_GPC['referer']) ? $_GPC['referer'] : $_SERVER['HTTP_REFERER'];
-        $_B['referer'] = self::endsWith($_B['referer'], '?') ? substr($_B['referer'], 0, -1) : $_B['referer'];
+        $_B['referer'] = static::endsWith($_B['referer'], '?') ? substr($_B['referer'], 0, -1) : $_B['referer'];
 
         if (!empty($needle) && strpos($_B['referer'], $needle)) {
             $_B['referer'] = $default;
@@ -121,7 +121,7 @@ class Util
         $_B['referer'] = str_replace('&amp;', '&', $_B['referer']);
         $reUrl         = parse_url($_B['referer']);
 
-        $_B['siteRoot'] = self::getSiteRoot();
+        $_B['siteRoot'] = static::getSiteRoot();
         if (
             !empty($reUrl['host'])
             && !in_array($reUrl['host'], [$_SERVER['HTTP_HOST'], 'www.' . $_SERVER['HTTP_HOST']])
@@ -161,12 +161,12 @@ class Util
         }
 
         // 如果存在资源目录，转换为本地资源目录
-        if (self::strExists($src, 'static/')) {
+        if (static::strExists($src, 'static/')) {
             return Yii::$app->params['domain']['attachment_local'] . substr($src, strpos($src, 'static/'));
         }
 
         // 移除资源链接中的本地附件域名
-        if (self::startsWith($src, Yii::$app->params['domain']['attachment_local']) && !self::strExists($src, '/static/')) {
+        if (static::startsWith($src, Yii::$app->params['domain']['attachment_local']) && !static::strExists($src, '/static/')) {
             $urls = parse_url($src);
             $src  = substr($urls['path'], strpos($urls['path'], 'images'));
         }
@@ -194,10 +194,10 @@ class Util
     public static function removeMediaDomain(?string $src)
     {
         if (empty($src)) return '';
-        if (self::startsWith($src, Yii::$app->params['domain']['attachment_local']) || self::startsWith($src, Yii::$app->params['domain']['attachment'])) {
+        if (static::startsWith($src, Yii::$app->params['domain']['attachment_local']) || static::startsWith($src, Yii::$app->params['domain']['attachment'])) {
             $type = 'images';
             foreach (File::$fileTypes as $item) {
-                if (self::strExists($src, $item)) {
+                if (static::strExists($src, $item)) {
                     $type = $item . 's';
                     break;
                 }
@@ -220,7 +220,7 @@ class Util
     public static function parsePath(string $path)
     {
         $danger_char = ['../', '{php', '<?php', '<%', '<?', '..\\', '\\\\', '\\', '..\\\\', '%00', '\0', '\r'];
-        foreach ($danger_char as $char) if (self::strExists($path, $char)) return false;
+        foreach ($danger_char as $char) if (static::strExists($path, $char)) return false;
         return $path;
     }
 
@@ -362,7 +362,7 @@ class Util
             if (!is_array($item) || empty($item)) continue;
             // 匹配父级id
             if ($item[$parentIdKey] == $parentId) {
-                $children = self::arrayToTree($arr, $item['id'], $parentIdKey, $childrenKey);
+                $children = static::arrayToTree($arr, $item['id'], $parentIdKey, $childrenKey);
                 if (!empty($children)) {
                     $item[$childrenKey] = $children;
                 }
@@ -396,7 +396,7 @@ class Util
             if (isset($item[$childrenKey])) unset($item[$childrenKey]);
             $arr[] = $item;
             if (!empty($children)) {
-                $arr = array_merge($arr, self::treeToArray($children, $sortKey, $childrenKey));
+                $arr = array_merge($arr, static::treeToArray($children, $sortKey, $childrenKey));
             }
         }
 
@@ -433,7 +433,7 @@ class Util
             }
             $children = $item[$childrenKey] ?? [];
             if (!empty($children)) {
-                $node = self::findNodeInTree($children, $value, $key, $childrenKey);
+                $node = static::findNodeInTree($children, $value, $key, $childrenKey);
                 if (!empty($node))
                     break;
             }
@@ -582,7 +582,7 @@ class Util
             if (!is_array($value))
                 $s .= "<$tagName>" . (!is_numeric($value) ? '<![CDATA[' : '') . $value . (!is_numeric($value) ? ']]>' : '') . "</$tagName>";
             else
-                $s .= "<$tagName>" . self::arrayToXml($value, $level + 1) . "</$tagName>";
+                $s .= "<$tagName>" . static::arrayToXml($value, $level + 1) . "</$tagName>";
         }
         $s = preg_replace("/([\x01-\x08\x0b-\x0c\x0e-\x1f])+/", ' ', $s);
 
@@ -604,7 +604,7 @@ class Util
         if (empty($xml)) return [];
 
         $result = [];
-        $xmlObj = self::simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
+        $xmlObj = static::simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
         if ($xmlObj instanceof SimpleXMLElement) {
             $result = json_decode(json_encode($xmlObj), true);
             if (is_array($result))
@@ -628,7 +628,7 @@ class Util
     public static function unserializer($value)
     {
         if (empty($value)) return [];
-        if (!self::is_serialized($value)) {
+        if (!static::is_serialized($value)) {
             return $value;
         }
         if (version_compare(PHP_VERSION, '7.0.0', '>=')) {
@@ -804,7 +804,7 @@ class Util
     public static function substr(string $string, int $length, bool $haveDot = false, string $charset = 'utf8'): string
     {
         $charset = 'gbk' === strtolower($charset) ? 'gbk' : 'utf8';
-        if (self::strLen($string, $charset) <= $length) return $string;
+        if (static::strLen($string, $charset) <= $length) return $string;
 
         if (function_exists('mb_strcut')) {
             $string = mb_substr($string, 0, $length, $charset);
@@ -998,7 +998,7 @@ class Util
         foreach (glob($dir . '*') as $v) {
             $dirInfo[] = $v;
             if (is_dir($v)) {
-                $dirInfo = array_merge($dirInfo, self::getFilesByDir($v));
+                $dirInfo = array_merge($dirInfo, static::getFilesByDir($v));
             }
         }
         return $dirInfo;
@@ -1069,7 +1069,7 @@ class Util
     {
         $expire = intval($expire);
 
-        $redis = self::getRedis();
+        $redis = static::getRedis();
         if (is_array($value)) $value = serialize($value);
         $result = $redis->set($key, $value, ...$options);
         if (!empty($expire)) $redis->expire($key, $expire);
@@ -1086,10 +1086,10 @@ class Util
      */
     public static function redisGet($key)
     {
-        $redis = self::getRedis();
+        $redis = static::getRedis();
 
         $value = $redis->get($key);
-        return self::unserializer($value);
+        return static::unserializer($value);
     }
 
     /**
@@ -1104,10 +1104,10 @@ class Util
     {
         if (empty($key)) return [];
 
-        $redis = self::getRedis();
+        $redis = static::getRedis();
 
         $list = (array)$redis->mget(...$key);
-        foreach ($list as &$item) $item = self::unserializer($item);
+        foreach ($list as &$item) $item = static::unserializer($item);
         return $list;
     }
 
@@ -1123,7 +1123,7 @@ class Util
      */
     public static function redisDel(...$keys)
     {
-        $redis = self::getRedis();
+        $redis = static::getRedis();
         return $redis->del(...$keys);
     }
 
@@ -1139,7 +1139,7 @@ class Util
      */
     public static function redisExists(...$keys)
     {
-        $redis = self::getRedis();
+        $redis = static::getRedis();
         return $redis->exists(...$keys);
     }
 
@@ -1156,12 +1156,12 @@ class Util
      */
     public static function redisExpire($key, $expire)
     {
-        $redis = self::getRedis();
+        $redis = static::getRedis();
         return $redis->expire($key, $expire);
     }
 
     /**
-     * 将self::error的数据转换为result输出
+     * 将static::error的数据转换为result输出
      *
      * @author Bowen
      * @email bowen@jiuchet.com
