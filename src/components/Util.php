@@ -413,14 +413,14 @@ class Util
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param array $tree 树形结构的多维数组
+     * @param array|null $tree 树形结构的多维数组
      * @param mixed $value 要查找的值
      * @param string $key 要查找的key
      * @param string $childrenKey 子级所在的key
      * @return array
      * @lasttime: 2023/6/23 3:38 PM
      */
-    public static function findNodeInTree(array $tree = [], $value = '', string $key = 'id', string $childrenKey = 'children'): array
+    public static function findNodeInTree(?array $tree = [], $value = '', string $key = 'id', string $childrenKey = 'children'): array
     {
         if (empty($tree))
             return [];
@@ -440,6 +440,44 @@ class Util
         }
 
         return $node;
+    }
+
+    /**
+     * 根据指定的key获取该节点所在的分支
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array|null $tree 树形结构的多维数组
+     * @param mixed $value 要查找的值
+     * @param string $key 要查找的key
+     * @param string $childrenKey 子级所在的key
+     * @return array
+     * @lasttime: 2023/10/30 11:27 PM
+     */
+    public static function getBranchInTree(?array $tree = [], $value = '', string $key = 'id', string $childrenKey = 'children'): array
+    {
+        if (empty($tree))
+            return [];
+
+        $branch = [];
+        foreach ($tree as $item) {
+            if ($item[$key] == $value) {
+                $branch = $item;
+                break;
+            }
+            $children = $item[$childrenKey] ?? [];
+            if (!empty($children)) {
+                $subBranch = static::getBranchInTree($children, $value, $key, $childrenKey);
+                if (!empty($subBranch)) {
+                    $branch               = $item;
+                    $branch[$childrenKey] = [$subBranch];
+                    break;
+                }
+            }
+        }
+
+        return $branch;
     }
 
     /**
