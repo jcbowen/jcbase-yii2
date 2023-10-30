@@ -362,7 +362,7 @@ class Util
             if (!is_array($item) || empty($item)) continue;
             // 匹配父级id
             if ($item[$parentIdKey] == $parentId) {
-                $children = static::arrayToTree($arr, $item['id'], $parentIdKey, $childrenKey);
+                $children = self::arrayToTree($arr, $item['id'], $parentIdKey, $childrenKey);
                 if (!empty($children)) {
                     $item[$childrenKey] = $children;
                 }
@@ -396,7 +396,7 @@ class Util
             if (isset($item[$childrenKey])) unset($item[$childrenKey]);
             $arr[] = $item;
             if (!empty($children)) {
-                $arr = array_merge($arr, static::treeToArray($children, $sortKey, $childrenKey));
+                $arr = array_merge($arr, self::treeToArray($children, $sortKey, $childrenKey));
             }
         }
 
@@ -433,7 +433,7 @@ class Util
             }
             $children = $item[$childrenKey] ?? [];
             if (!empty($children)) {
-                $node = static::findNodeInTree($children, $value, $key, $childrenKey);
+                $node = self::findNodeInTree($children, $value, $key, $childrenKey);
                 if (!empty($node))
                     break;
             }
@@ -468,7 +468,7 @@ class Util
             }
             $children = $item[$childrenKey] ?? [];
             if (!empty($children)) {
-                $subBranch = static::getBranchInTree($children, $value, $key, $childrenKey);
+                $subBranch = self::getBranchInTree($children, $value, $key, $childrenKey);
                 if (!empty($subBranch)) {
                     $branch               = $item;
                     $branch[$childrenKey] = [$subBranch];
@@ -497,7 +497,7 @@ class Util
 
         foreach ($tree as &$item)
             if (!empty($item[$childrenKey]))
-                static::treeLast($item[$childrenKey], $fn, $childrenKey);
+                self::treeLast($item[$childrenKey], $fn, $childrenKey);
             else {
                 $item = $fn($item);
             }
@@ -526,13 +526,13 @@ class Util
                 // 从原树形结构中移除该节点
                 unset($tree[$key]);
                 // 重新从头开始遍历
-                static::removeTreeNode($tree, $fn, $childrenKey);
+                self::removeTreeNode($tree, $fn, $childrenKey);
                 break;
             }
 
             // 递归遍历子节点
             if (isset($node[$childrenKey]) && is_array($node[$childrenKey]))
-                static::removeTreeNode($node[$childrenKey], $fn, $childrenKey);
+                self::removeTreeNode($node[$childrenKey], $fn, $childrenKey);
         }
     }
 
@@ -564,7 +564,7 @@ class Util
                         $res[] = $v;
                     }
                 } elseif (is_array($v) && isset($res[$k]) && is_array($res[$k])) {
-                    $res[$k] = static::merge($res[$k], $v);
+                    $res[$k] = self::merge($res[$k], $v);
                 } else {
                     $res[$k] = $v;
                 }
@@ -620,7 +620,7 @@ class Util
             if (!is_array($value))
                 $s .= "<$tagName>" . (!is_numeric($value) ? '<![CDATA[' : '') . $value . (!is_numeric($value) ? ']]>' : '') . "</$tagName>";
             else
-                $s .= "<$tagName>" . static::arrayToXml($value, $level + 1) . "</$tagName>";
+                $s .= "<$tagName>" . self::arrayToXml($value, $level + 1) . "</$tagName>";
         }
         $s = preg_replace("/([\x01-\x08\x0b-\x0c\x0e-\x1f])+/", ' ', $s);
 
@@ -1036,7 +1036,7 @@ class Util
         foreach (glob($dir . '*') as $v) {
             $dirInfo[] = $v;
             if (is_dir($v)) {
-                $dirInfo = array_merge($dirInfo, static::getFilesByDir($v));
+                $dirInfo = array_merge($dirInfo, self::getFilesByDir($v));
             }
         }
         return $dirInfo;
