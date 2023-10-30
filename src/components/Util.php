@@ -1082,6 +1082,7 @@ class Util
      * @lastTime 2021/5/24 8:53 下午
      * @param string $connectionName
      * @return Connection
+     * @deprecated use Jcbowen\JcbaseYii2\components\Redis
      */
     public static function getRedis(string $connectionName = 'redis'): Connection
     {
@@ -1102,6 +1103,7 @@ class Util
      * @param mixed ...$options
      * @param $key
      * @return mixed
+     * @deprecated use Jcbowen\JcbaseYii2\components\Redis set()
      */
     public static function redisSet($key, $value, $expire = 0, ...$options)
     {
@@ -1121,6 +1123,7 @@ class Util
      * @email bowen@jiuchet.com
      * @param $key
      * @return string|array|mixed
+     * @deprecated use Jcbowen\JcbaseYii2\components\Redis get()
      */
     public static function redisGet($key)
     {
@@ -1137,6 +1140,7 @@ class Util
      * @email bowen@jiuchet.com
      * @param mixed ...$key
      * @return array
+     * @deprecated use Jcbowen\JcbaseYii2\components\Redis mget()
      */
     public static function redisMget(...$key): array
     {
@@ -1158,6 +1162,7 @@ class Util
      * @param ...$keys
      * @return mixed
      * @lasttime: 2022/9/8 2:04 PM
+     * @deprecated use Jcbowen\JcbaseYii2\components\Redis del()
      */
     public static function redisDel(...$keys)
     {
@@ -1174,6 +1179,7 @@ class Util
      * @param ...$keys
      * @return mixed
      * @lasttime: 2022/10/6 18:54
+     * @deprecated use Jcbowen\JcbaseYii2\components\Redis exists()
      */
     public static function redisExists(...$keys)
     {
@@ -1191,6 +1197,7 @@ class Util
      * @param $expire
      * @return mixed
      * @lasttime: 2022/9/8 2:05 PM
+     * @deprecated use Jcbowen\JcbaseYii2\components\Redis expire()
      */
     public static function redisExpire($key, $expire)
     {
