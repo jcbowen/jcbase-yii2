@@ -450,12 +450,13 @@ class Util
      *
      * @param array|null $tree 树形结构的多维数组
      * @param mixed $value 要查找的值
+     * @param bool $needChildren 是否需要子级
      * @param string $key 要查找的key
      * @param string $childrenKey 子级所在的key
      * @return array
      * @lasttime: 2023/10/30 11:27 PM
      */
-    public static function getBranchInTree(?array $tree = [], $value = '', string $key = 'id', string $childrenKey = 'children'): array
+    public static function getBranchInTree(?array $tree = [], $value = '', bool $needChildren = true, string $key = 'id', string $childrenKey = 'children'): array
     {
         if (empty($tree))
             return [];
@@ -463,12 +464,14 @@ class Util
         $branch = [];
         foreach ($tree as $item) {
             if ($item[$key] == $value) {
+                // 不需要子级
+                if (!$needChildren) unset($item[$childrenKey]);
                 $branch = $item;
                 break;
             }
             $children = $item[$childrenKey] ?? [];
             if (!empty($children)) {
-                $subBranch = self::getBranchInTree($children, $value, $key, $childrenKey);
+                $subBranch = self::getBranchInTree($children, $value, $needChildren, $key, $childrenKey);
                 if (!empty($subBranch)) {
                     $branch               = $item;
                     $branch[$childrenKey] = [$subBranch];
