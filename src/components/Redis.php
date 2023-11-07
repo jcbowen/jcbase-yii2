@@ -99,7 +99,7 @@ class Redis extends BaseObject
      */
     public function stringify(&$value)
     {
-        if (empty($value) || !is_array($value)) return;
+        if (!is_array($value)) return;
         $value = $this->valueType === 'serialize' ? serialize($value) : json_encode($value, JSON_UNESCAPED_UNICODE);
     }
 
