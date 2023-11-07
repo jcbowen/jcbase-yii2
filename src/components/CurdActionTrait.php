@@ -974,7 +974,7 @@ trait CurdActionTrait
         $result_after = $this->updateAfter($id, $data);
         if (Util::isError($result_after)) {
             $tr->rollBack();
-            return static::result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '更新失败，请稍后再试');
+            return static::result(ErrCode::UNKNOWN, $result_after['errmsg'] ?: '更新失败，请稍后再试');
         }
 
         try {
@@ -1415,7 +1415,7 @@ trait CurdActionTrait
         $result_after = $this->deleteAfter($delIds);
         if (Util::isError($result_after)) {
             $tr->rollBack();
-            return static::result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
+            return static::result(ErrCode::UNKNOWN, $result_after['errmsg'] ?: '删除数据失败，请稍后再试');
         }
 
         try {
@@ -1580,7 +1580,7 @@ trait CurdActionTrait
         $result_after = $this->restoreAfter($itemIds);
         if (Util::isError($result_after)) {
             $transaction->rollBack();
-            return static::result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '恢复数据失败，请稍后再试');
+            return static::result(ErrCode::UNKNOWN, $result_after['errmsg'] ?: '恢复数据失败，请稍后再试');
         }
 
         try {
@@ -1737,7 +1737,7 @@ trait CurdActionTrait
         $result_after = $this->removeAfter($itemIds);
         if (Util::isError($result_after)) {
             $transaction->rollBack();
-            return static::result(ErrCode::UNKNOWN, $result_before['errmsg'] ?: '删除数据失败，请稍后再试');
+            return static::result(ErrCode::UNKNOWN, $result_after['errmsg'] ?: '删除数据失败，请稍后再试');
         }
 
         try {
