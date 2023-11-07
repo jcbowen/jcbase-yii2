@@ -408,6 +408,29 @@ class Util
     }
 
     /**
+     * 遍历树形结构
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array $tree 树形结构的多维数组
+     * @param callable $callback 回调函数，示例：function(&$node):void
+     * @lasttime: 2023/11/7 11:16 AM
+     */
+    public static function treeEach(array &$tree, callable $callback)
+    {
+        foreach ($tree as &$node) {
+            // 调用回调函数处理节点数据
+            $callback($node);
+
+            // 如果节点包含子节点，则递归调用
+            if (isset($node['children']) && is_array($node['children'])) {
+                self::treeEach($node['children'], $callback);
+            }
+        }
+    }
+
+    /**
      * 根据指定的key查找树形结构中的节点
      *
      * @author Bowen
