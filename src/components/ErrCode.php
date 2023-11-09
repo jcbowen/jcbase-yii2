@@ -49,8 +49,15 @@ class ErrCode
     const LOGIN_INVALID = 9002004;
     /** @var int 无效的token */
     const INVALID_TOKEN = 9002028;
-    /** @var int 权限不足 */
-    const NO_PERMISSION = 9002005;
+    /**
+     * @var int 无权访问
+     * @deprecated 请使用 NO_PERMISSION_EDIT
+     */
+    const NO_PERMISSION = 9002011;
+    /** @var int 无权访问 */
+    const NO_PERMISSION_VISIT = 9002005;
+    /** @var int 无权编辑 */
+    const NO_PERMISSION_EDIT = 9002011;
     /** @var int 账号或密码错误 */
     const INCORRECT_USERNAME_OR_PASSWORD = 9002006;
     /** @var int 禁用 */
