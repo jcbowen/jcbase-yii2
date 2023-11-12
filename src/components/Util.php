@@ -272,6 +272,27 @@ class Util
     }
 
     /**
+     * 生成指定长度的随机字符串(不含数字)
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param int $length 字符串长度
+     * @return string 生成的随机字符串
+     * @lasttime: 2023/11/12 11:15 PM
+     */
+    public static function randomKeys(int $length): string
+    {
+        $pattern = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $key     = '';
+
+        for ($i = 0; $i < $length; ++$i)
+            $key .= $pattern[mt_rand(0, 51)];
+
+        return $key;
+    }
+
+    /**
      * 取出数组中指定部分
      *
      * @author Bowen
