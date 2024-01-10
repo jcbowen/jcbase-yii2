@@ -31,10 +31,10 @@ class Main extends Component
      */
     public function init()
     {
-        $cityDataJsonFile = file_get_contents(Yii::getAlias('@common/components/weather/json/city-data.json'));
+        $cityDataJsonFile = file_get_contents(__DIR__ . '/json/city-data.json');
         static::$cityData = json_decode($cityDataJsonFile, true);
 
-        $citySearchDataJsonFile = file_get_contents(Yii::getAlias('@common/components/weather/json/city-search-data.json'));
+        $citySearchDataJsonFile = file_get_contents(__DIR__ . '/json/city-data.json');
         static::$citySearchData = json_decode($citySearchDataJsonFile, true);
 
         parent::init();
