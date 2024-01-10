@@ -4,6 +4,7 @@ namespace Jcbowen\JcbaseYii2\components\weather;
 
 use Jcbowen\JcbaseYii2\base\Component;
 use Yii;
+use yii\helpers\ArrayHelper;
 
 /**
  * Class Weather
@@ -50,14 +51,14 @@ class Main extends Component
      * @return int|mixed
      * @lasttime: 2024/1/8 5:17 PM
      */
-    public function getCityId(array $city = [
-        'country'  => '中国',
-        'province' => '重庆市',
-        'city'     => '重庆市',
-        'district' => '九龙坡区'
-    ])
+    public function getCityId(array $city = [])
     {
-        $city['country'] = !empty($city['country']) ? $city['country'] : '中国';
+        $city = ArrayHelper::merge([
+            'country'  => '中国',
+            'province' => '',
+            'city'     => '',
+            'district' => '',
+        ], $city);
 
         // 移除掉省、市、区、县字样
         $city['old_province'] = $city['province'];
