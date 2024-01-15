@@ -147,6 +147,9 @@ class FieldFilter
 
     public function de(&$fields)
     {
+        if (empty($fields) || !is_array($fields))
+            goto returnVar;
+
         $config = $this->getConfig();
         if (!empty($config)) {
             $config['_extend'] = 'json';
@@ -178,6 +181,8 @@ class FieldFilter
                 }
             }
         }
+
+        returnVar:
         return $fields;
     }
 
