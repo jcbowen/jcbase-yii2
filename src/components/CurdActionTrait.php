@@ -1412,7 +1412,7 @@ trait CurdActionTrait
         }
 
         // 删除后
-        $result_after = $this->deleteAfter($delIds);
+        $result_after = $this->deleteAfter($delIds, $delArr);
         if (Util::isError($result_after)) {
             $tr->rollBack();
             return static::result(ErrCode::UNKNOWN, $result_after['errmsg'] ?: '删除数据失败，请稍后再试');
@@ -1494,11 +1494,12 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param array $ids
+     * @param array $ids 被删除的数据id
+     * @param array $delArr 被删除的数据
      * @return array|bool
      * @lasttime: 2021/5/9 3:04 下午
      */
-    public function deleteAfter(array $ids = [])
+    public function deleteAfter(array $ids = [], array $delArr = [])
     {
         return true;
     }
