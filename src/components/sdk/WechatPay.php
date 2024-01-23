@@ -642,6 +642,7 @@ class WechatPay extends Component
      * @email bowen@jiuchet.com
      * @return array|void
      * @lasttime 2022/11/10 11:06
+     * @throws ErrorException
      */
     public function dealNotify()
     {

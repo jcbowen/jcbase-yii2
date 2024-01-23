@@ -161,6 +161,9 @@ class PaymentNotifyData extends ComponentArrayAccess
     {
         $this->decryptData = $decryptData ?? $this->decryptData;
 
+        if (Util::isError($this->decryptData))
+            throw new InvalidArgumentException($this->decryptData['errmsg'] ?? '无法解析支付平台回调数据');
+
         // 如果platform没有值则根据$this->decryptData判断是支付宝的还是微信的
         if ($this->platform === 'alipay' || (empty($this->platform) && !empty($this->decryptData['notify_type']) && $this->decryptData['notify_type'] === 'trade_status_sync')) {
             $this->platform = 'alipay';
