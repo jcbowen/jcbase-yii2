@@ -154,16 +154,17 @@ class PaymentNotifyData extends ComponentArrayAccess
      *
      * @param array|null $decryptData 解密后的数据，如果为空则使用$this->decryptData
      * @return PaymentNotifyData
+     * @throws InvalidArgumentException
      * @lasttime: 2023/4/19 3:24 PM
      */
     public function parse(?array $decryptData = null): PaymentNotifyData
     {
         $this->decryptData = $decryptData ?? $this->decryptData;
 
-        // 如果platform没有值则根据$this->parseData判断是支付宝的还是微信的
+        // 如果platform没有值则根据$this->decryptData判断是支付宝的还是微信的
         if ($this->platform === 'alipay' || (empty($this->platform) && !empty($this->decryptData['notify_type']) && $this->decryptData['notify_type'] === 'trade_status_sync')) {
             $this->platform = 'alipay';
-        } elseif ($this->platform === 'wechatPay' || (empty($this->platform) && !empty($this->decryptData['mchid']) && !empty($this->rawData['event_type']))) {
+        } elseif ($this->platform === 'wechatPay' || (empty($this->platform) && !empty($this->rawData['event_type']))) {
             $this->platform = 'wechatPay';
         } else {
             Yii::error(ArrayHelper::toArray($this), 'invalidPaymentPlatform');

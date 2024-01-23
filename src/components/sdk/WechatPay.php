@@ -13,6 +13,7 @@ use WeChatPay\Formatter;
 use WeChatPay\Util\PemUtil;
 use Yii;
 use yii\base\Component;
+use yii\base\ErrorException;
 
 class WechatPay extends Component
 {
@@ -661,21 +662,22 @@ class WechatPay extends Component
             $inWechatpaySignature,
             $platformPublicKeyInstance
         );
-        if ($timeOffsetStatus && $verifiedStatus) {
-            // 转换通知的JSON文本消息为PHP Array数组
-            $inBodyArray = (array)json_decode($inBody, true);
-            // 使用PHP7的数据解构语法，从Array中解构并赋值变量
-            [
-                'resource' => [
-                    'ciphertext'      => $ciphertext,
-                    'nonce'           => $nonce,
-                    'associated_data' => $aad
-                ]
-            ] = $inBodyArray;
-            // 加密文本消息解密
-            $inBodyResource = AesGcm::decrypt($ciphertext, $this->apiV3Key, $nonce, $aad);
-            // 把解密后的文本转换为PHP Array数组
-            return (array)json_decode($inBodyResource, true);
-        }
+        if (!$timeOffsetStatus || !$verifiedStatus)
+            throw new ErrorException('签名验证失败');
+
+        // 转换通知的JSON文本消息为PHP Array数组
+        $inBodyArray = (array)json_decode($inBody, true);
+        // 使用PHP7的数据解构语法，从Array中解构并赋值变量
+        [
+            'resource' => [
+                'ciphertext'      => $ciphertext,
+                'nonce'           => $nonce,
+                'associated_data' => $aad
+            ]
+        ] = $inBodyArray;
+        // 加密文本消息解密
+        $inBodyResource = AesGcm::decrypt($ciphertext, $this->apiV3Key, $nonce, $aad);
+        // 把解密后的文本转换为PHP Array数组
+        return (array)json_decode($inBodyResource, true);
     }
 }
