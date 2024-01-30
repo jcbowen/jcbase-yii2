@@ -109,7 +109,7 @@ class Excel extends Component
 
         // 如果文件名为空，填充时间戳+随机字符作为文件名
         if (empty($this->fileName))
-            $this->fileName = date('YmdHis') . Util::random(5) . '-export.xlsx';
+            $this->fileName = 'export' . date('YmdHis') . Util::random(5) . '.xlsx';
 
         // 整合文件路径
         $this->fullPath = $this->filePath . $this->fileName;
