@@ -116,12 +116,14 @@ class Excel extends Component
     }
 
     /**
+     * 导出Excel文件
      *
      * @author Bowen
      * @email bowen@jiuchet.com
      *
+     * @return false|string
      * @throws Exception
-     * @lasttime: 2024/1/30 12:58 PM
+     * @lasttime: 2024/1/30 2:45 PM
      */
     public function export()
     {
@@ -149,5 +151,8 @@ class Excel extends Component
         // 保存文件
         $writer = new Xls($spreadsheet);
         $writer->save($this->fullPath);
+
+        // 如果文件导出成功，返回文件路径，如果导出失败，返回false
+        return file_exists($this->fullPath) ? $this->fullPath : false;
     }
 }
