@@ -1578,7 +1578,7 @@ trait CurdActionTrait
         }
 
         // 删除后
-        $result_after = $this->restoreAfter($itemIds);
+        $result_after = $this->restoreAfter($itemIds, $items);
         if (Util::isError($result_after)) {
             $transaction->rollBack();
             return static::result(ErrCode::UNKNOWN, $result_after['errmsg'] ?: '恢复数据失败，请稍后再试');
@@ -1657,11 +1657,12 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param array $ids
+     * @param array $ids 被恢复的id
+     * @param array $items 被恢复的数据
      * @return array|bool
      * @lasttime 2022/9/21 15:06
      */
-    public function restoreAfter(array $ids = [])
+    public function restoreAfter(array $ids = [], array $items = [])
     {
         return true;
     }
@@ -1735,7 +1736,7 @@ trait CurdActionTrait
         }
 
         // 删除后
-        $result_after = $this->removeAfter($itemIds);
+        $result_after = $this->removeAfter($itemIds, $items);
         if (Util::isError($result_after)) {
             $transaction->rollBack();
             return static::result(ErrCode::UNKNOWN, $result_after['errmsg'] ?: '删除数据失败，请稍后再试');
@@ -1800,11 +1801,12 @@ trait CurdActionTrait
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @param array $ids
+     * @param array $ids 永久删除的id
+     * @param array $items 永久删除的数据
      * @return array|bool
      * @lasttime 2022/9/21 15:06
      */
-    public function removeAfter(array $ids = [])
+    public function removeAfter(array $ids = [], array $items = [])
     {
         return true;
     }
