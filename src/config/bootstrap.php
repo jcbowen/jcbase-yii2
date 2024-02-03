@@ -1,7 +1,7 @@
 <?php
 
 const REGULAR_EMAIL    = '/\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/i';
-const REGULAR_MOBILE   = '/^\d{6,15}$/';
+const REGULAR_MOBILE   = '/^1[3456789]\d{9}$/';
 const REGULAR_USERNAME = '/^[\x{4e00}-\x{9fa5}a-z\d_\.]{3,30}$/iu';
 
 const PASSWORD_STRONG_STATE   = '密码至少8-16个字符，至少1个大写字母，1个小写字母和1个数字';
