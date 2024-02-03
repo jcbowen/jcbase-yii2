@@ -90,7 +90,7 @@ class Excel extends Component
                 if (is_array($item)) {
                     switch ($this->arrayToFormat) {
                         case 'json':
-                            $item = json_encode($item);
+                            $item = json_encode($item, JSON_UNESCAPED_UNICODE);
                             break;
                         case 'implode':
                             $item = implode($this->arrayToFormatImplode, $item);
