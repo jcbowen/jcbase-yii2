@@ -50,20 +50,71 @@ if (!function_exists('allowCrossDomain')) {
      * @email bowen@jiuchet.com
      *
      * @param string $domain 域名
+     * @param array $params 自定义跨域参数
+     *                      - methods
+     *                      - headers
      * @return bool
      * @lasttime: 2021/12/26 10:30 下午
      */
-    function allowCrossDomain(string $domain = ''): bool
+    function allowCrossDomain(string $domain = '', array $params = []): bool
     {
         global $_B;
 
         if (empty($domain)) return false;
 
+        // 定义默认参数
+        $defaultParams = [
+            'methods' => '*',
+            'headers' => implode(', ', [
+                'Authorization',
+                'Accept',
+                'Client-Security-Token',
+                'Accept-Encoding',
+                'Content-Type',
+                'Depth',
+                'User-Agent',
+                'X-File-Size',
+                'X-Requested-With',
+                'X-Requested-By',
+                'If-Modified-Since',
+                'X-File-Name',
+                'X-File-Type',
+                'Cache-Control',
+                'Origin',
+                'online_token',
+                'Referer',
+                'User-Agent',
+                'JcClient',
+                'EnvVersion',
+                'release',
+                'releaseCode',
+            ]),
+        ];
+
+        // 只保留有效参数
+        $params = array_filter($params, function ($v, $k) {
+            return in_array($k, [
+                'methods',
+                'headers',
+            ]);
+        }, ARRAY_FILTER_USE_BOTH);
+
+        // 如果是传递的数组，则拼接为字符串
+        if (!empty($params)) {
+            foreach ($params as &$value) {
+                if (is_array($value))
+                    $value = implode(', ', $value);
+            }
+        }
+
+        // 合并新的参数到默认值中
+        $params = Util::merge($defaultParams, $params);
+
         header("Access-Control-Allow-Origin: $domain");
-        header('Access-Control-Allow-Methods: *');
-        header("Access-Control-Allow-Headers:Authorization, Accept, Client-Security-Token, Accept-Encoding, Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, X-Requested-By, If-Modified-Since, X-File-Name, X-File-Type, Cache-Control, Origin, online_token, Referer, User-Agent, JcClient, EnvVersion, release, releaseCode");
-        header('Access-Control-Allow-Credentials:true'); // 允许跨域携带cookie
-        header('Access-Control-Request-Method:OPTIONS,GET,POST');
+        header("Access-Control-Allow-Methods: {$params['methods']}");
+        header("Access-Control-Allow-Headers: {$params['headers']}");
+        header('Access-Control-Allow-Credentials: true'); // 允许跨域携带cookie
+        header('Access-Control-Request-Method: OPTIONS,GET,POST');
         header('Access-Control-Expose-Headers: Authorization');
         if (strtoupper($_SERVER['REQUEST_METHOD']) == 'OPTIONS') {
             header("HTTP/1.1 200 OK");
@@ -74,4 +125,3 @@ if (!function_exists('allowCrossDomain')) {
         return true;
     }
 }
-
