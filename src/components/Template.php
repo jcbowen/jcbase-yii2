@@ -2,12 +2,12 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
-use Jcbowen\JcbaseYii2\base\WebController;
 use Yii;
 use yii\base\Component;
 use yii\base\Exception;
 use yii\base\InvalidArgumentException;
 use yii\helpers\FileHelper;
+use yii\web\Controller;
 
 /**
  * Class Template
@@ -33,7 +33,7 @@ class Template extends Component
 
     /** @var array 传递的变量(需要作用到模板文件中的变量；一般通过get_defined_vars()获取) */
     public $variables = [];
-    /** @var WebController web控制器 */
+    /** @var Controller web控制器 */
     public $controller;
 
     /**
@@ -45,8 +45,8 @@ class Template extends Component
 
         $this->variables = !empty($this->variables) && is_array($this->variables) ? $this->variables : [];
 
-        if (isset($this->controller) && !$this->controller instanceof WebController)
-            throw new InvalidArgumentException('Template组件的controller属性必须是WebController的实例');
+        if (isset($this->controller) && !$this->controller instanceof Controller)
+            throw new InvalidArgumentException('Template组件的controller属性必须是\yii\web\Controller的实例');
 
         // 初始化
         $this->appPath       = $this->appPath ? Yii::getAlias(rtrim($this->appPath, '/')) : Yii::getAlias('@app');
@@ -280,7 +280,7 @@ class Template extends Component
         $str = str_replace('##}', '}', $str);
 
         // 如果初始化的时候传递了controller，那么就可以使用controller的方法
-        if ($this->controller instanceof WebController) {
+        if ($this->controller instanceof Controller) {
             // 只调用控制器中的方法
             $str = preg_replace('/{controllerCall\s+(\S+)}/',
                 '<?php call_user_func([$this->controller, \'$1\']); ?>',
