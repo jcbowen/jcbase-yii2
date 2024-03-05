@@ -9,12 +9,9 @@ use Jcbowen\JcbaseYii2\components\Safe;
 use Jcbowen\JcbaseYii2\components\Template;
 use Jcbowen\JcbaseYii2\components\Util;
 use Yii;
-use yii\base\InvalidArgumentException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
-use yii\web\BadRequestHttpException;
 use yii\web\Controller;
-use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
 /**
