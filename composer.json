@@ -29,7 +29,9 @@
     "phpoffice/phpspreadsheet": "^1.12",
     "aliyuncs/oss-sdk-php": "~2.4",
     "qcloud/cos-sdk-v5": "^2.5",
-    "wechatpay/wechatpay": "^1.4",
+    "wechatpay/wechatpay": "^1.4"
+  },
+  "require-dev": {
     "ext-openssl": "*",
     "ext-curl": "*",
     "ext-json": "*",
