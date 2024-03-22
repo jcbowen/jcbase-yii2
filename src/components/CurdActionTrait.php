@@ -666,6 +666,7 @@ trait CurdActionTrait
         global $_GPC;
 
         $this->checkInit();
+        $showDeleted = intval($_GPC['show_deleted']);
 
         $fields = $this->getDetailFields();
         $where  = $this->getDetailWhere($_GPC);
@@ -678,6 +679,10 @@ trait CurdActionTrait
         $result = $this->getDetailRow($row);
         if (isset($result) && Util::isError($result))
             return static::resultError($result);
+
+        // 仅在存在deleted_at字段时才进行软删除过滤
+        if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
+            $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
 
         if ($this->detailAsArray())
             $row = $row->asArray();
