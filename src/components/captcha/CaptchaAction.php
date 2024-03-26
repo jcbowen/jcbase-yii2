@@ -7,6 +7,7 @@
 
 namespace Jcbowen\JcbaseYii2\components\captcha;
 
+use Jcbowen\JcbaseYii2\components\Util;
 use Yii;
 use yii\base\Action;
 use yii\base\InvalidConfigException;
@@ -31,9 +32,9 @@ use yii\web\Response;
  *    to be validated by the 'captcha' validator.
  * 3. In the controller view, insert a [[Captcha]] widget in the form.
  *
+ * @author Qiang Xue <qiang.xue@gmail.com>
  * @property string $verifyCode The verification code. This property is read-only.
  *
- * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
 class CaptchaAction extends Action
@@ -125,14 +126,14 @@ class CaptchaAction extends Action
     {
         if (Yii::$app->request->getQueryParam(self::REFRESH_GET_VAR) !== null) {
             // AJAX request for regenerating code
-            $code = $this->getVerifyCode(true);
+            $code                       = $this->getVerifyCode(true);
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'hash1' => $this->generateValidationHash($code),
                 'hash2' => $this->generateValidationHash(strtolower($code)),
                 // we add a random 'v' parameter so that FireFox can refresh the image
                 // when src attribute of image tag is changed
-                'url' => Url::to([$this->id, 'v' => uniqid('', true)]),
+                'url'   => Url::to([$this->id, 'v' => uniqid('', true)]),
             ];
         }
 
@@ -171,7 +172,7 @@ class CaptchaAction extends Action
         $session->open();
         $name = $this->getSessionKey();
         if ($session[$name] === null || $regenerate) {
-            $session[$name] = $this->generateVerifyCode();
+            $session[$name]           = $this->generateVerifyCode();
             $session[$name . 'count'] = 1;
         }
 
@@ -186,11 +187,11 @@ class CaptchaAction extends Action
      */
     public function validate($input, $caseSensitive)
     {
-        $code = $this->getVerifyCode();
-        $valid = $caseSensitive ? ($input === $code) : strcasecmp($input, $code) === 0;
+        $code    = $this->getVerifyCode();
+        $valid   = $caseSensitive ? ($input === $code) : strcasecmp($input, $code) === 0;
         $session = Yii::$app->getSession();
         $session->open();
-        $name = $this->getSessionKey() . 'count';
+        $name           = $this->getSessionKey() . 'count';
         $session[$name] += 1;
         if ($valid || $session[$name] > $this->testLimit && $this->testLimit > 0) {
             $this->getVerifyCode(true);
@@ -217,8 +218,8 @@ class CaptchaAction extends Action
         $length = mt_rand($this->minLength, $this->maxLength);
 
         $letters = 'bcdfghjklmnpqrstvwxyz';
-        $vowels = 'aeiou';
-        $code = '';
+        $vowels  = 'aeiou';
+        $code    = '';
         for ($i = 0; $i < $length; ++$i) {
             if ($i % 2 && mt_rand(0, 10) > 2 || !($i % 2) && mt_rand(0, 10) > 9) {
                 $code .= $vowels[mt_rand(0, 4)];
@@ -302,19 +303,19 @@ class CaptchaAction extends Action
         }
 
         $length = strlen($code);
-        $box = imagettfbbox(30, 0, $this->fontFile, $code);
-        $w = $box[4] - $box[0] + $this->offset * ($length - 1);
-        $h = $box[1] - $box[5];
-        $scale = min(($this->width - $this->padding * 2) / $w, ($this->height - $this->padding * 2) / $h);
-        $x = 10;
-        $y = round($this->height * 27 / 40);
+        $box    = imagettfbbox(30, 0, $this->fontFile, $code);
+        $w      = $box[4] - $box[0] + $this->offset * ($length - 1);
+        $h      = $box[1] - $box[5];
+        $scale  = min(($this->width - $this->padding * 2) / $w, ($this->height - $this->padding * 2) / $h);
+        $x      = 10;
+        $y      = round($this->height * 27 / 40);
         for ($i = 0; $i < $length; ++$i) {
-            $fontSize = (int)(mt_rand(26, 32) * $scale * 0.8);
-            $angle = mt_rand(-10, 10);
-            $letter = $code[$i];
+            $fontSize  = (int)(mt_rand(26, 32) * $scale * 0.8);
+            $angle     = mt_rand(-10, 10);
+            $letter    = $code[$i];
             $foreColor = imagecolorallocate($image, mt_rand(0, 156), mt_rand(0, 156), mt_rand(0, 156));//随机字体色
-            $box = imagettftext($image, $fontSize, $angle, $x, $y, $foreColor, $this->fontFile, $letter);
-            $x = $box[2] + $this->offset;
+            $box       = imagettftext($image, $fontSize, $angle, $x, $y, $foreColor, $this->fontFile, $letter);
+            $x         = $box[2] + $this->offset;
         }
 
         imagecolordeallocate($image, $foreColor);
@@ -348,16 +349,16 @@ class CaptchaAction extends Action
         $fontMetrics = $image->queryFontMetrics($draw, $code);
 
         $length = strlen($code);
-        $w = (int)$fontMetrics['textWidth'] - 8 + $this->offset * ($length - 1);
-        $h = (int)$fontMetrics['textHeight'] - 8;
-        $scale = min(($this->width - $this->padding * 2) / $w, ($this->height - $this->padding * 2) / $h);
+        $w      = (int)$fontMetrics['textWidth'] - 8 + $this->offset * ($length - 1);
+        $h      = (int)$fontMetrics['textHeight'] - 8;
+        $scale  = min(($this->width - $this->padding * 2) / $w, ($this->height - $this->padding * 2) / $h);
 
         //随机字母背景
         for ($i = 0; $i < $length * 2; $i++) {
             $draw->setFont($this->fontFile);
             $draw->setFontSize((int)(mt_rand(26, 32) * $scale * 1));
             $draw->setFillColor($this->randColor(10));
-            $image->annotateImage($draw, mt_rand(0, $this->width), mt_rand(0, $this->height), mt_rand(-10, 10), random(1));
+            $image->annotateImage($draw, mt_rand(0, $this->width), mt_rand(0, $this->height), mt_rand(-10, 10), Util::random(1));
         }
 
         $x = 10;
@@ -370,7 +371,7 @@ class CaptchaAction extends Action
             $draw->setFillColor($this->randColor(0, 10));//随机字体颜色
             $image->annotateImage($draw, $x, $y, mt_rand(-10, 10), $code[$i]);
             $fontMetrics = $image->queryFontMetrics($draw, $code[$i]);
-            $x += (int)$fontMetrics['textWidth'] + $this->offset;
+            $x           += (int)$fontMetrics['textWidth'] + $this->offset;
         }
 
         ob_clean();
