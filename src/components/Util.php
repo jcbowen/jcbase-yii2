@@ -135,6 +135,39 @@ class Util
     }
 
     /**
+     * 判断是否为内网IP地址
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $ip IP 地址
+     * @return bool
+     * @lasttime: 2024/3/28 9:20 PM
+     */
+    public static function isPrivateIP(string $ip): bool
+    {
+        $private_ips = array(
+            // 私有IP地址范围
+            array('10.0.0.0', '10.255.255.255'),
+            array('172.16.0.0', '172.31.255.255'),
+            array('192.168.0.0', '192.168.255.255')
+        );
+
+        // 将 IP 地址转换为整数形式
+        $ip = ip2long($ip);
+
+        // 检查 IP 地址是否在私有 IP 地址范围内
+        foreach ($private_ips as $range) {
+            list($start, $end) = $range;
+            if ($ip >= ip2long($start) && $ip <= ip2long($end)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * 将附件路径转换为附件链接
      *
      * @author Bowen
