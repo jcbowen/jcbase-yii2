@@ -4,8 +4,10 @@ namespace Jcbowen\JcbaseYii2\components;
 
 use ArrayObject;
 use Yii;
+use yii\base\InvalidArgumentException;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveQuery;
+use yii\db\Exception;
 
 /**
  * Class ActiveRecord
@@ -20,6 +22,9 @@ class ActiveRecord extends \yii\db\ActiveRecord
     /** @var int|bool 缓存时间(单位秒)，不开启缓存为false */
     public static $cacheTime = false;
 
+    /** @var string|null|false 操作时间 */
+    protected $operationTime = null;
+
     /**
      * 注册事件: 新增,更新,删除时清理清理缓存
      *
@@ -30,6 +35,7 @@ class ActiveRecord extends \yii\db\ActiveRecord
      */
     public function init()
     {
+        $this->operationTime = defined('TIME') ? TIME : date('Y-m-d H:i:s');
         if (static::$cacheTime !== false) {
             $this->on('*', static function ($e) {
                 if (in_array($e->name, ['afterInsert', 'afterUpdate', 'afterDelete'])) {
@@ -58,6 +64,78 @@ class ActiveRecord extends \yii\db\ActiveRecord
         }
 
         return $query;
+    }
+
+    /**
+     * 批量插入数据
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array $data 需要插入的数据
+     *           - 每个元素都应当是key=>value结构
+     *           - 需要保证第一个元素的字段完整
+     *           - 非第一个元素无论是乱序还是缺字段都可以完成插入
+     *           - 如：[['username' => '张三', 'age' => '28'], ['username' => '李四']]
+     * @return int
+     * @throws Exception
+     * @lasttime: 2024/4/10 11:21 AM
+     */
+    public function batchInsert(array $data = []): int
+    {
+        if (empty($data)) return 0;
+
+        // 取数组的第一个元素作为插入字段
+        $columns = array_keys($data[0]);
+        $columns = array_values(array_filter($columns, function ($column) {
+            return $this->hasAttribute($column);
+        }));
+
+        // 是否补充created_at字段
+        $columnsAddCreatedAt = false;
+        // 是否补充updated_at字段
+        $columnsAddUpdatedAt = false;
+
+        // 整理出每行的数据
+        $rows = [];
+        foreach ($data as $item) {
+            // 根据字段名整理数据
+            $fields = [];
+            foreach ($columns as $itemKey) {
+                $fields[$itemKey] = $item[$itemKey];
+            }
+
+            // 非有效数据直接跳过
+            if (empty($fields)) continue;
+
+            // 自动处理字段结构
+            $fields = $this->filterFields($fields);
+
+            // 自动补充创建时间以及更新时间
+            if ($this->hasAttribute('created_at') && empty($fields['created_at'])) {
+                $columnsAddCreatedAt  = true;
+                $fields['created_at'] = $this->operationTime;
+            }
+            if ($this->hasAttribute('updated_at') && empty($fields['updated_at'])) {
+                $columnsAddUpdatedAt  = true;
+                $fields['updated_at'] = $this->operationTime;
+            }
+
+            // 只保留值到待插入变量中
+            $rows[] = array_values($fields);
+        }
+
+        // 如果没有待插入数据，直接输出0
+        if (empty($rows)) return 0;
+
+        // 判断是否需要给字段加上创建时间和更新时间字段
+        if ($columnsAddCreatedAt && !in_array('created_at', $columns))
+            $columns[] = 'created_at';
+        if ($columnsAddUpdatedAt && !in_array('updated_at', $columns))
+            $columns[] = 'updated_at';
+
+        // 批量插入
+        return static::getDb()->createCommand()->batchInsert(static::tableName(), $columns, $rows)->execute();
     }
 
     /**
@@ -96,7 +174,7 @@ class ActiveRecord extends \yii\db\ActiveRecord
         }
         if ($value) {
             $behaviorsDef['class'] = TimestampBehavior::class;
-            $behaviorsDef['value'] = date('Y-m-d H:i:s');
+            $behaviorsDef['value'] = $this->operationTime;
         }
 
         if (!empty($behaviorsDef)) $behaviors[] = $behaviorsDef;
