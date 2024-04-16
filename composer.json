@@ -29,9 +29,7 @@
     "phpoffice/phpspreadsheet": "^1.12",
     "aliyuncs/oss-sdk-php": "~2.4",
     "qcloud/cos-sdk-v5": "^2.5",
-    "wechatpay/wechatpay": "^1.4",
-    "ext-gd": "*",
-    "ext-imagick": "*"
+    "wechatpay/wechatpay": "^1.4"
   },
   "require-dev": {
     "ext-openssl": "*",
@@ -42,7 +40,9 @@
     "ext-bcmath": "*",
     "ext-libxml": "*",
     "ext-pdo": "*",
-    "ext-iconv": "*"
+    "ext-iconv": "*",
+    "ext-gd": "*",
+    "ext-imagick": "*"
   },
   "extra": {
     "branch-alias": {
