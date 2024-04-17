@@ -76,6 +76,8 @@ const CLIENT_LIST                  = [
     CLIENT_JINGDONG_MINI_PROGRAM => '京东小程序',
 ];
 
+// 空日期字符串（一般用于日期字段表示为空）
+const NO_DATE = '0000-00-00';
 // 空时间字符串（一般用于时间字段表示为空，如：deleted_at为NO_TIME，就代表没有删除）
 const NO_TIME = '0000-00-00 00:00:00';
 
