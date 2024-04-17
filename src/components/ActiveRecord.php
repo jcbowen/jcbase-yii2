@@ -4,7 +4,6 @@ namespace Jcbowen\JcbaseYii2\components;
 
 use ArrayObject;
 use Yii;
-use yii\base\InvalidArgumentException;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveQuery;
 use yii\db\Exception;
@@ -64,6 +63,76 @@ class ActiveRecord extends \yii\db\ActiveRecord
         }
 
         return $query;
+    }
+
+    /**
+     * 分页查询
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array $options
+     *          - page 页码，默认1
+     *          - page_size 分页大小，默认10
+     *          - asArray 是否传递asArray给query
+     * @param callable|null $getQuery query回调
+     * @param callable|null $listEach 列表循环回调
+     * @return array
+     * @lasttime: 2024/4/17 11:17 AM
+     */
+    public static function findForPage(array $options = [], callable $getQuery = null, callable $listEach = null): array
+    {
+        $defaultOptions = [
+            'page'      => 1,
+            'page_size' => 10,
+            'asArray'   => true
+        ];
+        $options        = array_merge($defaultOptions, $options);
+
+        $page     = max(1, intval($options['page']));
+        $pageSize = intval($options['page_size']);
+        $pageSize = $pageSize <= 0 ? $defaultOptions['page_size'] : $pageSize;
+
+        $query = parent::find();
+
+        if (static::$cacheTime !== false) {
+            $dependency = ModelCacheDependency::create(static::class);
+            $query->cache(static::$cacheTime, $dependency);
+        }
+
+        $query = $query->limit($pageSize)->offset(($page - 1) * $pageSize);
+
+        if (is_callable($getQuery))
+            $query = call_user_func($getQuery, $query);
+
+        if ($options['asArray'])
+            $query = $query->asArray();
+
+        $list  = $query->all();
+        $total = $query->count();
+
+        if (!empty($list)) {
+            // 自动处理字段结构
+            foreach ($list as &$item) {
+                if (is_callable($listEach))
+                    $item = call_user_func($listEach, $item);
+                else {
+                    if (!$options['asArray']) {
+                        if (method_exists($item, 'toArray'))
+                            $item = $item->toArray();
+                    } else {
+                        (new FieldFilter)->set([
+                            'modelClass' => static::class,
+                        ])->de($item);
+                    }
+                }
+            }
+        }
+
+        return [
+            'list'  => $list,
+            'total' => $total
+        ];
     }
 
     /**
