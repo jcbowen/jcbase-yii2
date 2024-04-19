@@ -3,12 +3,12 @@
 namespace Jcbowen\JcbaseYii2\base;
 
 use Jcbowen\JcbaseYii2\components\BaseControllerTrait;
-use Jcbowen\JcbaseYii2\components\CurdActionTrait;
 use Jcbowen\JcbaseYii2\components\ErrCode;
 use Jcbowen\JcbaseYii2\components\Safe;
 use Jcbowen\JcbaseYii2\components\Template;
 use Jcbowen\JcbaseYii2\components\Util;
 use Yii;
+use yii\base\Exception;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use yii\web\Controller;
@@ -25,7 +25,6 @@ use yii\web\Response;
 class WebController extends Controller
 {
     use BaseControllerTrait;
-    use CurdActionTrait;
 
     public function init()
     {
@@ -79,17 +78,19 @@ class WebController extends Controller
      * @param string $redirect 跳转地址 refresh:刷新当前页，referer:返回上一页，其他:跳转到指定地址
      * @param string $type 提示类型 success:成功，error:失败，info:提示，warning:警告，ajax:ajax请求，sql:sql错误
      * @return string|Response
+     * @throws Exception
      * @lasttime: 2023/2/1 4:04 PM
      */
-    public function resultMessage($msg, string $redirect = '', string $type = '')
+    public function resultMessage(string $msg, string $redirect = '', string $type = '')
     {
-        global $_B;
-        if ($redirect == 'refresh') {
+        global $_B, $_GPC;
+
+        if ($redirect == 'refresh')
             $redirect = Url::to('', true);
-        }
-        if ($redirect == 'referer') {
+
+        if ($redirect == 'referer')
             $redirect = Util::getReferer();
-        }
+
         // $redirect = Safe::gpcUrl($redirect);
 
         if ($redirect == '')
@@ -137,43 +138,6 @@ class WebController extends Controller
     }
 
     /**
-     * 输出json结构数据到Response中
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     *
-     * @param string|integer $errCode
-     * @param string $errmsg
-     * @param mixed $data
-     * @param array $params
-     * @param string $returnType
-     * @return string|Response
-     * @lasttime: 2022/8/28 23:17
-     */
-    /*public function result($errCode = '0', string $errmsg = '', $data = [], array $params = [], string $returnType = 'exit')
-    {
-        return (new Util)->result($errCode, $errmsg, $data, $params, $returnType);
-    }*/
-
-    /**
-     * 输出json字符串
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     *
-     * @param string|integer $errCode
-     * @param string $errmsg
-     * @param mixed $data
-     * @param array $params
-     * @return string|Response
-     * @lasttime: 2023/1/13 1:33 PM
-     */
-    /*public function result_r($errCode = '0', string $errmsg = '', $data = [], array $params = [])
-    {
-        return $this->result($errCode, $errmsg, $data, $params, 'return');
-    }*/
-
-    /**
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -191,21 +155,6 @@ class WebController extends Controller
             $msg  = $data;
             $data = [];
         }
-        return $this->result(ErrCode::SUCCESS, $msg ?: 'ok', $data, $params, $returnType);
+        return (new Util)->result(ErrCode::SUCCESS, $msg ?: 'ok', $data, $params, $returnType);
     }
-
-    /**
-     * 将error数组转换Response输出
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     *
-     * @param mixed $error
-     * @return string|Response
-     * @lasttime: 2023/1/13 1:35 PM
-     */
-    /*public function resultError($error = [])
-    {
-        return (new Util)->resultError($error);
-    }*/
 }
