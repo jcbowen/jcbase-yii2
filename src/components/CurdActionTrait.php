@@ -348,6 +348,12 @@ trait CurdActionTrait
         $maxTime = Safe::gpcString(trim($_GPC['maxTime'])); // 上次查询数据里的最大时间
         $minTime = Safe::gpcString(trim($_GPC['minTime'])); // 上次查询数据里的最小时间
 
+        // 验证maxTime及minTime是否为Y-m-d H:i:s格式
+        if (!empty($maxTime) && !preg_match('/^\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}$/', $maxTime))
+            $maxTime = '';
+        if (!empty($minTime) && !preg_match('/^\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}$/', $minTime))
+            $minTime = '';
+
         // minTime和maxTime都不为空时，查询时间区间内的数据
         if (!empty($maxTime) && !empty($minTime))
             return ['between', $this->modelTableName . '.' . $this->loaderTimeField, $minTime, $maxTime];
