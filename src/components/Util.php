@@ -236,8 +236,11 @@ class Util
                 }
             }
             $urls = parse_url($src);
-            // 判断是本地资源还是附件
-            if (static::startsWith($src, Yii::$app->params['domain']['attachment_local']) && !static::strExists($src, '/static/'))
+            // 判断是本地资源还是远程附件
+            if (
+                static::startsWith($src, Yii::$app->params['domain']['attachment']) ||
+                (static::startsWith($src, Yii::$app->params['domain']['attachment_local']) && !static::strExists($src, '/static/'))
+            )
                 $src = substr($urls['path'], strpos($urls['path'], $type));
             else
                 $src = substr($urls['path'], strpos($urls['path'], '/static'));
