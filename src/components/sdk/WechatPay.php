@@ -61,7 +61,21 @@ class WechatPay extends Component
      * @var array 支付者信息
      */
     public $payer = [
-        'openid' => '', // 用户在直连商户appid下的唯一标识。 下单前需获取到用户的Openid。 示例值：oUpF8uMuAJO_M2pxb1Q9zNjWeS6o
+        'openid'    => '', // 用户在直连商户appid下的唯一标识。 下单前需获取到用户的Openid。 示例值：oUpF8uMuAJO_M2pxb1Q9zNjWeS6o
+        'auth_code' => '', // 【授权码】付款码支付授权码，即用户打开微信钱包显示的码。
+    ];
+
+    /**
+     * @var array 场景信息
+     */
+    public $sceneInfo = [
+        'device_id'  => '', // 选填，商户端设备号】 商户端设备号（门店号或收银设备ID）
+        'device_ip'  => '', // 选填，【商户端设备 IP】 商户端设备 IP。
+        'store_info' => [ // 必填，【商户门店信息】 商户门店信息。
+                          'id'     => '',
+                          // 【门店编号】 此参数与商家自定义编码(out_id)二选一必填。微信支付线下场所ID，格式为纯数字。基于合规要求与风险管理目的，线下条码支付时需传入用户实际付款的场景信息。
+                          'out_id' => '', // 【商家自定义编码】 此参数与门店(id)二选一必填。商户系统的门店编码，支持大小写英文字母、数字，仅支持utf-8格式。
+        ]
     ];
 
     /**
@@ -205,17 +219,121 @@ class WechatPay extends Component
     }
 
     /**
+     * 设置支付者信息
+     * 为空的信息将会被移除
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param array|string $data
+     *    - openid: 支付者openid
+     *    - auth_code: 授权码（付款码）
+     * @return $this
+     * @lasttime: 2024/5/25 11:15
+     */
+    public function payer($data = []): WechatPay
+    {
+        // 如果为字符串，就代表传的是openid（兼容旧版用法）
+        if (is_string($data))
+            $data = ['openid' => $data];
+
+        $this->payer = [
+            'openid'    => $data['openid'] ?? '',
+            'auth_code' => $data['auth_code'] ?? '',
+        ];
+
+        // 为空的直接移除
+        foreach ($this->payer as $key => $value)
+            if (empty($value))
+                unset($this->payer[$key]);
+
+        return $this;
+    }
+
+    /**
+     * 设置授权码(付款码)
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @param string $authCode
+     * @return $this
+     * @lasttime 2024/5/25 11:18:1
+     */
+    public function payerAuthCode(string $authCode = ''): WechatPay
+    {
+        $this->payer['auth_code'] = $authCode;
+        return $this;
+    }
+
+    /**
      * 设置支付者openid
      *
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param string $openid
      * @return $this
-     * @lasttime 2022/11/10 01:26
+     * @lasttime 2024/5/25 11:18:6
      */
-    public function payer(string $openid = ''): WechatPay
+    public function payerOpenid(string $openid = ''): WechatPay
     {
         $this->payer['openid'] = $openid;
+        return $this;
+    }
+
+    /**
+     * 设置场景信息
+     *
+     * @author Bowen
+     * @email 3308725087@qq.com
+     *
+     * @param array $data
+     * @return $this
+     * @lasttime: 2024/5/26 21:34
+     */
+    public function sceneInfo(array $data = []): WechatPay
+    {
+        $this->sceneInfo = [
+            'device_id' => $data['device_id'] ?? '',
+            'device_ip' => $data['device_ip'] ?? '',
+        ];
+        $this->storeInfo($data['store_info'] ?? []);
+
+        // 为空的直接移除
+        foreach ($this->sceneInfo as $key => $value)
+            if (empty($value))
+                unset($this->sceneInfo[$key]);
+
+        return $this;
+    }
+
+    /**
+     * 设置商户门店信息
+     *
+     * @author Bowen
+     * @email 3308725087@qq.com
+     *
+     * @param array $data
+     *    - id: 【门店编号】 此参数与商家自定义编码(out_id)二选一必填。微信支付线下场所ID，格式为纯数字。基于合规要求与风险管理目的，线下条码支付时需传入用户实际付款的场景信息。
+     *    - out_id: 【商家自定义编码】 此参数与门店(id)二选一必填。商户系统的门店编码，支持大小写英文字母、数字，仅支持utf-8格式。
+     * @return $this
+     * @lasttime: 2024/5/26 21:28
+     */
+    public function storeInfo(array $data = []): WechatPay
+    {
+        $this->sceneInfo['store_info'] = [
+            'id'     => $data['id'] ?? '',
+            'out_id' => $data['out_id'] ?? '',
+        ];
+
+        // 为空的直接移除
+        foreach ($this->sceneInfo['store_info'] as $key => $value)
+            if (empty($value))
+                unset($this->sceneInfo['store_info'][$key]);
+
+        // 如果没有传门店信息，这里默认设置一个
+        if (empty($this->sceneInfo['store_info']))
+            $this->sceneInfo['store_info']['out_id'] = 'jc001';
+
         return $this;
     }
 
@@ -312,6 +430,31 @@ class WechatPay extends Component
         if (empty($this->payer['openid']))
             $this->errors[] = '支付者openid不能为空';
 
+        if (empty($this->payer['auth_code']))
+            unset($this->payer['auth_code']);
+
+        return $this->checkTransactionsError();
+    }
+
+    /**
+     * 检查收款码支付交易参数是否有误
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return array|true
+     * @lasttime: 2024/5/25 11:01
+     */
+    public function checkAuthCodeError()
+    {
+        if (empty($this->payer['auth_code']))
+            $this->errors[] = '授权码不能为空';
+
+        if (empty($this->payer['openid']))
+            unset($this->payer['openid']);
+
+        $this->sceneInfo($this->sceneInfo);
+
         return $this->checkTransactionsError();
     }
 
@@ -404,6 +547,51 @@ class WechatPay extends Component
                     $this->prepayId = $body['prepay_id'];
                 }
                 return $body;
+            }
+            return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
+        } catch (Exception $e) {
+            return Util::error($e->getCode(), $e->getMessage(), [
+                'errcode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * CODE付款码
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @return array|bool|mixed
+     * @lasttime 2024/5/25 10:33:23
+     */
+    public function CODE()
+    {
+        $check = $this->checkAuthCodeError();
+        if (Util::isError($check))
+            return $check;
+
+        try {
+            $jsonData = [
+                'appid'        => $this->appId,
+                'mchid'        => $this->merchantId,
+                'description'  => $this->description ?? '商品' . date('YmdHis'),
+                'out_trade_no' => $this->outTradeNo ?? 'jc' . date('YmdHis') . '000' . Util::random(4, true),
+                'payer'        => $this->payer,
+                'amount'       => $this->amount,
+                'scene_info'   => $this->sceneInfo,
+            ];
+
+            if (!empty($this->attach))
+                $jsonData['attach'] = $this->attach;
+
+            $resp = $this->instance->chain('v3/pay/transactions/codepay')->post([
+                'debug' => true,
+                'json'  => $jsonData,
+            ]);
+            if ($resp->getStatusCode() == 200) {
+                $body = $resp->getBody();
+                return json_decode($body, true);
             }
             return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
         } catch (Exception $e) {
@@ -625,6 +813,46 @@ class WechatPay extends Component
             if ($resp->getStatusCode() == 200) {
                 $body = $resp->getBody();
                 return json_decode($body, true);
+            }
+            return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
+        } catch (Exception $e) {
+            return Util::error($e->getCode(), $e->getMessage(), [
+                'errcode' => $e->getCode(),
+                'errmsg'  => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * 撤销
+     * 支付交易返回失败或支付系统超时，调用该接口撤销交易。
+     * 如果此订单用户支付失败，微信支付系统会将此订单关闭；
+     * 如果用户支付成功，微信支付系统会将此订单资金退还给用户。
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $outRefundNo
+     * @return array|mixed
+     * @lasttime: 2024/5/25 11:27
+     */
+    public function reverse($outRefundNo = null)
+    {
+        $outRefundNo = $outRefundNo ?? $this->outTradeNo;
+        try {
+            $jsonData = [
+                'appid' => $this->appId,
+                'mchid' => $this->merchantId,
+            ];
+
+            $resp = $this->instance
+                ->chain("v3/pay/transactions/out-trade-no/$outRefundNo/reverse")
+                ->post([
+                    'json' => $jsonData,
+                ]);
+            if ($resp->getStatusCode() == 200) {
+                $body = $resp->getBody();
+                return @json_decode($body, true);
             }
             return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
         } catch (Exception $e) {
