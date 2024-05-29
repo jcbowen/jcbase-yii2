@@ -25,6 +25,13 @@ use yii\web\Response;
 class Util
 {
     /**
+     * @var array 代表响应正确的code
+     */
+    public static $successCodes = [
+        ErrCode::SUCCESS,
+    ];
+
+    /**
      *
      * @author Bowen
      * @email bowen@jiuchet.com
@@ -1068,13 +1075,16 @@ class Util
      * @author Bowen
      * @email bowen@jiuchet.com
      *
-     * @param $data
+     * @param mixed $data 需要验证的数据
+     * @param mixed $successCodes 验证成功的状态码
      * @return bool
      * @lasttime: 2023/2/1 3:47 PM
      */
-    public static function isError($data): bool
+    public static function isError($data, $successCodes = []): bool
     {
-        if (empty($data) || (is_array($data) && array_key_exists('errcode', $data) && $data['errcode'] != ErrCode::SUCCESS))
+        $codes = $successCodes ?: static::$successCodes;
+        if (!is_array($codes)) $codes = [$codes];
+        if (empty($data) || (is_array($data) && array_key_exists('errcode', $data) && in_array($data, $codes)))
             return true;
         else
             return false;
