@@ -14,6 +14,7 @@ use WeChatPay\Util\PemUtil;
 use Yii;
 use yii\base\Component;
 use yii\base\ErrorException;
+use yii\base\InvalidArgumentException;
 
 class WechatPay extends Component
 {
@@ -71,10 +72,12 @@ class WechatPay extends Component
     public $sceneInfo = [
         'device_id'  => '', // 选填，商户端设备号】 商户端设备号（门店号或收银设备ID）
         'device_ip'  => '', // 选填，【商户端设备 IP】 商户端设备 IP。
-        'store_info' => [ // 必填，【商户门店信息】 商户门店信息。
-                          'id'     => '',
-                          // 【门店编号】 此参数与商家自定义编码(out_id)二选一必填。微信支付线下场所ID，格式为纯数字。基于合规要求与风险管理目的，线下条码支付时需传入用户实际付款的场景信息。
-                          'out_id' => '', // 【商家自定义编码】 此参数与门店(id)二选一必填。商户系统的门店编码，支持大小写英文字母、数字，仅支持utf-8格式。
+        // 必填，【商户门店信息】 商户门店信息。
+        'store_info' => [
+            // 【门店编号】 此参数与商家自定义编码(out_id)二选一必填。微信支付线下场所ID，格式为纯数字。基于合规要求与风险管理目的，线下条码支付时需传入用户实际付款的场景信息。
+            'id'     => '',
+            // 【商家自定义编码】 此参数与门店(id)二选一必填。商户系统的门店编码，支持大小写英文字母、数字，仅支持utf-8格式。
+            'out_id' => '',
         ]
     ];
 
@@ -99,6 +102,16 @@ class WechatPay extends Component
     public $errors = [];
 
     /**
+     * @var string 证书路径
+     */
+    public $certPath = '@common/pay/wechat/';
+
+    /**
+     * @var bool 是否在请求中开启调试模式
+     */
+    public $debug = false;
+
+    /**
      * 构建APIv3客户端实例
      *
      * @author Bowen
@@ -116,16 +129,15 @@ class WechatPay extends Component
         $this->notifyUrl                 = Yii::$app->params[$type . "Config"]['notifyUrl'];
 
         // 从本地文件中加载「商户API私钥」，「商户API私钥」会用来生成请求的签名
-        $merchantPrivateKeyFilePath = Yii::getAlias('@common/pay/wechat/') . $this->merchantId . '/apiclient_key.pem';
-        if (!file_exists($merchantPrivateKeyFilePath)) {
-            $this->errors[] = '商户API私钥文件不存在';
-            return $this;
-        }
+        $merchantPrivateKeyFilePath = Yii::getAlias($this->certPath) . $this->merchantId . '/apiclient_key.pem';
+        if (!file_exists($merchantPrivateKeyFilePath))
+            throw new InvalidArgumentException('商户API私钥文件不存在');
+
         $merchantPrivateKeyFilePath = 'file://' . $merchantPrivateKeyFilePath;
         $merchantPrivateKeyInstance = Rsa::from($merchantPrivateKeyFilePath);
 
         // 从本地文件中加载「微信支付平台证书」，用来验证微信支付应答的签名
-        $platformCertificateFilePath = 'file://' . Yii::getAlias('@common/pay/wechat/') . $this->merchantId . '/cert.pem';
+        $platformCertificateFilePath = 'file://' . Yii::getAlias($this->certPath) . $this->merchantId . '/cert.pem';
         $platformPublicKeyInstance   = Rsa::from($platformCertificateFilePath, Rsa::KEY_TYPE_PUBLIC);
 
         // 从「微信支付平台证书」中获取「证书序列号」
@@ -473,133 +485,30 @@ class WechatPay extends Component
             return $check;
         }
 
+        $jsonData = [
+            'mchid'        => $this->merchantId,
+            'out_trade_no' => $this->outTradeNo ?? 'jc' . date('YmdHis') . '000' . Util::random(4, true),
+            'appid'        => $this->appId,
+            'description'  => $this->description ?? '商品' . date('YmdHis'),
+            'notify_url'   => $this->notifyUrl,
+            'amount'       => $this->amount,
+            'payer'        => $this->payer,
+        ];
+
+        if (!empty($this->attach)) {
+            $jsonData['attach'] = $this->attach;
+        }
+
         try {
-            $jsonData = [
-                'mchid'        => $this->merchantId,
-                'out_trade_no' => $this->outTradeNo ?? 'jc' . date('YmdHis') . '000' . Util::random(4, true),
-                'appid'        => $this->appId,
-                'description'  => $this->description ?? '商品' . date('YmdHis'),
-                'notify_url'   => $this->notifyUrl,
-                'amount'       => $this->amount,
-                'payer'        => $this->payer,
-            ];
-
-            if (!empty($this->attach)) {
-                $jsonData['attach'] = $this->attach;
-            }
-
             $resp = $this->instance->chain('v3/pay/transactions/jsapi')->post([
-                'json' => $jsonData,
-            ]);
-            if ($resp->getStatusCode() == 200) {
-                $body = $resp->getBody();
-                $body = json_decode($body, true);
-                if (isset($body['prepay_id'])) {
-                    $this->prepayId = $body['prepay_id'];
-                }
-                return $body;
-            }
-            return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
-        } catch (Exception $e) {
-            return Util::error($e->getCode(), $e->getMessage(), [
-                'errcode' => $e->getCode(),
-                'errmsg'  => $e->getMessage(),
-            ]);
-        }
-    }
-
-    /**
-     * app下单
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     *
-     * @return array|mixed|true
-     * @lasttime: 2023/3/10 12:15
-     */
-    public function APP()
-    {
-        $check = $this->checkTransactionsError();
-        if (Util::isError($check))
-            return $check;
-
-        try {
-            $jsonData = [
-                'mchid'        => $this->merchantId,
-                'out_trade_no' => $this->outTradeNo ?? 'jc' . date('YmdHis') . '000' . Util::random(4, true),
-                'appid'        => $this->appId,
-                'description'  => $this->description ?? '商品' . date('YmdHis'),
-                'notify_url'   => $this->notifyUrl,
-                'amount'       => $this->amount,
-            ];
-
-            if (!empty($this->attach)) {
-                $jsonData['attach'] = $this->attach;
-            }
-
-            $resp = $this->instance->chain('v3/pay/transactions/app')->post([
-                'json' => $jsonData,
-            ]);
-            if ($resp->getStatusCode() == 200) {
-                $body = $resp->getBody();
-                $body = json_decode($body, true);
-                if (isset($body['prepay_id'])) {
-                    $this->prepayId = $body['prepay_id'];
-                }
-                return $body;
-            }
-            return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
-        } catch (Exception $e) {
-            return Util::error($e->getCode(), $e->getMessage(), [
-                'errcode' => $e->getCode(),
-                'errmsg'  => $e->getMessage(),
-            ]);
-        }
-    }
-
-    /**
-     * CODE付款码
-     *
-     * @author Bowen
-     * @email bowen@jiuchet.com
-     * @return array|bool|mixed
-     * @lasttime 2024/5/25 10:33:23
-     */
-    public function CODE()
-    {
-        $check = $this->checkAuthCodeError();
-        if (Util::isError($check))
-            return $check;
-
-        try {
-            $jsonData = [
-                'appid'        => $this->appId,
-                'mchid'        => $this->merchantId,
-                'description'  => $this->description ?? '商品' . date('YmdHis'),
-                'out_trade_no' => $this->outTradeNo ?? 'jc' . date('YmdHis') . '000' . Util::random(4, true),
-                'payer'        => $this->payer,
-                'amount'       => $this->amount,
-                'scene_info'   => $this->sceneInfo,
-            ];
-
-            if (!empty($this->attach))
-                $jsonData['attach'] = $this->attach;
-
-            $resp = $this->instance->chain('v3/pay/transactions/codepay')->post([
-                'debug' => true,
+                'debug' => $this->debug,
                 'json'  => $jsonData,
             ]);
-            if ($resp->getStatusCode() == 200) {
-                $body = $resp->getBody();
-                return json_decode($body, true);
-            }
-            return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
         } catch (Exception $e) {
-            return Util::error($e->getCode(), $e->getMessage(), [
-                'errcode' => $e->getCode(),
-                'errmsg'  => $e->getMessage(),
-            ]);
+            return Util::error($e->getCode(), $e->getMessage());
         }
+
+        return $this->returnResp($resp);
     }
 
     /**
@@ -616,7 +525,7 @@ class WechatPay extends Component
         if (empty($this->prepayId))
             return Util::error(ErrCode::PARAMETER_ERROR, 'prepayId不能为空');
 
-        $merchantPrivateKeyFilePath = 'file://' . Yii::getAlias('@common/pay/wechat/') . $this->merchantId . '/apiclient_key.pem';
+        $merchantPrivateKeyFilePath = 'file://' . Yii::getAlias($this->certPath) . $this->merchantId . '/apiclient_key.pem';
         $merchantPrivateKeyInstance = Rsa::from($merchantPrivateKeyFilePath);
 
         if ($this->payType == 'APP') {
@@ -664,6 +573,84 @@ class WechatPay extends Component
     }
 
     /**
+     * app下单
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return array|mixed|true
+     * @lasttime: 2023/3/10 12:15
+     */
+    public function APP()
+    {
+        $check = $this->checkTransactionsError();
+        if (Util::isError($check))
+            return $check;
+
+        $jsonData = [
+            'mchid'        => $this->merchantId,
+            'out_trade_no' => $this->outTradeNo ?? 'jc' . date('YmdHis') . '000' . Util::random(4, true),
+            'appid'        => $this->appId,
+            'description'  => $this->description ?? '商品' . date('YmdHis'),
+            'notify_url'   => $this->notifyUrl,
+            'amount'       => $this->amount,
+        ];
+
+        if (!empty($this->attach))
+            $jsonData['attach'] = $this->attach;
+
+        try {
+            $resp = $this->instance->chain('v3/pay/transactions/app')->post([
+                'debug' => $this->debug,
+                'json'  => $jsonData,
+            ]);
+        } catch (Exception $e) {
+            return Util::error($e->getCode(), $e->getMessage());
+        }
+
+        return $this->returnResp($resp);
+    }
+
+    /**
+     * CODE付款码
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @return array|bool|mixed
+     * @lasttime 2024/5/25 10:33:23
+     */
+    public function CODE()
+    {
+        $check = $this->checkAuthCodeError();
+        if (Util::isError($check))
+            return $check;
+
+        $jsonData = [
+            'appid'        => $this->appId,
+            'mchid'        => $this->merchantId,
+            'description'  => $this->description ?? '商品' . date('YmdHis'),
+            'out_trade_no' => $this->outTradeNo ?? 'jc' . date('YmdHis') . '000' . Util::random(4, true),
+            'payer'        => $this->payer,
+            'amount'       => $this->amount,
+            'scene_info'   => $this->sceneInfo,
+        ];
+
+        if (!empty($this->attach))
+            $jsonData['attach'] = $this->attach;
+
+        try {
+            $resp = $this->instance->chain('v3/pay/transactions/codepay')->post([
+                'debug' => true,
+                'json'  => $jsonData,
+            ]);
+        } catch (Exception $e) {
+            return Util::error($e->getCode(), $e->getMessage());
+        }
+
+        return $this->returnResp($resp);
+    }
+
+    /**
      * 订单查询
      * 默认通过商户订单号查询，如果传入了微信支付订单号，则以微信支付订单号查询
      *
@@ -678,25 +665,20 @@ class WechatPay extends Component
         if (empty($transactionId) && empty($this->outTradeNo))
             return Util::error(ErrCode::PARAMETER_ERROR, 'transactionId和outTradeNo不能同时为空');
 
-        if (!empty($transactionId)) {
+        if (!empty($transactionId))
             $path = 'v3/pay/transactions/id/' . $transactionId . '?mchid=' . $this->merchantId;
-        } else {
+        else
             $path = 'v3/pay/transactions/out-trade-no/' . $this->outTradeNo . '?mchid=' . $this->merchantId;
-        }
 
         try {
-            $resp = $this->instance->chain($path)->get();
-            if ($resp->getStatusCode() == 200) {
-                $body = $resp->getBody();
-                return json_decode($body, true);
-            }
-            return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
-        } catch (Exception $e) {
-            return Util::error($e->getCode(), $e->getMessage(), [
-                'errcode' => $e->getCode(),
-                'errmsg'  => $e->getMessage(),
+            $resp = $this->instance->chain($path)->get([
+                'debug' => $this->debug,
             ]);
+        } catch (Exception $e) {
+            return Util::error($e->getCode(), $e->getMessage());
         }
+
+        return $this->returnResp($resp);
     }
 
     /**
@@ -714,18 +696,15 @@ class WechatPay extends Component
             return Util::error(ErrCode::PARAMETER_ERROR, 'outRefundNo不能为空');
 
         try {
-            $resp = $this->instance->chain('v3/refund/domestic/refunds/' . $outRefundNo)->get();
-            if ($resp->getStatusCode() == 200) {
-                $body = $resp->getBody();
-                return json_decode($body, true);
-            }
-            return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
+            $resp = $this->instance->chain('v3/refund/domestic/refunds/' . $outRefundNo)
+                ->get([
+                    'debug' => $this->debug,
+                ]);
         } catch (Exception $e) {
-            return Util::error($e->getCode(), $e->getMessage(), [
-                'errcode' => $e->getCode(),
-                'errmsg'  => $e->getMessage(),
-            ]);
+            return Util::error($e->getCode(), $e->getMessage());
         }
+
+        return $this->returnResp($resp);
     }
 
     /**
@@ -742,23 +721,17 @@ class WechatPay extends Component
             return Util::error(ErrCode::PARAMETER_ERROR, 'outTradeNo不能为空');
 
         try {
-            $path = 'v3/pay/transactions/out-trade-no/' . $this->outTradeNo . '/close';
-            $resp = $this->instance->chain($path)->post([
-                'json' => [
+            $resp = $this->instance->chain('v3/pay/transactions/out-trade-no/' . $this->outTradeNo . '/close')->post([
+                'debug' => $this->debug,
+                'json'  => [
                     'mchid' => $this->merchantId,
                 ],
             ]);
-            if ($resp->getStatusCode() == 200) {
-                $body = $resp->getBody();
-                return json_decode($body, true);
-            }
-            return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
         } catch (Exception $e) {
-            return Util::error($e->getCode(), $e->getMessage(), [
-                'errcode' => $e->getCode(),
-                'errmsg'  => $e->getMessage(),
-            ]);
+            return Util::error($e->getCode(), $e->getMessage());
         }
+
+        return $this->returnResp($resp);
     }
 
     /**
@@ -786,41 +759,35 @@ class WechatPay extends Component
         if (empty($this->notifyUrl))
             return Util::error(ErrCode::PARAMETER_ERROR, 'notifyUrl不能为空');
 
+        $jsonData = [
+            'out_refund_no' => $outRefundNo,
+
+            'notify_url' => $this->notifyUrl,
+            'amount'     => [
+                'refund'   => $refundAmount,
+                'total'    => $totalAmount,
+                'currency' => 'CNY',
+            ],
+        ];
+
+        if (!empty($transactionId))
+            $jsonData['transaction_id'] = $transactionId;
+        else
+            $jsonData['out_trade_no'] = $this->outTradeNo;
+
+        if (!empty($refundReason))
+            $jsonData['reason'] = $refundReason;
+
         try {
-            $jsonData = [
-                'out_refund_no' => $outRefundNo,
-
-                'notify_url' => $this->notifyUrl,
-                'amount'     => [
-                    'refund'   => $refundAmount,
-                    'total'    => $totalAmount,
-                    'currency' => 'CNY',
-                ],
-            ];
-
-            if (!empty($transactionId)) {
-                $jsonData['transaction_id'] = $transactionId;
-            } else {
-                $jsonData['out_trade_no'] = $this->outTradeNo;
-            }
-
-            if (!empty($refundReason))
-                $jsonData['reason'] = $refundReason;
-
             $resp = $this->instance->chain('v3/refund/domestic/refunds')->post([
-                'json' => $jsonData,
+                'debug' => $this->debug,
+                'json'  => $jsonData,
             ]);
-            if ($resp->getStatusCode() == 200) {
-                $body = $resp->getBody();
-                return json_decode($body, true);
-            }
-            return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
         } catch (Exception $e) {
-            return Util::error($e->getCode(), $e->getMessage(), [
-                'errcode' => $e->getCode(),
-                'errmsg'  => $e->getMessage(),
-            ]);
+            return Util::error($e->getCode(), $e->getMessage());
         }
+
+        return $this->returnResp($resp);
     }
 
     /**
@@ -850,17 +817,10 @@ class WechatPay extends Component
                 ->post([
                     'json' => $jsonData,
                 ]);
-            if ($resp->getStatusCode() == 200) {
-                $body = $resp->getBody();
-                return @json_decode($body, true);
-            }
-            return Util::error($resp->getStatusCode(), '请求失败', $resp->getBody());
         } catch (Exception $e) {
-            return Util::error($e->getCode(), $e->getMessage(), [
-                'errcode' => $e->getCode(),
-                'errmsg'  => $e->getMessage(),
-            ]);
+            return Util::error($e->getCode(), $e->getMessage());
         }
+        return $this->returnResp($resp);
     }
 
     /**
@@ -881,7 +841,7 @@ class WechatPay extends Component
         $inBody               = file_get_contents('php://input');
 
         // 根据通知的平台证书序列号，查询本地平台证书文件，
-        $platformPublicKeyInstance = Rsa::from('file://' . Yii::getAlias('@common/pay/wechat/') . $this->merchantId . '/cert.pem', Rsa::KEY_TYPE_PUBLIC);
+        $platformPublicKeyInstance = Rsa::from('file://' . Yii::getAlias($this->certPath) . $this->merchantId . '/cert.pem', Rsa::KEY_TYPE_PUBLIC);
 
         // 检查通知时间偏移量，允许5分钟之内的偏移
         $timeOffsetStatus = 300 >= abs(Formatter::timestamp() - (int)$inWechatpayTimestamp);
@@ -908,5 +868,27 @@ class WechatPay extends Component
         $inBodyResource = AesGcm::decrypt($ciphertext, $this->apiV3Key, $nonce, $aad);
         // 把解密后的文本转换为PHP Array数组
         return (array)json_decode($inBodyResource, true);
+    }
+
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $resp
+     * @return array
+     * @lasttime: 2024/5/29 下午1:35
+     */
+    private function returnResp($resp): array
+    {
+        $statusCode = $resp->getStatusCode();
+        $body       = $resp->getBody();
+        $body2      = @json_decode($body, true);
+        $body       = $body2 ?? $body;
+        if (isset($body['prepay_id']))
+            $this->prepayId = $body['prepay_id'];
+        if ($statusCode == 200)
+            return Util::error(ErrCode::SUCCESS, '处理完成', $body);
+        return Util::error($resp->getStatusCode(), '请求成功', $body);
     }
 }
