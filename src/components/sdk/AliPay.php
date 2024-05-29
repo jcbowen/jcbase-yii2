@@ -16,6 +16,7 @@ use Jcbowen\JcbaseYii2\components\Util;
 use stdClass;
 use Yii;
 use yii\base\Component;
+use yii\base\InvalidArgumentException;
 use yii\helpers\ArrayHelper;
 
 class AliPay extends Component
@@ -98,6 +99,11 @@ class AliPay extends Component
     public $errors = [];
 
     /**
+     * @var string 证书路径
+     */
+    public $certPath = '@common/pay/alipay/';
+
+    /**
      * 构建支付宝支付实例
      *
      * @author Bowen
@@ -108,12 +114,11 @@ class AliPay extends Component
     public function build(): AliPay
     {
         $this->appId                  = Yii::$app->params['alipay']['app_id'];
-        $this->rsaPrivateKeyFile      = Yii::getAlias(Yii::$app->params['alipay']['rsaPrivateKeyFile'] ?? "@common/pay/alipay/$this->appId/rsa_private_key.txt");
-        $this->alipayRsaPublicKeyFile = Yii::getAlias(Yii::$app->params['alipay']['alipayRsaPublicKeyFile'] ?? "@common/pay/alipay/$this->appId/alipay_rsa_public_key.txt");
-        if (!file_exists($this->rsaPrivateKeyFile)) {
-            $this->errors[] = '应用私钥文件不存在';
-            return $this;
-        }
+        $this->rsaPrivateKeyFile      = Yii::getAlias(Yii::$app->params['alipay']['rsaPrivateKeyFile'] ?? $this->certPath . "$this->appId/rsa_private_key.txt");
+        $this->alipayRsaPublicKeyFile = Yii::getAlias(Yii::$app->params['alipay']['alipayRsaPublicKeyFile'] ?? $this->certPath . "$this->appId/alipay_rsa_public_key.txt");
+        if (!file_exists($this->rsaPrivateKeyFile))
+            throw new InvalidArgumentException('商户API私钥文件不存在');
+
         $this->notifyUrl = $this->notifyUrl ?: Yii::$app->params['alipay']['notifyUrl'];
 
         // 获取应用私钥和支付宝公钥
