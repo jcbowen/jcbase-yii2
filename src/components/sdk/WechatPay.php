@@ -640,7 +640,7 @@ class WechatPay extends Component
 
         try {
             $resp = $this->instance->chain('v3/pay/transactions/codepay')->post([
-                'debug' => true,
+                'debug' => $this->debug,
                 'json'  => $jsonData,
             ]);
         } catch (Exception $e) {
