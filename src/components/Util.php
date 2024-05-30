@@ -1084,7 +1084,7 @@ class Util
     {
         $codes = $successCodes ?: static::$successCodes;
         if (!is_array($codes)) $codes = [$codes];
-        if (empty($data) || (is_array($data) && array_key_exists('errcode', $data) && in_array($data, $codes)))
+        if (empty($data) || (is_array($data) && array_key_exists('errcode', $data) && in_array($data['errcode'], $codes)))
             return true;
         else
             return false;
