@@ -629,7 +629,7 @@ class WechatPay extends Component
             'appid'        => $this->appId,
             'mchid'        => $this->merchantId,
             'description'  => $this->description ?? '商品' . date('YmdHis'),
-            'out_trade_no' => $this->outTradeNo ?? 'jc' . date('YmdHis') . '000' . Util::random(4, true),
+            'out_trade_no' => $this->getOutTradeNo(true),
             'payer'        => $this->payer,
             'amount'       => $this->amount,
             'scene_info'   => $this->sceneInfo,
@@ -890,5 +890,24 @@ class WechatPay extends Component
         if ($statusCode == 200)
             return Util::error(ErrCode::SUCCESS, '处理完成', $body);
         return Util::error($resp->getStatusCode(), '请求成功', $body);
+    }
+
+    /**
+     * 获取订单号
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param bool $emptyNew 为空时是否生成一个新的
+     * @return string
+     * @lasttime: 2024/5/30 下午5:29
+     */
+    private function getOutTradeNo(bool $emptyNew = false): string
+    {
+        $outTradeNo = $this->outTradeNo;
+        if ($emptyNew && empty($outTradeNo)) {
+            $outTradeNo = $this->outTradeNo = 'jc' . date('YmdHis') . '000' . Util::random(4, true);
+        }
+        return $outTradeNo;
     }
 }
