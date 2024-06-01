@@ -887,9 +887,20 @@ class WechatPay extends Component
         $body       = $body2 ?? $body;
         if (isset($body['prepay_id']))
             $this->prepayId = $body['prepay_id'];
+        // 直接处理成功
         if ($statusCode == 200)
-            return Util::error(ErrCode::SUCCESS, '处理完成', $body);
-        return Util::error($resp->getStatusCode(), '请求成功', $body);
+            return Util::error(ErrCode::SUCCESS, 'success', $body, [
+                'statusCode' => $statusCode,
+            ]);
+        // 等待用户支付
+        if ($statusCode == 202 && !empty($body['trade_state']) && $body['trade_state'] == 'USERPAYING')
+            return Util::error(ErrCode::SUCCESS, 'USERPAYING', $body, [
+                'statusCode' => $statusCode,
+            ]);
+        // 其他情况
+        return Util::error($resp->getStatusCode(), '请求成功', $body, [
+            'statusCode' => $statusCode,
+        ]);
     }
 
     /**
