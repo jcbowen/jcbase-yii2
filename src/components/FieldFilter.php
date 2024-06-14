@@ -182,8 +182,8 @@ class FieldFilter
                 }
             }
             // 将_extend字段合并，并删除_extend字段
-            if (isset($fields['_extend'])) {
-                $fields = ArrayHelper::merge($fields['_extend'], $fields);
+            if (!empty($fields['_extend']) && is_array($fields['_extend'])) {
+                $fields = ArrayHelper::merge($fields, $fields['_extend']);
                 unset($fields['_extend']);
             }
         }
