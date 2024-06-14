@@ -3,6 +3,7 @@
 namespace Jcbowen\JcbaseYii2\components;
 
 use Yii;
+use yii\helpers\ArrayHelper;
 
 class FieldFilter
 {
@@ -179,6 +180,11 @@ class FieldFilter
                         $field = $field != NO_TIME ? $field : '';
                         break;
                 }
+            }
+            // 将_extend字段合并，并删除_extend字段
+            if (isset($fields['_extend'])) {
+                $fields = ArrayHelper::merge($fields['_extend'], $fields);
+                unset($fields['_extend']);
             }
         }
 
