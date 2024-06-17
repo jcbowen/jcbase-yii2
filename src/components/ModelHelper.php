@@ -27,7 +27,7 @@ trait ModelHelper
      * @return array|bool
      * @lasttime: 2022/12/28 10:29 AM
      */
-    protected function toSave(ActiveRecord $model, array $data = [], string $formName = '')
+    public function toSave(ActiveRecord $model, array $data = [], string $formName = '')
     {
         $this->model        = $model;
         $this->_FieldFilter = new FieldFilter($model);
@@ -114,7 +114,7 @@ trait ModelHelper
      * @lasttime: 2022/8/28 23:03
      * @throws InvalidArgumentException
      */
-    public function filedExist(string $field): bool
+    protected function filedExist(string $field): bool
     {
         $this->check_FieldFilter();
         return $this->_FieldFilter->filedExist($field);
@@ -129,7 +129,7 @@ trait ModelHelper
      * @throws InvalidArgumentException
      * @lasttime: 2022/8/28 23:02
      */
-    public function getAttributes(): array
+    protected function getAttributes(): array
     {
         $this->check_FieldFilter();
         return $this->_FieldFilter->getAttributes();
