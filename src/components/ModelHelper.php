@@ -2,12 +2,14 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
-use InvalidArgumentException;
-use \yii\db\ActiveRecord;
+use Yii;
+use yii\base\InvalidArgumentException;
+use yii\db\ActiveRecord;
 
 trait ModelHelper
 {
     //---------- 其他方法 ----------/
+    /** @var ActiveRecord */
     public $model;
 
     /** @var FieldFilter */
@@ -54,6 +56,7 @@ trait ModelHelper
      *
      * @param $data
      * @return array
+     * @throws InvalidArgumentException
      * @lasttime: 2022/8/28 23:03
      */
     protected function filterData($data): array
@@ -109,9 +112,11 @@ trait ModelHelper
      * @param string $field
      * @return bool
      * @lasttime: 2022/8/28 23:03
+     * @throws InvalidArgumentException
      */
     public function filedExist(string $field): bool
     {
+        $this->check_FieldFilter();
         return $this->_FieldFilter->filedExist($field);
     }
 
@@ -120,13 +125,33 @@ trait ModelHelper
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     *
      * @return array
+     * @throws InvalidArgumentException
      * @lasttime: 2022/8/28 23:02
      */
     public function getAttributes(): array
     {
+        $this->check_FieldFilter();
         return $this->_FieldFilter->getAttributes();
+    }
+
+    /**
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     * @throws InvalidArgumentException
+     *
+     * @lasttime: 2024/6/17 13:31
+     */
+    private function check_FieldFilter()
+    {
+        if (empty($this->_FieldFilter)) {
+            if (empty($this->model)) {
+                Yii::error('未初始化模型', __METHOD__);
+                throw new InvalidArgumentException('模型不存在');
+            }
+            $this->_FieldFilter = new FieldFilter($this->model);
+        }
     }
 }
 
