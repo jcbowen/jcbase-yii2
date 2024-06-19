@@ -1361,6 +1361,7 @@ class Util
             $result = array_merge($result, $params);
         }
         $result['totalCount'] = $result['count'];
+        Yii::info($result, __METHOD__);
         if ($_GPC['print_result'] == 1) {
             print_r($result);
             $this->_end();
