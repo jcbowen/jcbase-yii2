@@ -40,9 +40,7 @@ trait CurdActionTrait
     /** @var string 数据表名称 */
     public $modelTableName;
 
-    /**
-     * @var ActiveRecord 数据模型实例
-     */
+    /** @var ActiveRecord 数据模型实例 */
     public $modelInstance;
 
     /** @var array 该表拥有的字段 */
@@ -53,6 +51,9 @@ trait CurdActionTrait
 
     /** @var string 空时间字符 */
     public $noTime = '0000-00-00 00:00:00';
+
+    /** @var string 数据表查询别名 */
+    public $modelQueryAlias;
 
     //---------- 以下赋值于actionCreate/actionUpdate之后 ----------/
 
@@ -110,6 +111,8 @@ trait CurdActionTrait
         /** @var ActiveQuery $row */
         $row = call_user_func($this->modelClass . '::find');
         $row = $row->select($fields);
+        if (!empty($this->modelQueryAlias))
+            $row->alias($this->modelQueryAlias);
 
         // 用于补充查询
         $result = $this->getListRow($row);
@@ -118,7 +121,7 @@ trait CurdActionTrait
 
         // 仅在存在deleted_at字段时才进行软删除过滤
         if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
-            $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
+            $row = $row->andWhere([($this->modelQueryAlias ?: $this->modelTableName) . '.deleted_at' => $this->noTime]);
 
         if (!empty($where)) $row = $row->andWhere($where);
         $row = $row->andFilterWhere($filterWhere);
@@ -187,7 +190,7 @@ trait CurdActionTrait
      */
     public function getListFields()
     {
-        return $this->modelTableName . '.*';
+        return ($this->modelQueryAlias ?: $this->modelTableName) . '.*';
     }
 
     /**
@@ -292,6 +295,8 @@ trait CurdActionTrait
         /** @var ActiveQuery $row */
         $row = call_user_func($this->modelClass . '::find');
         $row->select($fields);
+        if (!empty($this->modelQueryAlias))
+            $row->alias($this->modelQueryAlias);
 
         // 用于补充查询
         $result = $this->getLoaderRow($row);
@@ -300,7 +305,7 @@ trait CurdActionTrait
 
         // 仅在存在deleted_at字段时才进行软删除过滤
         if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
-            $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
+            $row->andWhere([($this->modelQueryAlias ?: $this->modelTableName) . '.deleted_at' => $this->noTime]);
 
         if (!empty($where)) $row->andWhere($where);
         $row->andFilterWhere($filterWhere);
@@ -356,11 +361,21 @@ trait CurdActionTrait
 
         // minTime和maxTime都不为空时，查询时间区间内的数据
         if (!empty($maxTime) && !empty($minTime))
-            return ['between', $this->modelTableName . '.' . $this->loaderTimeField, $minTime, $maxTime];
+            return [
+                'between',
+                ($this->modelQueryAlias ?: $this->modelTableName) . '.' . $this->loaderTimeField,
+                $minTime, $maxTime
+            ];
         // 只传minTime意味着时间为倒叙，所以只查询小于minTime的数据
-        if (!empty($minTime)) return ['<', $this->modelTableName . '.' . $this->loaderTimeField, $minTime];
+        if (!empty($minTime))
+            return [
+                '<',
+                ($this->modelQueryAlias ?: $this->modelTableName) . '.' . $this->loaderTimeField,
+                $minTime
+            ];
         // 只传maxTime意味着时间为正序，所以只查询大于maxTime的数据
-        if (!empty($maxTime)) return ['>', $this->modelTableName . '.' . $this->loaderTimeField, $maxTime];
+        if (!empty($maxTime))
+            return ['>', ($this->modelQueryAlias ?: $this->modelTableName) . '.' . $this->loaderTimeField, $maxTime];
 
         return [];
     }
@@ -389,7 +404,7 @@ trait CurdActionTrait
      */
     public function getLoaderFields()
     {
-        return $this->modelTableName . '.*';
+        return ($this->modelQueryAlias ?: $this->modelTableName) . '.*';
     }
 
     /**
@@ -408,9 +423,9 @@ trait CurdActionTrait
         if (!isset($_GPC['minTime']) && !isset($_GPC['maxTime'])) return [];
         // 只传maxTime时，正序
         if (isset($_GPC['maxTime']) && !isset($_GPC['minTime']))
-            return [$this->modelTableName . '.' . $this->loaderTimeField => SORT_ASC];
+            return [($this->modelQueryAlias ?: $this->modelTableName) . '.' . $this->loaderTimeField => SORT_ASC];
 
-        return [$this->modelTableName . '.' . $this->loaderTimeField => SORT_DESC];
+        return [($this->modelQueryAlias ?: $this->modelTableName) . '.' . $this->loaderTimeField => SORT_DESC];
     }
 
     /**
@@ -502,6 +517,8 @@ trait CurdActionTrait
         /** @var ActiveQuery $row */
         $row = call_user_func($this->modelClass . '::find');
         $row = $row->select($fields);
+        if (!empty($this->modelQueryAlias))
+            $row->alias($this->modelQueryAlias);
 
         // 用于补充查询
         $result = $this->getAllRow($row);
@@ -510,7 +527,7 @@ trait CurdActionTrait
 
         // 仅在存在deleted_at字段时才进行软删除过滤
         if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
-            $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
+            $row = $row->andWhere([($this->modelQueryAlias ?: $this->modelTableName) . '.deleted_at' => $this->noTime]);
 
         if (!empty($where)) $row = $row->andWhere($where);
         $row = $row->andFilterWhere($filterWhere);
@@ -588,7 +605,7 @@ trait CurdActionTrait
      */
     public function getAllFields()
     {
-        return $this->modelTableName . '.*';
+        return ($this->modelQueryAlias ?: $this->modelTableName) . '.*';
     }
 
     /**
@@ -680,6 +697,8 @@ trait CurdActionTrait
         /** @var ActiveQuery $row */
         $row = call_user_func($this->modelClass . '::find');
         $row = $row->select($fields);
+        if (!empty($this->modelQueryAlias))
+            $row->alias($this->modelQueryAlias);
         $row = $row->where($where);
 
         $result = $this->getDetailRow($row);
@@ -688,7 +707,7 @@ trait CurdActionTrait
 
         // 仅在存在deleted_at字段时才进行软删除过滤
         if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
-            $row = $row->andWhere([$this->modelTableName . '.deleted_at' => $this->noTime]);
+            $row = $row->andWhere([($this->modelQueryAlias ?: $this->modelTableName) . '.deleted_at' => $this->noTime]);
 
         if ($this->detailAsArray())
             $row = $row->asArray();
@@ -711,7 +730,7 @@ trait CurdActionTrait
      */
     public function getDetailFields()
     {
-        return $this->modelTableName . '.*';
+        return ($this->modelQueryAlias ?: $this->modelTableName) . '.*';
     }
 
     /**
@@ -744,7 +763,7 @@ trait CurdActionTrait
             return static::result(ErrCode::PARAMETER_ERROR, "{$this->pkId}不能为空");
 
         $where   = ['and'];
-        $where[] = [$this->modelTableName . '.' . $this->pkId => $id];
+        $where[] = [($this->modelQueryAlias ?: $this->modelTableName) . '.' . $this->pkId => $id];
         return $where;
     }
 
