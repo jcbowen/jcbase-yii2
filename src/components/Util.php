@@ -938,7 +938,7 @@ class Util
         $charset = 'gbk' === strtolower($charset) ? 'gbk' : 'utf8';
         if (static::strLen($string, $charset) <= $length) return $string;
 
-        if (function_exists('mb_strcut')) {
+        if (function_exists('mb_substr')) {
             $string = mb_substr($string, 0, $length, $charset);
         } else {
             $pre    = '{%';
@@ -1015,6 +1015,31 @@ class Util
             $string .= '...';
 
         return $string;
+    }
+
+    /**
+     * 隐藏字符串中间部分，只显示指定数量的开头和结尾字符。
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $str 输入的字符串。
+     * @param int $showStart 显示开头的字符数量，默认是3。
+     * @param int $showEnd 显示结尾的字符数量，默认是4。
+     * @param string $replace 用于替换隐藏部分的字符，默认是'*'。
+     * @param string $encoding 字符串的编码类型，默认是'UTF-8'。
+     * @return string 返回中间部分被替换后的字符串。
+     *
+     * @lasttime: 2024/7/20 上午11:02
+     */
+    public static function maskString(string $str, int $showStart = 3, int $showEnd = 4, string $replace = '*', string $encoding = 'UTF-8'): string
+    {
+        $strLength    = mb_strlen($str, $encoding);
+        $hiddenLength = $strLength - $showStart - $showEnd;
+
+        return ($showStart >= 0 ? mb_substr($str, 0, $showStart, $encoding) : '') .
+            str_repeat($replace, max($hiddenLength, 0)) .
+            ($showEnd > 0 ? mb_substr($str, -$showEnd, $showEnd, $encoding) : '');
     }
 
     /**
