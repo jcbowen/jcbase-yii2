@@ -1359,45 +1359,49 @@ class Util
     }
 
     /**
-     * 输出json结构数据
+     * 返回API结果的通用方法
      *
      * @author Bowen
      * @email bowen@jiuchet.com
-     * @lastTime 2021/12/18 12:18 上午
-     * @param string $errmsg 错误信息
-     * @param mixed $data 返回内容
-     * @param array $params 补充参数
-     * @param string $returnType
+     * @param int|string|Response $errCode 错误代码，默认为 ErrCode::UNKNOWN
+     * @param string|Response $errmsg 错误信息，默认为空字符串
+     * @param array|string|int|Response $data 返回的数据，默认为空数组
+     * @param array $additionalParams 附加参数，默认为空数组
+     * @param string $returnType 输出类型，默认为 'exit'；可选：'exit'，'return'
+     * @return Response|string 返回响应对象或JSON字符串
      *
-     * @param string|int $errCode 错误码，其中0为正确
-     * @return string|Response
+     * @lastTime 2021/12/18 12:18 上午
      */
     public function result(
         $errCode = ErrCode::UNKNOWN,
-        string $errmsg = '',
+        $errmsg = '',
         $data = [],
-        array $params = [],
+        array $additionalParams = [],
         string $returnType = 'exit'
     )
     {
         global $_GPC;
 
+        // 将数据转换为数组，并统计数据数量
         $data  = (array)$data;
         $count = count($data);
 
+        // 获取响应代码和信息，并规范化数据
         $errCode = (int)$this->getResponseCode($errCode);
         $errmsg  = $this->getResponseMsg($errmsg);
         $data    = $this->getResponseData($data);
         $data    = static::normalizeData($data);
 
+        // 构建结果数组
         $result = [
             'code'    => $errCode,
             'message' => $errmsg,
             'data'    => $data
         ];
 
+        // 设置数据统计字段
         if (is_array($result['data']) && isset($result['data']['list'])) {
-            // 如果用户传入了统计数量，应当覆盖掉count
+            // 如果传入了统计数量，应当覆盖掉count
             $count = (int)(
                 $result['data']['list']['count'] ??
                 $result['data']['list']['total'] ??
@@ -1410,8 +1414,9 @@ class Util
             $result['count'] = $count;
         }
 
-        if (!empty($params) && is_array($params)) {
-            $result = array_merge($result, $params);
+        // 合并附加参数
+        if (!empty($additionalParams) && is_array($additionalParams)) {
+            $result = array_merge($result, $additionalParams);
         }
 
         // 开启字段名兼容模式
@@ -1427,14 +1432,21 @@ class Util
             }
         }
 
+        // 记录日志
         Yii::info($result, __METHOD__);
 
+        // 如果需要打印结果，打印并结束
         if ($_GPC['print_result'] == 1) {
             print_r($result);
             $this->_end();
         }
 
+        // 添加安全相关的HTTP头
+        $this->addSecurityHeaders();
+
+        // 根据返回类型返回结果
         if ($returnType == 'exit') {
+            // 返回封装后的JSON格式数据
             $response             = Yii::$app->getResponse();
             $response->format     = Response::FORMAT_JSON;
             $response->data       = $result;
@@ -1447,6 +1459,7 @@ class Util
 
             return $response;
         } else {
+            // 返回JSON字符串
             return stripslashes(json_encode($result, JSON_UNESCAPED_UNICODE));
         }
     }
@@ -1467,6 +1480,32 @@ class Util
         $response->data       = $html;
         $response->statusCode = 200;
         return $response;
+    }
+
+    /**
+     * 添加安全相关的HTTP头
+     *
+     *  这些HTTP头有助于防止常见的Web攻击，如XSS、点击劫持、内容嗅探等。
+     *  - X-Content-Type-Options: 防止浏览器嗅探文件类型
+     *  - X-XSS-Protection: 启用XSS过滤
+     *  - Content-Security-Policy: 限制资源加载源
+     *  - Referrer-Policy: 控制Referer头的发送策略
+     *  - X-Download-Options: 防止文件自动下载
+     *  - X-Frame-Options: 防止点击劫持
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @lasttime: 2024/7/24 下午2:54
+     */
+    public function addSecurityHeaders()
+    {
+        header('X-Content-Type-Options: nosniff');
+        header('X-XSS-Protection: 1');
+        header('Content-Security-Policy: default-src self');
+        header('Referrer-Policy: no-referrer-when-downgrade');
+        header('X-Download-Options: noopen');
+        header('X-Frame-Options: SAMEORIGIN');
     }
 
     /**
