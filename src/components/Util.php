@@ -5,6 +5,7 @@ namespace Jcbowen\JcbaseYii2\components;
 use SimpleXMLElement;
 use Yii;
 use yii\base\ExitException;
+use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\captcha\CaptchaAction;
 use yii\helpers\ArrayHelper;
@@ -24,6 +25,13 @@ use yii\web\Response;
  */
 class Util
 {
+    /**
+     * @var bool 兼容模式
+     *
+     * 打开后result输出的字段会兼容多个字段，比如message会同时输出errmsg、msg、message
+     */
+    public $compatibility = false;
+
     /**
      * @var array 代表响应正确的code
      */
@@ -228,7 +236,7 @@ class Util
      * @email bowen@jiuchet.com
      *
      * @param string|null $src 附件路径
-     * @return false|mixed|string
+     * @return false|string
      * @lasttime: 2022/9/12 17:52
      */
     public static function removeMediaDomain(?string $src)
@@ -839,7 +847,7 @@ class Util
      * @return bool
      * @lasttime: 2023/10/9 12:26 AM
      */
-    public static function is_json($string)
+    public static function is_json($string): bool
     {
         if (!is_string($string)) return false;
         json_decode($string);
@@ -1364,35 +1372,69 @@ class Util
      * @param string|int $errCode 错误码，其中0为正确
      * @return string|Response
      */
-    public function result($errCode = ErrCode::UNKNOWN, string $errmsg = '', $data = [], array $params = [], string $returnType = 'exit')
+    public function result(
+        $errCode = ErrCode::UNKNOWN,
+        string $errmsg = '',
+        $data = [],
+        array $params = [],
+        string $returnType = 'exit'
+    )
     {
         global $_GPC;
+
         $data  = (array)$data;
         $count = count($data);
 
-        $errCode = isset($errCode) ? (int)$this->getResponseCode($errCode) : ErrCode::UNKNOWN;
+        $errCode = (int)$this->getResponseCode($errCode);
         $errmsg  = $this->getResponseMsg($errmsg);
         $data    = $this->getResponseData($data);
+        $data    = static::normalizeData($data);
 
         $result = [
-            'errcode' => $errCode,
             'code'    => $errCode,
-            'errmsg'  => $errmsg,
-            'msg'     => $errmsg,
-            'count'   => $count,
+            'message' => $errmsg,
             'data'    => $data
         ];
+
+        if (is_array($result['data']) && isset($result['data']['list'])) {
+            // 如果用户传入了统计数量，应当覆盖掉count
+            $count = (int)(
+                $result['data']['list']['count'] ??
+                $result['data']['list']['total'] ??
+                $result['data']['list']['totalCount'] ??
+                $count
+            );
+
+            $result['data']['list']['count'] = $count;
+        } else {
+            $result['count'] = $count;
+        }
+
         if (!empty($params) && is_array($params)) {
             $result = array_merge($result, $params);
         }
-        $result['totalCount'] = $result['count'];
+
+        // 开启字段名兼容模式
+        if ($this->compatibility) {
+            $result['errcode'] = $errCode;
+            $result['errmsg']  = $errmsg;
+            $result['msg']     = $errmsg;
+
+            if (isset($result['data']['list']['count'])) {
+                $result['data']['list']['total'] = $result['data']['list']['totalCount'] = $count;
+            } else {
+                $result['total'] = $result['totalCount'] = $count;
+            }
+        }
+
         Yii::info($result, __METHOD__);
+
         if ($_GPC['print_result'] == 1) {
             print_r($result);
             $this->_end();
         }
+
         if ($returnType == 'exit') {
-            //  返回封装后的json格式数据
             $response             = Yii::$app->getResponse();
             $response->format     = Response::FORMAT_JSON;
             $response->data       = $result;
@@ -1490,6 +1532,55 @@ class Util
         }
 
         return 'ok';
+    }
+
+    /**
+     * 递归过滤和标准化输入数据。
+     *
+     * 该方法会递归地处理输入数据，将对象转换为数组，去除数组键中的空格，
+     * 并将特定类型的数据标准化。例如，将空的日期字符串转换为空字符串，将
+     * 所有字符串、数字和 null 类型的数据转换为字符串。
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $data
+     * @return array|bool|mixed|string|void
+     * @lasttime: 2024/7/24 上午11:41
+     */
+    public static function normalizeData($data)
+    {
+        // 如果是对象类型先转换成数组
+        if (is_object($data)) {
+            if (method_exists($data, 'toArray'))
+                $data = $data->toArray() ?: (object)[];
+            else
+                throw new InvalidArgumentException('传入数据只能是数组或有toArray方法的对象');
+        }
+
+        // 如果是数组，递归处理每个元素
+        if (is_array($data)) {
+            $item = [];
+            foreach ($data as $key => $val) {
+                $key        = trim($key);  // 去掉前后空格
+                $item[$key] = static::normalizeData($val);
+            }
+            return $item;
+        }
+
+        // 布尔类型直接返回
+        if (is_bool($data))
+            return $data;
+
+        // 把空的日期时间字符串转换成空字符串
+        if ($data === '0000-00-00' || $data === '0000-00-00 00:00:00')
+            return '';
+
+        // 字符串、数字、null类型全部转换为字符串
+        if (is_string($data) || is_numeric($data) || $data === null)
+            return (string)$data;
+
+        return $data;
     }
 
     /**
