@@ -31,7 +31,7 @@ class Util extends Component
      *
      * 打开后result输出的字段会兼容多个字段，比如message会同时输出errmsg、msg、message
      */
-    public $compatibility = false;
+    public $compatibility = true;
 
     /**
      * @var array 代表响应正确的code
