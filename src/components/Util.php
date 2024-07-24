@@ -2,6 +2,7 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
+use Jcbowen\JcbaseYii2\base\Component;
 use SimpleXMLElement;
 use Yii;
 use yii\base\ExitException;
@@ -23,7 +24,7 @@ use yii\web\Response;
  * @lasttime: 2022/9/19 2:50 PM
  * @package Jcbowen\JcbaseYii2\components
  */
-class Util
+class Util extends Component
 {
     /**
      * @var bool 兼容模式
