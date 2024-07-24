@@ -1403,13 +1403,13 @@ class Util
         if (is_array($result['data']) && isset($result['data']['list'])) {
             // 如果传入了统计数量，应当覆盖掉count
             $count = (int)(
-                $result['data']['list']['count'] ??
-                $result['data']['list']['total'] ??
-                $result['data']['list']['totalCount'] ??
+                $result['data']['count'] ??
+                $result['data']['total'] ??
+                $result['data']['totalCount'] ??
                 $count
             );
 
-            $result['data']['list']['count'] = $count;
+            $result['data']['count'] = $count;
         } else {
             $result['count'] = $count;
         }
@@ -1425,8 +1425,8 @@ class Util
             $result['errmsg']  = $errmsg;
             $result['msg']     = $errmsg;
 
-            if (isset($result['data']['list']['count'])) {
-                $result['data']['list']['total'] = $result['data']['list']['totalCount'] = $count;
+            if (isset($result['data']['count'])) {
+                $result['data']['total'] = $result['data']['totalCount'] = $count;
             } else {
                 $result['total'] = $result['totalCount'] = $count;
             }
