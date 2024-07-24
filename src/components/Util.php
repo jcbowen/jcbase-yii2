@@ -1595,7 +1595,8 @@ class Util extends Component
             if (method_exists($data, 'toArray'))
                 $data = $data->toArray() ?: (object)[];
             else
-                throw new InvalidArgumentException('传入数据只能是数组或有toArray方法的对象');
+                // throw new InvalidArgumentException('传入数据只能是数组或有toArray方法的对象');
+                $data = ArrayHelper::toArray($data) ?: (object)[];
         }
 
         // 如果是数组，递归处理每个元素
