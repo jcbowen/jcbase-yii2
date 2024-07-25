@@ -1400,6 +1400,11 @@ class Util extends Component
             'data'    => $data
         ];
 
+        // 合并附加参数
+        if (!empty($additionalParams) && is_array($additionalParams)) {
+            $result = array_merge($result, $additionalParams);
+        }
+
         // 设置数据统计字段
         if (is_array($result['data']) && isset($result['data']['list'])) {
             // 如果传入了统计数量，应当覆盖掉count
@@ -1412,12 +1417,12 @@ class Util extends Component
 
             $result['data']['count'] = $count;
         } else {
-            $result['count'] = $count;
-        }
+            $count = (int)($result['count'] ??
+                $result['total'] ??
+                $result['totalCount'] ??
+                $count);
 
-        // 合并附加参数
-        if (!empty($additionalParams) && is_array($additionalParams)) {
-            $result = array_merge($result, $additionalParams);
+            $result['count'] = $count;
         }
 
         // 开启字段名兼容模式
