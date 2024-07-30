@@ -1596,13 +1596,8 @@ class Util extends Component
     public static function normalizeData($data)
     {
         // 如果是对象类型先转换成数组
-        if (is_object($data)) {
-            if (method_exists($data, 'toArray'))
-                $data = $data->toArray() ?: (object)[];
-            else
-                // throw new InvalidArgumentException('传入数据只能是数组或有toArray方法的对象');
-                $data = ArrayHelper::toArray($data) ?: (object)[];
-        }
+        if (is_object($data))
+            $data = ArrayHelper::toArray($data) ?: (object)[];
 
         // 如果是数组，递归处理每个元素
         if (is_array($data)) {
