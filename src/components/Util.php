@@ -1365,23 +1365,35 @@ class Util extends Component
      * @author Bowen
      * @email bowen@jiuchet.com
      * @param int|string|Response $errCode 错误代码，默认为 ErrCode::UNKNOWN
-     * @param string|Response $errmsg 错误信息，默认为空字符串
-     * @param array|string|int|Response $data 返回的数据，默认为空数组
-     * @param array $additionalParams 附加参数，默认为空数组
-     * @param string $returnType 输出类型，默认为 'exit'；可选：'exit'，'return'
+     * @param string|Response $errmsg 错误信息，默认为
+     * @param array|string|int|Response $data 返回的数据
+     * @param array $additionalParams 附加参数
+     * @param string $returnType 输出类型，默认为 'response'；可选：'response'，'json', 'array'
+     * @param bool $addSecurityHeaders 是否添加安全响应头，默认为 true
      * @return Response|string 返回响应对象或JSON字符串
      *
-     * @lastTime 2021/12/18 12:18 上午
+     * @lastTime 2024/8/3 10:02:06
      */
     public function result(
         $errCode = ErrCode::UNKNOWN,
         $errmsg = '',
         $data = [],
         array $additionalParams = [],
-        string $returnType = 'exit'
+        string $returnType = 'response',
+        bool $addSecurityHeaders = true
     )
     {
         global $_GPC;
+
+        // 兼容早期参数
+        switch ($returnType) {
+            case 'exit':
+                $returnType = 'response';
+                break;
+            case 'return':
+                $returnType = 'json';
+                break;
+        }
 
         // 将数据转换为数组，并统计数据数量
         $data  = (array)$data;
@@ -1447,11 +1459,12 @@ class Util extends Component
             $this->_end();
         }
 
-        // 添加安全相关的HTTP头
-        $this->addSecurityHeaders();
-
         // 根据返回类型返回结果
-        if ($returnType == 'exit') {
+        if ($returnType == 'response') {
+            // 添加安全相关的HTTP头
+            if ($addSecurityHeaders)
+                $this->addSecurityHeaders();
+
             // 返回封装后的JSON格式数据
             $response             = Yii::$app->getResponse();
             $response->format     = Response::FORMAT_JSON;
@@ -1464,10 +1477,13 @@ class Util extends Component
             }
 
             return $response;
-        } else {
+        } elseif ($returnType == 'json') {
             // 返回JSON字符串
             return stripslashes(json_encode($result, JSON_UNESCAPED_UNICODE));
         }
+
+        // 默认直接输出整理好后的数据
+        return $result;
     }
 
     /**

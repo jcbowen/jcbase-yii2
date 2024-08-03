@@ -15,7 +15,7 @@ use RuntimeException;
  * Trait CurdActionTrait
  * 增删改查操作
  *
- * @method string|Response result($errCode = ErrCode::UNKNOWN, string $errmsg = '', $data = [], array $params = [], string $returnType = 'exit') 输出json结构数据到Response中
+ * @method string|Response result($errCode = ErrCode::UNKNOWN, string $errmsg = '', $data = [], array $params = [], string $returnType = 'response') 输出json结构数据到Response中
  * @method string|Response result_r($errCode = '0', string $errmsg = '', $data = [], array $params = []) 输出json字符串
  * @method string|Response resultError($error = []) 将error数组转换Response输出
  *
@@ -1888,7 +1888,7 @@ trait CurdActionTrait
      * @return string|Response
      * @lasttime: 2022/8/28 23:17
      */
-    public static function result($errCode = ErrCode::UNKNOWN, string $errmsg = '', $data = [], array $params = [], string $returnType = 'exit')
+    public static function result($errCode = ErrCode::UNKNOWN, string $errmsg = '', $data = [], array $params = [], string $returnType = 'response')
     {
         return (new Util)->result($errCode, $errmsg, $data, $params, $returnType);
     }

@@ -149,7 +149,7 @@ class WebController extends Controller
      * @return string|Response
      * @lasttime: 2023/5/27 4:47 PM
      */
-    public function success($data = [], string $msg = '', array $params = [], string $returnType = 'exit')
+    public function success($data = [], string $msg = '', array $params = [], string $returnType = 'response')
     {
         if (is_string($data) && empty($msg)) {
             $msg  = $data;
