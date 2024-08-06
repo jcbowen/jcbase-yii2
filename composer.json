@@ -24,14 +24,14 @@
   "minimum-stability": "stable",
   "require": {
     "php": ">=7.2.0 <8.0.0",
-    "yiisoft/yii2": "^2.0.11",
-    "yiisoft/yii2-redis": "^2.0.6",
+    "yiisoft/yii2-redis": "^2.0.18",
     "phpoffice/phpspreadsheet": "^1.12",
     "aliyuncs/oss-sdk-php": "~2.4",
     "qcloud/cos-sdk-v5": "^2.5",
     "wechatpay/wechatpay": "^1.4"
   },
   "require-dev": {
+    "yiisoft/yii2": "^2.0.11",
     "ext-openssl": "*",
     "ext-curl": "*",
     "ext-json": "*",
