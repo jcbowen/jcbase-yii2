@@ -25,6 +25,7 @@
   "require": {
     "php": ">=7.2.0 <8.0.0",
     "yiisoft/yii2-redis": "^2.0.18",
+    "guzzlehttp/guzzle": "^6.2 || ^7.0",
     "phpoffice/phpspreadsheet": "^1.12",
     "aliyuncs/oss-sdk-php": "~2.4",
     "qcloud/cos-sdk-v5": "^2.5",

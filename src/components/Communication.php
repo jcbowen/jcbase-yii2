@@ -3,6 +3,9 @@
 namespace Jcbowen\JcbaseYii2\components;
 
 use CURLFile;
+use GuzzleHttp\Client;
+use GuzzleHttp\Promise;
+use GuzzleHttp\Psr7\Utils;
 use Yii;
 use yii\helpers\ArrayHelper;
 
@@ -16,6 +19,21 @@ use yii\helpers\ArrayHelper;
  */
 class Communication
 {
+    private static $client;
+
+    /**
+     * 初始化 Guzzle 客户端
+     */
+    private static function initClient()
+    {
+        if (!self::$client) {
+            self::$client = new Client([
+                'timeout' => 60,
+                'verify'  => false,
+            ]);
+        }
+    }
+
     /**
      * 发起get请求
      *
@@ -29,14 +47,9 @@ class Communication
      */
     public static function get($url, array $params = [])
     {
+        self::initClient();
         if (!empty($params)) {
-            // 判断url字符串是否已经携带了参数
-            if (strpos($url, '?') === false) {
-                $url .= '?';
-            } else {
-                $url .= '&';
-            }
-            $url = $url . http_build_query($params);
+            $url .= (strpos($url, '?') === false ? '?' : '&') . http_build_query($params);
         }
 
         return self::request($url);
@@ -57,6 +70,7 @@ class Communication
      */
     public static function post(string $url, array $data = [])
     {
+        self::initClient();
         $args = func_get_args();
         $url  = array_shift($args);
 
@@ -92,13 +106,7 @@ class Communication
         }
 
         if (!empty($params)) {
-            // 判断url字符串是否已经携带了参数
-            if (strpos($url, '?') === false) {
-                $url .= '?';
-            } else {
-                $url .= '&';
-            }
-            $url = $url . http_build_query($params);
+            $url .= (strpos($url, '?') === false ? '?' : '&') . http_build_query($params);
         }
 
         $headers = ['Content-Type' => 'application/x-www-form-urlencoded'];
@@ -120,55 +128,70 @@ class Communication
      * @param int $timeout 超时时间
      *
      * @param $url
+     * @param array $post
+     * @param array $extra
+     * @param int $timeout
      * @return array|false|int|resource|string|null
      */
     public static function request($url, $post = [], array $extra = [], int $timeout = 60)
     {
-        if (function_exists('curl_init') && function_exists('curl_exec') && $timeout > 0) {
-            $ch = self::buildCurl($url, $post, $extra, $timeout);
-            if (Util::isError($ch)) {
-                return $ch;
-            }
-            $data   = curl_exec($ch);
-            $status = curl_getinfo($ch);
-            $errno  = curl_errno($ch);
-            $error  = curl_error($ch);
-            curl_close($ch);
-            if ($errno || empty($data)) {
-                return Util::error($errno, $error, $status);
-            } else {
-                return self::responseParse($data);
-            }
-        }
-        $urlSet = self::parseUrl($url, true);
-        if (!empty($urlSet['ip'])) {
-            $urlSet['host'] = $urlSet['ip'];
-        }
+        self::initClient();
 
-        $body = self::buildHttpBody($url, $post, $extra);
+        $options = [
+            'headers' => is_array($extra) ? $extra : [],
+        ];
 
-        if ('https' == $urlSet['scheme']) {
-            $fp = self::socketOpen('ssl://' . $urlSet['host'], $urlSet['port'], $errno, $error);
-        } elseif ('http' == $urlSet['scheme']) {
-            $fp = self::socketOpen($urlSet['host'], $urlSet['port'], $errno, $error);
-        } else {
-            return Util::error(ErrCode::PARAMETER_ERROR, '只能使用 http / https 协议');
-        }
-        stream_set_blocking($fp, $timeout > 0);
-        stream_set_timeout($fp, ini_get('default_socket_timeout'));
-        if (!$fp) {
-            return Util::error(ErrCode::UNKNOWN, $error);
-        } else {
-            fwrite($fp, $body);
-            $content = '';
-            if ($timeout > 0) {
-                while (!feof($fp)) {
-                    $content .= fgets($fp, 512);
+        // 处理上传文件和 JSON 数据
+        if (!empty($post)) {
+            if (is_string($post)) {
+                if (Util::is_json($post)) {
+                    $options['body']                    = $post;
+                    $options['headers']['Content-Type'] = 'application/json';
+                } else {
+                    $options['form_params'] = $post;
+                }
+            } elseif (is_array($post)) {
+                $isFile = false;
+                foreach ($post as $key => $value) {
+                    if (is_string($value) && strpos($value, '@') === 0) {
+                        $post[$key] = Utils::tryFopen(ltrim($value, '@'), 'r');
+                        $isFile     = true;
+                    }
+                }
+                if ($isFile) {
+                    $options['multipart'] = [];
+                    foreach ($post as $name => $content) {
+                        $options['multipart'][] = [
+                            'name'     => $name,
+                            'contents' => $content
+                        ];
+                    }
+                } else {
+                    $contentType = $options['headers']['Content-Type'] ?? 'application/x-www-form-urlencoded';
+                    if (strpos($contentType, 'application/json') !== false) {
+                        $options['json'] = $post;
+                    } else {
+                        $options['form_params'] = $post;
+                    }
                 }
             }
-            fclose($fp);
+        }
 
-            return self::responseParse($content, true);
+        try {
+            $response   = self::$client->request(empty($post) ? 'GET' : 'POST', $url, $options);
+            $statusCode = $response->getStatusCode();
+            $body       = $response->getBody()->getContents();
+
+            return [
+                'code'         => $statusCode,
+                'status'       => $response->getReasonPhrase(),
+                'responseline' => $response->getStatusCode() . ' ' . $response->getReasonPhrase(),
+                'headers'      => $response->getHeaders(),
+                'content'      => $body,
+                'meta'         => $response,
+            ];
+        } catch (\Exception $e) {
+            return Util::error($e->getCode(), $e->getMessage());
         }
     }
 
@@ -178,6 +201,7 @@ class Communication
      * @author Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2022/1/14 11:21 下午
+     *
      * @param array $urls
      * @param array $posts
      * @param array $extra
@@ -186,42 +210,74 @@ class Communication
      */
     public static function multiRequest(array $urls, array $posts = [], array $extra = [], int $timeout = 60): array
     {
-        $curl_multi  = curl_multi_init();
-        $curl_client = $response = [];
+        self::initClient();
 
+        $promises = [];
         foreach ($urls as $i => $url) {
-            $post = $posts;
-            if (isset($posts[$i]) && is_array($posts[$i])) $post = $posts[$i];
-            if (!empty($url)) {
-                $curl = self::buildCurl($url, $post, $extra, $timeout);
-                if (Util::isError($curl)) {
-                    continue;
-                }
-                if (CURLM_OK === curl_multi_add_handle($curl_multi, $curl)) {
-                    $curl_client[] = $curl;
+            $options = [
+                'headers' => is_array($extra) ? $extra : [],
+                'timeout' => $timeout,
+            ];
+            if (isset($posts[$i])) {
+                if (is_string($posts[$i])) {
+                    if (Util::is_json($posts[$i])) {
+                        $options['body']                    = $posts[$i];
+                        $options['headers']['Content-Type'] = 'application/json';
+                    } else {
+                        $options['form_params'] = $posts[$i];
+                    }
+                } elseif (is_array($posts[$i])) {
+                    $isFile = false;
+                    foreach ($posts[$i] as $key => $value) {
+                        if (is_string($value) && strpos($value, '@') === 0) {
+                            $posts[$i][$key] = Utils::tryFopen(ltrim($value, '@'), 'r');
+                            $isFile          = true;
+                        }
+                    }
+                    if ($isFile) {
+                        $options['multipart'] = [];
+                        foreach ($posts[$i] as $name => $content) {
+                            $options['multipart'][] = [
+                                'name'     => $name,
+                                'contents' => $content
+                            ];
+                        }
+                    } else {
+                        $contentType = $options['headers']['Content-Type'] ?? 'application/x-www-form-urlencoded';
+                        if (strpos($contentType, 'application/json') !== false) {
+                            $options['json'] = $posts[$i];
+                        } else {
+                            $options['form_params'] = $posts[$i];
+                        }
+                    }
                 }
             }
+            $promises[] = self::$client->requestAsync(isset($posts[$i]) ? 'POST' : 'GET', $url, $options);
         }
-        if (!empty($curl_client)) {
-            $active = null;
-            do {
-                $mrc = curl_multi_exec($curl_multi, $active);
-            } while (CURLM_CALL_MULTI_PERFORM == $mrc);
 
-            while ($active && CURLM_OK == $mrc) {
-                do {
-                    $mrc = curl_multi_exec($curl_multi, $active);
-                } while (CURLM_CALL_MULTI_PERFORM == $mrc);
+        $results   = Promise\Utils::settle($promises)->wait();
+        $responses = [];
+
+        foreach ($results as $result) {
+            if ($result['state'] === 'fulfilled') {
+                $response   = $result['value'];
+                $statusCode = $response->getStatusCode();
+                $body       = $response->getBody()->getContents();
+
+                $responses[] = [
+                    'code'         => $statusCode,
+                    'status'       => $response->getReasonPhrase(),
+                    'responseline' => $response->getStatusCode() . ' ' . $response->getReasonPhrase(),
+                    'headers'      => $response->getHeaders(),
+                    'content'      => $body,
+                    'meta'         => $response,
+                ];
+            } else {
+                $responses[] = Util::error($result['reason']->getCode(), $result['reason']->getMessage());
             }
         }
 
-        foreach ($curl_client as $i => $curl) {
-            $response[$i] = curl_multi_getcontent($curl);
-            curl_multi_remove_handle($curl_multi, $curl);
-        }
-        curl_multi_close($curl_multi);
-
-        return $response;
+        return $responses;
     }
 
     /**
@@ -609,5 +665,3 @@ class Communication
         return $fData;
     }
 }
-
-
