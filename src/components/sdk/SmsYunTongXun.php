@@ -27,15 +27,25 @@ class SmsYunTongXun
     public $SoftVersion = '2013-12-26';
     public $BodyType = "json"; //包体格式，可填值：json 、xml
     public $enableLog = true; //日志开关。可填值：true、
-    public $logPath = "@runtime/log/sms-ytx.txt"; //日志文件
+    public $logPath = "@runtime/logs/sms-ytx/{date|Y/m-d}.txt"; //日志文件
 
     private $Batch;  // 时间sh
     private $Handle; // 句柄
 
     public function __construct()
     {
-        $this->Batch = date("YmdHis");
-        $fileName    = Yii::getAlias($this->logPath);
+        $timeStamp = time();
+
+        $this->Batch = date("YmdHis", $timeStamp);
+
+        $regex = '/\{date\|([^}]+)}/';
+        if (preg_match($regex, $this->logPath, $matches)) {
+            // 获取日期格式
+            $dateFormat = $matches[1];
+            // 替换模板中的 {date|格式} 部分
+            $this->logPath = preg_replace($regex, date($dateFormat, $timeStamp), $this->logPath);
+        }
+        $fileName = Yii::getAlias($this->logPath);
         if (!file_exists($fileName)) {
             FileHelper::createDirectory(dirname($fileName));
         }
@@ -61,17 +71,16 @@ class SmsYunTongXun
     /**
      * 发起HTTPS请求
      */
-    private function curl_post($url, $data, $header, $post = 1)
-    {
-        //初始化curl
+    private function curl_post($url, $data, $header)
+    {//初始化curl
         $ch = curl_init();
         //参数设置
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
         curl_setopt($ch, CURLOPT_HEADER, 0);
-        curl_setopt($ch, CURLOPT_POST, $post);
-        if ($post) curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        if (1) curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
         $result = curl_exec($ch);
@@ -164,7 +173,7 @@ class SmsYunTongXun
     {
         if (empty($this->ServerIP)) {
             $data             = new stdClass();
-            $data->statusCode = ErrCode::PARAMETER_EMPTY;
+            $data->statusCode = ErrCode::PARAMETER_ERROR;
             $data->statusMsg  = '服务地址(serverIP)为空';
             return $data;
         }
@@ -176,25 +185,25 @@ class SmsYunTongXun
         }
         if (empty($this->SoftVersion)) {
             $data             = new stdClass();
-            $data->statusCode = ErrCode::PARAMETER_EMPTY;
+            $data->statusCode = ErrCode::PARAMETER_ERROR;
             $data->statusMsg  = '版本号(SoftVersion)为空';
             return $data;
         }
         if (empty($this->AccountSid)) {
             $data             = new stdClass();
-            $data->statusCode = ErrCode::PARAMETER_EMPTY;
+            $data->statusCode = ErrCode::PARAMETER_ERROR;
             $data->statusMsg  = '主帐号(AccountSid)为空';
             return $data;
         }
         if (empty($this->AccountToken)) {
             $data             = new stdClass();
-            $data->statusCode = ErrCode::PARAMETER_EMPTY;
+            $data->statusCode = ErrCode::PARAMETER_ERROR;
             $data->statusMsg  = '主帐号令牌(AccountToken)为空';
             return $data;
         }
         if (empty($this->AppId)) {
             $data             = new stdClass();
-            $data->statusCode = ErrCode::PARAMETER_EMPTY;
+            $data->statusCode = ErrCode::PARAMETER_ERROR;
             $data->statusMsg  = '应用ID(AppId)为空';
             return $data;
         }
