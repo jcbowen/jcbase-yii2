@@ -48,7 +48,8 @@ class WechatPay extends Component
      */
     public $attach;
     /**
-     * @var string 异步接收微信支付结果通知的回调地址，通知url必须为外网可访问的url，不能携带参数。 公网域名必须为https，如果是走专线接入，使用专线NAT IP或者私有回调域名可使用http。 示例值：https://www.weixin.qq.com/wxpay/pay.php
+     * @var string 异步接收微信支付结果通知的回调地址，通知url必须为外网可访问的url，不能携带参数。 公网域名必须为https，如果是走专线接入，使用专线NAT IP或者私有回调域名可使用http。
+     *     示例值：https://www.weixin.qq.com/wxpay/pay.php
      */
     public $notifyUrl;
     /**
@@ -114,9 +115,11 @@ class WechatPay extends Component
     /**
      * 构建APIv3客户端实例
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string $type 微信支付类型 小程序:WeChatMiniProgram，公众号:WeChatOfficialAccount，企业微信:WeChatWork，APP:App
+     *
      * @return $this
      * @lasttime 2022/11/10 01:12
      */
@@ -168,9 +171,11 @@ class WechatPay extends Component
     /**
      * 设置订单总金额
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param float|int $total 订单总金额(如果传入的是整数，则单位为分；如果传入的是浮点数，则单位为元；推荐使用整数)
+     *
      * @return $this
      * @lasttime 2022/11/10 01:15
      */
@@ -188,9 +193,11 @@ class WechatPay extends Component
     /**
      * 商品描述
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string|null $description 商品描述
+     *
      * @return $this
      * @lasttime 2022/11/10 01:18
      */
@@ -203,9 +210,11 @@ class WechatPay extends Component
     /**
      * 设置商户系统内部订单号
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string|null $outTradeNo
+     *
      * @return $this
      * @lasttime 2022/11/10 01:25
      */
@@ -218,9 +227,11 @@ class WechatPay extends Component
     /**
      * 设置支付成功回调地址
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string $notifyUrl
+     *
      * @return $this
      * @lasttime 2022/11/10 01:25
      */
@@ -234,12 +245,13 @@ class WechatPay extends Component
      * 设置支付者信息
      * 为空的信息将会被移除
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param array|string $data
      *    - openid: 支付者openid
      *    - auth_code: 授权码（付款码）
+     *
      * @return $this
      * @lasttime: 2024/5/25 11:15
      */
@@ -265,9 +277,11 @@ class WechatPay extends Component
     /**
      * 设置授权码(付款码)
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string $authCode
+     *
      * @return $this
      * @lasttime 2024/5/25 11:18:1
      */
@@ -280,9 +294,11 @@ class WechatPay extends Component
     /**
      * 设置支付者openid
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string $openid
+     *
      * @return $this
      * @lasttime 2024/5/25 11:18:6
      */
@@ -295,10 +311,11 @@ class WechatPay extends Component
     /**
      * 设置场景信息
      *
-     * @author Bowen
-     * @email 3308725087@qq.com
+     * @author  Bowen
+     * @email   3308725087@qq.com
      *
      * @param array $data
+     *
      * @return $this
      * @lasttime: 2024/5/26 21:34
      */
@@ -321,12 +338,13 @@ class WechatPay extends Component
     /**
      * 设置商户门店信息
      *
-     * @author Bowen
-     * @email 3308725087@qq.com
+     * @author  Bowen
+     * @email   3308725087@qq.com
      *
      * @param array $data
      *    - id: 【门店编号】 此参数与商家自定义编码(out_id)二选一必填。微信支付线下场所ID，格式为纯数字。基于合规要求与风险管理目的，线下条码支付时需传入用户实际付款的场景信息。
      *    - out_id: 【商家自定义编码】 此参数与门店(id)二选一必填。商户系统的门店编码，支持大小写英文字母、数字，仅支持utf-8格式。
+     *
      * @return $this
      * @lasttime: 2024/5/26 21:28
      */
@@ -352,9 +370,11 @@ class WechatPay extends Component
     /**
      * 设置附加数据
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string $attach
+     *
      * @return $this
      * @lasttime 2022/11/10 10:41
      */
@@ -367,9 +387,11 @@ class WechatPay extends Component
     /**
      * 批量设置支付信息（通过上面的方法）
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array $data
+     *
      * @return $this
      * @lasttime 2022/11/10 01:27
      */
@@ -386,9 +408,11 @@ class WechatPay extends Component
     /**
      * 批量设置支付信息（通过property）
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array $data
+     *
      * @return $this
      * @lasttime 2022/11/10 01:27
      */
@@ -405,7 +429,7 @@ class WechatPay extends Component
     /**
      * 检查交易参数是否有误
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return array|true
@@ -431,7 +455,7 @@ class WechatPay extends Component
     /**
      * 检查jsApi交易参数是否有误
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return array|true
@@ -451,7 +475,7 @@ class WechatPay extends Component
     /**
      * 检查收款码支付交易参数是否有误
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return array|true
@@ -473,7 +497,7 @@ class WechatPay extends Component
     /**
      * jsApi下单
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @return array|bool|mixed
      * @lasttime 2022/11/10 01:29
@@ -515,7 +539,7 @@ class WechatPay extends Component
      * 生成前端调用支付的参数
      * 执行前务必保证当前实例已经执行过 jsApi/app下单 方法
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @return array
      * @lasttime 2022/11/10 01:31
@@ -575,7 +599,7 @@ class WechatPay extends Component
     /**
      * app下单
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return array|mixed|true
@@ -614,7 +638,7 @@ class WechatPay extends Component
     /**
      * CODE付款码
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @return array|bool|mixed
      * @lasttime 2024/5/25 10:33:23
@@ -654,9 +678,11 @@ class WechatPay extends Component
      * 订单查询
      * 默认通过商户订单号查询，如果传入了微信支付订单号，则以微信支付订单号查询
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string|null $transactionId 微信支付系统生成的订单号 示例值：1217752501201407033233368018
+     *
      * @return array|mixed
      * @lasttime 2022/11/10 01:47
      */
@@ -684,9 +710,11 @@ class WechatPay extends Component
     /**
      * 查询单笔退款
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param $outRefundNo
+     *
      * @return array|mixed
      * @lasttime 2022/11/11 17:11
      */
@@ -710,7 +738,7 @@ class WechatPay extends Component
     /**
      * 关闭订单
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @return array|mixed
      * @lasttime 2022/11/10 01:59
@@ -737,13 +765,15 @@ class WechatPay extends Component
     /**
      * 申请退款
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
-     * @param int $refundAmount 退款金额，单位为分
-     * @param int $totalAmount 订单总金额，单位为分
-     * @param string|null $outRefundNo 商户退款单号
-     * @param string|null $refundReason 退款原因
+     *
+     * @param int         $refundAmount  退款金额，单位为分
+     * @param int         $totalAmount   订单总金额，单位为分
+     * @param string|null $outRefundNo   商户退款单号
+     * @param string|null $refundReason  退款原因
      * @param string|null $transactionId 微信支付系统生成的订单号 示例值：1217752501201407033233368018
+     *
      * @return array|mixed
      * @lasttime 2022/11/10 02:12
      */
@@ -796,10 +826,11 @@ class WechatPay extends Component
      * 如果此订单用户支付失败，微信支付系统会将此订单关闭；
      * 如果用户支付成功，微信支付系统会将此订单资金退还给用户。
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $outRefundNo
+     *
      * @return array|mixed
      * @lasttime: 2024/5/25 11:27
      */
@@ -826,7 +857,7 @@ class WechatPay extends Component
     /**
      * 解密回调消息
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @return array|void
      * @lasttime 2022/11/10 11:06
@@ -872,10 +903,11 @@ class WechatPay extends Component
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $resp
+     *
      * @return array
      * @lasttime: 2024/5/29 下午1:35
      */
@@ -894,10 +926,11 @@ class WechatPay extends Component
     /**
      * 获取订单号
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param bool $emptyNew 为空时是否生成一个新的
+     *
      * @return string
      * @lasttime: 2024/5/30 下午5:29
      */
