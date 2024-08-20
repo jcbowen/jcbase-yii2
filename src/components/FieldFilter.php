@@ -49,10 +49,12 @@ class FieldFilter
     /**
      * 数据结构转化处理
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param $field
      * @param $value
+     *
      * @return false|float|int|string
      * @lasttime 2022/10/17 14:42
      */
@@ -77,10 +79,12 @@ class FieldFilter
     /**
      * 定义有规则的情况下，数据结构转化处理
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param $field
      * @param $value
+     *
      * @return string
      * @lasttime 2022/10/17 14:40
      */
@@ -115,10 +119,12 @@ class FieldFilter
     /**
      * 未定义规则的情况下，数据结构处理
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param $field
      * @param $value
+     *
      * @return false|float|int|string
      * @lasttime 2022/10/17 14:40
      */
@@ -162,12 +168,15 @@ class FieldFilter
                 }
                 switch ($config[$key]) {
                     case 'json':
-                        $field = $field ? (array)@json_decode($field, true) : [];
+                        if (is_array($field)) break;
+                        $field = $field ? (array)@json_decode($field, true) : $field;
                         break;
                     case 'json&base64':
+                        if (is_array($field)) break;
                         $field = $field ? (array)@json_decode(base64_decode($field), true) : [];
                         break;
                     case 'serialize':
+                        if (is_array($field)) break;
                         $field = $field ? (array)@Util::unserializer($field) : [];
                         break;
                     case 'rich_text':
@@ -196,9 +205,11 @@ class FieldFilter
      * 判断字段是否存在
      *
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string $field
+     *
      * @return bool
      * @lasttime 2022/10/17 15:59
      */
@@ -210,7 +221,7 @@ class FieldFilter
     /**
      * 获取模型属性
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @return array
      * @lasttime 2022/10/17 15:58
@@ -225,7 +236,7 @@ class FieldFilter
     /**
      * 获取字段特殊结构配置
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return array|mixed
