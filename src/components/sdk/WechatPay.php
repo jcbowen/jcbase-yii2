@@ -4,6 +4,7 @@ namespace Jcbowen\JcbaseYii2\components\sdk;
 
 use Exception;
 use Jcbowen\JcbaseYii2\components\ErrCode;
+use Jcbowen\JcbaseYii2\components\sdk\helper\WechatPay\TransferBatchesListStruct;
 use Jcbowen\JcbaseYii2\components\Util;
 use WeChatPay\Builder;
 use WeChatPay\BuilderChainable;
@@ -675,6 +676,64 @@ class WechatPay extends Component
     }
 
     /**
+     * 商家转账到零钱
+     *
+     * @param array  $list              批量转账列表
+     * @param string $transfer_scene_id 【转账场景ID】 该批次转账使用的转账场景，如不填写则使用商家的默认场景，如无默认场景可为空，可前往“商家转账到零钱-前往功能”中申请。
+     *                                  如：1001-现金营销
+     *
+     * @return array|true
+     * @throws Exception
+     */
+    public function TransferBatches(array $list, string $transfer_scene_id = '')
+    {
+        $check = $this->checkAuthCodeError();
+        if (Util::isError($check))
+            return $check;
+
+        $total_amount = 0;
+        $listArr      = [];
+        $batchNo      = $this->getOutTradeNo(true, 'tb');
+        $total_num    = 0;
+        foreach ($list as $item) {
+            if (!$item instanceof TransferBatchesListStruct)
+                throw new Exception('转账明细必须是WechatPayTransferItem实例');
+            $total_num++;
+            $itemData                  = $item->toArray();
+            $itemData['out_detail_no'] = $batchNo . $total_num;
+            $total_amount              += $itemData['transfer_amount'];
+            $listArr[]                 = $itemData;
+        }
+
+        $jsonData = [
+            'appid'                => $this->appId,
+            'out_batch_no'         => $batchNo, // 【商家批次单号】 商户系统内部的商家批次单号，要求此参数只能由数字、大小写字母组成，在商户系统内部唯一
+            'batch_name'           => '转账' . date('YmdHis'), // 【批次名称】 该笔批量转账的名称
+            'batch_remark'         => $this->description ?? '转账' . date('YmdHis'), // 【批次备注】 转账说明，UTF8编码，最多允许32个字符
+            'total_amount'         => $total_amount, // 【转账总金额】 转账金额单位为“分”。转账总金额必须与批次内所有明细转账金额之和保持一致，否则无法发起转账操作
+            'total_num'            => $total_num,
+            'transfer_detail_list' => $listArr,
+            'notify_url'           => $this->notifyUrl,
+        ];
+        if (!empty($transfer_scene_id))
+            $jsonData['transfer_scene_id'] = $transfer_scene_id;
+
+        if (!empty($this->attach))
+            $jsonData['attach'] = $this->attach;
+
+        try {
+            $resp = $this->instance->chain('v3/transfer/batches')->post([
+                'debug' => $this->debug,
+                'json'  => $jsonData,
+            ]);
+        } catch (Exception $e) {
+            return Util::error($e->getCode(), $e->getMessage());
+        }
+
+        return $this->returnResp($resp);
+    }
+
+    /**
      * 订单查询
      * 默认通过商户订单号查询，如果传入了微信支付订单号，则以微信支付订单号查询
      *
@@ -929,16 +988,17 @@ class WechatPay extends Component
      * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param bool $emptyNew 为空时是否生成一个新的
+     * @param bool   $emptyNew 为空时是否生成一个新的
+     * @param string $prefix   前缀
      *
      * @return string
      * @lasttime: 2024/5/30 下午5:29
      */
-    private function getOutTradeNo(bool $emptyNew = false): string
+    private function getOutTradeNo(bool $emptyNew = false, string $prefix = 'jc'): string
     {
         $outTradeNo = $this->outTradeNo;
         if ($emptyNew && empty($outTradeNo)) {
-            $outTradeNo = $this->outTradeNo = 'jc' . date('YmdHis') . '000' . Util::random(4, true);
+            $outTradeNo = $this->outTradeNo = $prefix . date('YmdHis') . '000' . Util::random(4, true);
         }
         return $outTradeNo;
     }
