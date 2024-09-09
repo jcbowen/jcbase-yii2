@@ -2,6 +2,8 @@
 
 namespace Jcbowen\JcbaseYii2\components;
 
+use DateTime;
+use Exception;
 use Jcbowen\JcbaseYii2\base\Component;
 use SimpleXMLElement;
 use Yii;
@@ -19,7 +21,7 @@ use yii\web\Response;
 /**
  * Class Util
  *
- * @author Bowen
+ * @author  Bowen
  * @email bowen@jiuchet.com
  * @lasttime: 2022/9/19 2:50 PM
  * @package Jcbowen\JcbaseYii2\components
@@ -42,7 +44,7 @@ class Util extends Component
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return string|null
@@ -55,7 +57,7 @@ class Util extends Component
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return string|null
@@ -68,7 +70,7 @@ class Util extends Component
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return string|null
@@ -87,11 +89,12 @@ class Util extends Component
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param $url
+     * @param string   $url
      * @param bool|int $format
+     *
      * @return array|false
      * @lasttime: 2023/2/1 3:45 PM
      */
@@ -113,11 +116,12 @@ class Util extends Component
     /**
      * 获取Referer
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param string $needle 需要排除的特征字符串
+     * @param string $needle  需要排除的特征字符串
      * @param string $default 当referer中包含$needle时，返回的默认值
+     *
      * @return string
      * @lasttime: 2023/2/1 3:32 PM
      */
@@ -153,10 +157,11 @@ class Util extends Component
     /**
      * 判断是否为内网IP地址
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string $ip IP 地址
+     *
      * @return bool
      * @lasttime: 2024/3/28 9:20 PM
      */
@@ -186,12 +191,13 @@ class Util extends Component
     /**
      * 将附件路径转换为附件链接
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param string|null $src 附件路径
-     * @param bool $local_path 本地附件路径
-     * @param bool $is_cache 是否缓存
+     * @param string|null $src        附件路径
+     * @param bool        $local_path 本地附件路径
+     * @param bool        $is_cache   是否缓存
+     *
      * @return string
      * @lasttime: 2022/3/19 5:45 下午
      */
@@ -233,10 +239,11 @@ class Util extends Component
     /**
      * 去除附件链接中的附件域名
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string|null $src 附件路径
+     *
      * @return false|string
      * @lasttime: 2022/9/12 17:52
      */
@@ -267,9 +274,11 @@ class Util extends Component
     /**
      * 路径安全解析
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string $path
+     *
      * @return false|string
      * @lasttime: 2022/3/19 5:46 下午
      */
@@ -281,9 +290,197 @@ class Util extends Component
     }
 
     /**
-     * 是否为https通讯
+     * 解析中国大陆身份证号码，提取性别、年龄、生日、出生地等信息
      *
      * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $idCard 身份证号码
+     *
+     * @return array 返回包含性别、年龄、生日、区域码和序列码的数组
+     * @throws InvalidArgumentException|Exception 如果身份证号无效或解析失败
+     */
+    public static function parseChineseIDCard(string $idCard): array
+    {
+        // 验证身份证号码是否有效
+        if (!static::isChineseIDCard($idCard)) {
+            throw new InvalidArgumentException('无效的居民身份证');
+        }
+
+        $length = strlen($idCard);
+        $year   = $month = $day = 0;
+
+        // 解析生日信息
+        if ($length == 15) {
+            $year         = intval('19' . substr($idCard, 6, 2));
+            $month        = intval(substr($idCard, 8, 2));
+            $day          = intval(substr($idCard, 10, 2));
+            $sequenceCode = substr($idCard, 12, 3);
+        } else if ($length == 18) {
+            $year         = intval(substr($idCard, 6, 4));
+            $month        = intval(substr($idCard, 10, 2));
+            $day          = intval(substr($idCard, 12, 2));
+            $sequenceCode = substr($idCard, 14, 3);
+        }
+        $birthDay = sprintf('%04d-%02d-%02d', $year, $month, $day);
+
+        // 计算年龄
+        $age = static::calculateAge($birthDay);
+
+        // 解析性别
+        $genderCode = $length == 15 ? intval($idCard[14]) : intval($idCard[16]);
+        $gender     = $genderCode % 2 === 0 ? '女' : '男';
+
+        // 提取区域码
+        $regionCode = substr($idCard, 0, 6);
+
+        return [
+            'gender'       => $gender,
+            'age'          => $age,
+            'birthDay'     => $birthDay,
+            'regionCode'   => $regionCode,
+            'sequenceCode' => $sequenceCode
+        ];
+    }
+
+    /**
+     * 根据提供的年份、月份、日或日期字符串计算年龄。
+     *
+     * @param mixed ...$args 可以传入年、月、日或一个日期字符串。
+     *                       支持的日期格式包括：
+     *                       - "Y-m-d" (例如 "2023-08-21")
+     *                       - "Y/m/d" (例如 "2023/08/21")
+     *                       - "Ymd"   (例如 "20230821")
+     *
+     * @return int 返回计算得到的年龄。
+     * @throws InvalidArgumentException|Exception 如果输入参数无效或数量不正确。
+     */
+    public static function calculateAge(...$args): int
+    {
+        $numArgs = count($args);
+
+        switch ($numArgs) {
+            case 3:
+                // 处理年、月、日的情况
+                if (!is_int($args[0]) || !is_int($args[1]) || !is_int($args[2])) {
+                    throw new InvalidArgumentException('年、月、日参数必须为整数');
+                }
+                $year  = $args[0];
+                $month = $args[1];
+                $day   = $args[2];
+                break;
+            case 1:
+                // 处理日期字符串的情况
+                if (!is_string($args[0])) {
+                    throw new InvalidArgumentException('参数必须为日期字符串');
+                }
+                $dateString = $args[0];
+                $formats    = ['Y-m-d', 'Y/m/d', 'Ymd'];
+                $date       = false;
+                foreach ($formats as $format) {
+                    $date = DateTime::createFromFormat($format, $dateString);
+                    if ($date !== false) {
+                        break;
+                    }
+                }
+                if ($date === false) {
+                    throw new InvalidArgumentException('无效的日期格式');
+                }
+                $year  = (int)$date->format('Y');
+                $month = (int)$date->format('m');
+                $day   = (int)$date->format('d');
+                break;
+            default:
+                throw new InvalidArgumentException('无效的参数数量');
+        }
+
+        // 计算年龄
+        $now       = new DateTime();
+        $birthDate = new DateTime(sprintf('%04d-%02d-%02d', $year, $month, $day));
+        $interval  = $now->diff($birthDate);
+        $age       = $interval->y;
+        if ($now->format('m') < $month || ($now->format('m') == $month && $now->format('d') < $day)) {
+            $age--;
+        }
+
+        return $age;
+    }
+
+    /**
+     * 检查字符串是否为有效的中国大陆身份证号码
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $idCard 身份证号码
+     *
+     * @return bool 返回验证结果，如果有效则返回true，否则返回false
+     */
+    public static function isChineseIDCard(string $idCard): bool
+    {
+        // 长度验证：身份证号码应为15位或18位
+        $length = strlen($idCard);
+        if ($length !== 15 && $length !== 18) {
+            return false;
+        }
+
+        // 正则表达式验证格式：15位全数字，18位末尾可以是数字或X/x
+        $pattern = $length === 15 ? '/^\d{15}$/' : '/^\d{17}[\dxX]$/';
+        if (!preg_match($pattern, $idCard)) {
+            return false;
+        }
+
+        // 验证区域码（省份代码）：身份证前两位应介于11至91之间
+        $regionCode = substr($idCard, 0, 2);
+        if (!($regionCode >= "11" && $regionCode <= "91")) {
+            return false;
+        }
+
+        // 验证生日：转换成日期格式并验证是否构成有效日期
+        $birthday = $length === 15 ? '19' . substr($idCard, 6, 6) : substr($idCard, 6, 8);
+        if (DateTime::createFromFormat('Ymd', $birthday) === false) {
+            return false;
+        }
+
+        // 验证18位身份证的校验码：通过特定算法计算出校验码并比对
+        if ($length === 18 && !static::verifyIDCardChecksum($idCard)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * 验证18位身份证的校验码是否正确
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $idCard 18位身份证号码
+     *
+     * @return bool 校验码是否有效
+     */
+    public static function verifyIDCardChecksum(string $idCard): bool
+    {
+        $idCard   = strtoupper($idCard); // 统一转为大写，以处理x/X的情况
+        $factor   = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]; // 加权因子
+        $checksum = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2']; // 校验码对应值
+        $sum      = 0;
+
+        // 计算加权和
+        for ($i = 0; $i < 17; $i++) {
+            $sum += (int)$idCard[$i] * $factor[$i];
+        }
+
+        // 计算校验码索引
+        $mod = $sum % 11;
+        return $idCard[17] === $checksum[$mod];
+    }
+
+    /**
+     * 是否为https通讯
+     *
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return bool
      * @lasttime: 2021/12/19 11:42 上午
@@ -305,8 +502,10 @@ class Util extends Component
 
     /**
      * 获取一个随机数
-     * @param int $length 要获取随机数的长度
+     *
+     * @param int  $length  要获取随机数的长度
      * @param bool $numeric 返回纯数字随机数
+     *
      * @return string
      */
     public static function random(int $length, bool $numeric = false): string
@@ -330,10 +529,11 @@ class Util extends Component
     /**
      * 生成指定长度的随机字符串(不含数字)
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param int $length 字符串长度
+     *
      * @return string 生成的随机字符串
      * @lasttime: 2023/11/12 11:15 PM
      */
@@ -351,11 +551,13 @@ class Util extends Component
     /**
      * 取出数组中指定部分
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
-     * @param array $arr
-     * @param mixed $default
+     *
+     * @param array        $arr
+     * @param mixed        $default
      * @param string|array $keys
+     *
      * @return array
      * @lasttime: 2022/3/19 6:12 下午
      */
@@ -389,10 +591,12 @@ class Util extends Component
      * // $result will be:
      * // 1
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string $key
-     * @param array $arr
+     * @param array  $arr
+     *
      * @return mixed
      * @lasttime: 2022/3/26 10:05 下午
      */
@@ -418,13 +622,14 @@ class Util extends Component
     /**
      * 根据指定的parentIdKey将数组转树形结构
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param array $arr 二维数组
-     * @param int|string $parentId 父级id
-     * @param string $parentIdKey 父级id的key
-     * @param string $childrenKey 将子级放入的key
+     * @param array      $arr         二维数组
+     * @param int|string $parentId    父级id
+     * @param string     $parentIdKey 父级id的key
+     * @param string     $childrenKey 将子级放入的key
+     *
      * @return array
      * @lasttime: 2023/5/14 5:59 PM
      */
@@ -453,12 +658,13 @@ class Util extends Component
     /**
      * 根据指定的parentIdKey将数组转树形结构
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param array $tree 树形结构的多维数组
-     * @param string $sortKey 根据指定的key进行排序
+     * @param array  $tree        树形结构的多维数组
+     * @param string $sortKey     根据指定的key进行排序
      * @param string $childrenKey 子级所在的key
+     *
      * @return array
      * @lasttime: 2023/5/14 5:59 PM
      */
@@ -487,11 +693,12 @@ class Util extends Component
     /**
      * 遍历树形结构
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param array $tree 树形结构的多维数组
+     * @param array    $tree     树形结构的多维数组
      * @param callable $callback 回调函数，示例：function(&$node):void
+     *
      * @lasttime: 2023/11/7 11:16 AM
      */
     public static function treeEach(array &$tree, callable $callback)
@@ -510,13 +717,14 @@ class Util extends Component
     /**
      * 根据指定的key查找树形结构中的节点
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param array|null $tree 树形结构的多维数组
-     * @param mixed $value 要查找的值
-     * @param string $key 要查找的key
-     * @param string $childrenKey 子级所在的key
+     * @param array|null $tree        树形结构的多维数组
+     * @param mixed      $value       要查找的值
+     * @param string     $key         要查找的key
+     * @param string     $childrenKey 子级所在的key
+     *
      * @return array
      * @lasttime: 2023/6/23 3:38 PM
      */
@@ -545,14 +753,15 @@ class Util extends Component
     /**
      * 根据指定的key获取该节点所在的分支
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param array|null $tree 树形结构的多维数组
-     * @param mixed $value 要查找的值
-     * @param bool $needChildren 是否需要子级
-     * @param string $key 要查找的key
-     * @param string $childrenKey 子级所在的key
+     * @param array|null $tree         树形结构的多维数组
+     * @param mixed      $value        要查找的值
+     * @param bool       $needChildren 是否需要子级
+     * @param string     $key          要查找的key
+     * @param string     $childrenKey  子级所在的key
+     *
      * @return array
      * @lasttime: 2023/10/30 11:27 PM
      */
@@ -586,12 +795,13 @@ class Util extends Component
     /**
      * 将树形结构的最底层返回给回调函数
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param array $tree 树形结构的多维数组
-     * @param callable|null $fn 匿名回调函数
-     * @param string $childrenKey 子级所在的key
+     * @param array         $tree        树形结构的多维数组
+     * @param callable|null $fn          匿名回调函数
+     * @param string        $childrenKey 子级所在的key
+     *
      * @lasttime: 2023/10/9 9:40 PM
      */
     public static function treeLast(array &$tree = [], callable $fn = null, string $childrenKey = 'children')
@@ -611,12 +821,13 @@ class Util extends Component
      *
      * 函数会遍历每个节点，并执行回调函数。如果回调函数返回 true，则从树形结构中移除该节点。一旦执行了一次移除，函数将从头开始遍历树形结构，以便处理可能被移除的节点的父节点
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param array $tree 树形结构的多维数组
-     * @param callable|null $fn 匿名回调函数
-     * @param string $childrenKey 子级所在的key
+     * @param array         $tree        树形结构的多维数组
+     * @param callable|null $fn          匿名回调函数
+     * @param string        $childrenKey 子级所在的key
+     *
      * @lasttime: 2023/10/10 11:18 PM
      */
     public static function removeTreeNode(array &$tree = [], callable $fn = null, string $childrenKey = 'children')
@@ -642,11 +853,12 @@ class Util extends Component
     /**
      * 递归合并数组，与yii2的ArrayHelper::merge()不同的是，如果遇到int类型的key，会将后面的值覆盖前面的值
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $a
      * @param $b
+     *
      * @return mixed|null
      * @lasttime: 2023/5/24 11:08
      */
@@ -680,14 +892,15 @@ class Util extends Component
     /**
      * 将 XML 字符串解释为对象
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param $string
+     * @param        $string
      * @param string $class_name
-     * @param int $options
+     * @param int    $options
      * @param string $ns
-     * @param bool $is_prefix
+     * @param bool   $is_prefix
+     *
      * @return false|SimpleXMLElement|string
      * @lasttime: 2023/3/14 23:54
      */
@@ -704,11 +917,12 @@ class Util extends Component
     /**
      * 将数组转换为xml
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param $arr
+     * @param     $arr
      * @param int $level
+     *
      * @return array|string|string[]|null
      * @lasttime: 2023/3/14 23:57
      */
@@ -733,10 +947,11 @@ class Util extends Component
     /**
      * 将xml转换为数组
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $xml
+     *
      * @return array|string
      * @lasttime: 2023/3/14 23:58
      */
@@ -759,9 +974,10 @@ class Util extends Component
     /**
      * 反序列化
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2021/12/19 10:51 下午
+     *
      * @param $value
      *
      * @return mixed|array
@@ -794,12 +1010,14 @@ class Util extends Component
     /**
      * 是否为序列化字符串
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2021/12/19 10:52 下午
+     *
      * @param bool $strict
      *
-     * @param $data
+     * @param      $data
+     *
      * @return bool
      */
     public static function is_serialized($data, bool $strict = true): bool
@@ -841,10 +1059,11 @@ class Util extends Component
     /**
      * 判断字符串是否为json
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param mixed $string
+     *
      * @return bool
      * @lasttime: 2023/10/9 12:26 AM
      */
@@ -858,12 +1077,14 @@ class Util extends Component
     /**
      * 判断字符串是否包含字串
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2021/12/18 12:26 上午
-     * @param string $find 需要查找的字串
+     *
+     * @param string $find   需要查找的字串
      *
      * @param string $string 在该字符串中查找
+     *
      * @return bool
      */
     public static function strExists(string $string, string $find): bool
@@ -874,11 +1095,12 @@ class Util extends Component
     /**
      * 获取字符串长度
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param string $string 字符串
+     * @param string $string  字符串
      * @param string $charset 字符集
+     *
      * @return false|int|mixed
      * @lasttime: 2023/2/13 2:06 PM
      */
@@ -936,10 +1158,11 @@ class Util extends Component
     /**
      * 截取字符串
      *
-     * @param string $string 字符串
-     * @param int $length 截取长度
-     * @param bool $haveDot 是否有省略号
+     * @param string $string  字符串
+     * @param int    $length  截取长度
+     * @param bool   $haveDot 是否有省略号
      * @param string $charset 字符集
+     *
      * @return string
      */
     public static function substr(string $string, int $length, bool $haveDot = false, string $charset = 'utf8'): string
@@ -1029,14 +1252,15 @@ class Util extends Component
     /**
      * 隐藏字符串中间部分，只显示指定数量的开头和结尾字符。
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param string $str 输入的字符串。
-     * @param int $showStart 显示开头的字符数量，默认是3。
-     * @param int $showEnd 显示结尾的字符数量，默认是4。
-     * @param string $replace 用于替换隐藏部分的字符，默认是'*'。
-     * @param string $charset 字符串的编码类型，默认是'UTF-8'。
+     * @param string $str       输入的字符串。
+     * @param int    $showStart 显示开头的字符数量，默认是3。
+     * @param int    $showEnd   显示结尾的字符数量，默认是4。
+     * @param string $replace   用于替换隐藏部分的字符，默认是'*'。
+     * @param string $charset   字符串的编码类型，默认是'UTF-8'。
+     *
      * @return string 返回中间部分被替换后的字符串。
      *
      * @lasttime: 2024/7/20 上午11:02
@@ -1054,12 +1278,14 @@ class Util extends Component
     /**
      * 是否以指定字符开始
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2021/12/19 11:19 下午
+     *
      * @param string $needle
      *
      * @param string $haystack
+     *
      * @return bool
      */
     public static function startsWith(string $haystack, string $needle): bool
@@ -1070,12 +1296,14 @@ class Util extends Component
     /**
      * 是否以指定字符结束
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2021/12/19 11:19 下午
+     *
      * @param string $needle
      *
      * @param string $haystack
+     *
      * @return bool
      */
     public static function endsWith(string $haystack, string $needle): bool
@@ -1084,12 +1312,14 @@ class Util extends Component
     }
 
     /**
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param int|string $errno
-     * @param string $message
-     * @param mixed $data
-     * @param array $params
+     * @param string     $message
+     * @param mixed      $data
+     * @param array      $params
+     *
      * @return array
      * @lasttime 2022/9/28 16:01
      */
@@ -1106,11 +1336,12 @@ class Util extends Component
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param mixed $data 需要验证的数据
+     * @param mixed $data         需要验证的数据
      * @param mixed $successCodes 验证成功的状态码
+     *
      * @return bool
      * @lasttime: 2023/2/1 3:47 PM
      */
@@ -1127,9 +1358,11 @@ class Util extends Component
     /**
      * 获取指定目录下的文件夹
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string $path
+     *
      * @return array
      * @lasttime: 2022/1/14 12:31 上午
      */
@@ -1154,9 +1387,11 @@ class Util extends Component
     /**
      * 获取指定目录下所有文件
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string $dir 目录路径
+     *
      * @return array
      * @lasttime: 2022/1/14 12:26 上午
      */
@@ -1176,11 +1411,13 @@ class Util extends Component
     /**
      * 对数据进行AES加密
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string $key
      * @param string $iv
      * @param string $data
+     *
      * @return string
      * @lasttime: 2021/12/28 1:24 下午
      */
@@ -1192,11 +1429,13 @@ class Util extends Component
     /**
      * 对数据进行AES解密
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string $key
      * @param string $iv
      * @param string $encode
+     *
      * @return string
      * @lasttime: 2021/12/28 1:24 下午
      */
@@ -1208,10 +1447,12 @@ class Util extends Component
     /**
      * 获取redis
      *
-     * @author Bowen
+     * @author     Bowen
      * @email bowen@jiuchet.com
-     * @lastTime 2021/5/24 8:53 下午
+     * @lastTime   2021/5/24 8:53 下午
+     *
      * @param string $connectionName
+     *
      * @return Connection
      * @deprecated use Jcbowen\JcbaseYii2\components\Redis
      */
@@ -1227,12 +1468,14 @@ class Util extends Component
     /**
      * redis设置数据
      *
-     * @author Bowen
+     * @author     Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string|array $value
-     * @param int|string $expire
-     * @param mixed ...$options
-     * @param $key
+     * @param int|string   $expire
+     * @param mixed        ...$options
+     * @param              $key
+     *
      * @return mixed
      * @deprecated use Jcbowen\JcbaseYii2\components\Redis set()
      */
@@ -1250,9 +1493,11 @@ class Util extends Component
     /**
      * redis根据key获取数据
      *
-     * @author Bowen
+     * @author     Bowen
      * @email bowen@jiuchet.com
+     *
      * @param $key
+     *
      * @return string|array|mixed
      * @deprecated use Jcbowen\JcbaseYii2\components\Redis get()
      */
@@ -1267,9 +1512,11 @@ class Util extends Component
     /**
      * redis根据key获取数据
      *
-     * @author Bowen
+     * @author     Bowen
      * @email bowen@jiuchet.com
+     *
      * @param mixed ...$key
+     *
      * @return array
      * @deprecated use Jcbowen\JcbaseYii2\components\Redis mget()
      */
@@ -1287,12 +1534,13 @@ class Util extends Component
     /**
      * redis根据key删除数据
      *
-     * @author Bowen
+     * @author     Bowen
      * @email bowen@jiuchet.com
      *
      * @param ...$keys
+     *
      * @return mixed
-     * @lasttime: 2022/9/8 2:04 PM
+     * @lasttime   : 2022/9/8 2:04 PM
      * @deprecated use Jcbowen\JcbaseYii2\components\Redis del()
      */
     public static function redisDel(...$keys)
@@ -1304,12 +1552,13 @@ class Util extends Component
     /**
      * redis确定key是否存在
      *
-     * @author Bowen
+     * @author     Bowen
      * @email bowen@jiuchet.com
      *
      * @param ...$keys
+     *
      * @return mixed
-     * @lasttime: 2022/10/6 18:54
+     * @lasttime   : 2022/10/6 18:54
      * @deprecated use Jcbowen\JcbaseYii2\components\Redis exists()
      */
     public static function redisExists(...$keys)
@@ -1321,13 +1570,14 @@ class Util extends Component
     /**
      * redis根据key延长过期时间
      *
-     * @author Bowen
+     * @author     Bowen
      * @email bowen@jiuchet.com
      *
      * @param $key
      * @param $expire
+     *
      * @return mixed
-     * @lasttime: 2022/9/8 2:05 PM
+     * @lasttime   : 2022/9/8 2:05 PM
      * @deprecated use Jcbowen\JcbaseYii2\components\Redis expire()
      */
     public static function redisExpire($key, $expire)
@@ -1339,9 +1589,11 @@ class Util extends Component
     /**
      * 将static::error的数据转换为result输出
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array|Response $error
+     *
      * @return string|Response
      * @lasttime 2022/9/28 15:49
      */
@@ -1362,14 +1614,16 @@ class Util extends Component
     /**
      * 返回API结果的通用方法
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
-     * @param int|string|Response $errCode 错误代码，默认为 ErrCode::UNKNOWN
-     * @param string|Response $errmsg 错误信息，默认为
-     * @param array|string|int|Response $data 返回的数据
-     * @param array $additionalParams 附加参数
-     * @param string $returnType 输出类型，默认为 'response'；可选：'response'，'json', 'array'
-     * @param bool $addSecurityHeaders 是否添加安全响应头，默认为 true
+     *
+     * @param int|string|Response       $errCode            错误代码，默认为 ErrCode::UNKNOWN
+     * @param string|Response           $errmsg             错误信息，默认为
+     * @param array|string|int|Response $data               返回的数据
+     * @param array                     $additionalParams   附加参数
+     * @param string                    $returnType         输出类型，默认为 'response'；可选：'response'，'json', 'array'
+     * @param bool                      $addSecurityHeaders 是否添加安全响应头，默认为 true
+     *
      * @return Response|string 返回响应对象或JSON字符串
      *
      * @lastTime 2024/8/3 10:02:06
@@ -1488,10 +1742,11 @@ class Util extends Component
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string|null $html
+     *
      * @return Response
      * @lasttime: 2022/10/6 13:05
      */
@@ -1515,7 +1770,7 @@ class Util extends Component
      *  - X-Download-Options: 防止文件自动下载
      *  - X-Frame-Options: 防止点击劫持
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @lasttime: 2024/7/24 下午2:54
@@ -1533,9 +1788,10 @@ class Util extends Component
     /**
      * 获取接口返回的数据
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2021/12/18 12:21 上午
+     *
      * @param $data
      *
      * @return array|int|mixed|string
@@ -1556,9 +1812,10 @@ class Util extends Component
     /**
      * 获取接口返回的状态码
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2021/12/18 12:21 上午
+     *
      * @param $code
      *
      * @return float|int|string
@@ -1576,9 +1833,10 @@ class Util extends Component
     /**
      * 获取接口返回的消息
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @lastTime 2021/12/18 12:21 上午
+     *
      * @param $msg
      *
      * @return string
@@ -1602,10 +1860,11 @@ class Util extends Component
      * 并将特定类型的数据标准化。例如，将空的日期字符串转换为空字符串，将
      * 所有字符串、数字和 null 类型的数据转换为字符串。
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $data
+     *
      * @return array|bool|mixed|string|void
      * @lasttime: 2024/7/24 上午11:41
      */
@@ -1643,11 +1902,12 @@ class Util extends Component
     /**
      * 结束程序
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      *
      * @param string|int $status
-     * @param null $response
+     * @param null       $response
+     *
      * @lastTime 2021/12/18 12:22 上午
      */
     private function _end($status = '0', $response = null)
@@ -1661,8 +1921,10 @@ class Util extends Component
     }
 
     /** 获取图片大小
+     *
      * @param string $filename
-     * @param array $imageInfo
+     * @param array  $imageInfo
+     *
      * @return array|false
      */
     public function getImageSize(string $filename, array $imageInfo = [])
@@ -1678,9 +1940,11 @@ class Util extends Component
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param Controller $controller
+     *
      * @return array|string|Response
      * @throws InvalidConfigException
      * @lasttime: 2021/12/20 10:00 上午
@@ -1708,10 +1972,14 @@ class Util extends Component
 
     /**
      * 验证传入的验证码是否正确
-     * @param string $code 传入的验证码
+     *
+     * @param string     $code 传入的验证码
      * @param Controller $controller
+     *
      * @return bool
-     * @throws InvalidConfigException 控制器中的使用示例 verifyCaptcha($code, new \backend\controllers\utility\CaptchaController('utility/captcha', $this->module));
+     * @throws InvalidConfigException 控制器中的使用示例 verifyCaptcha($code, new
+     *                                \backend\controllers\utility\CaptchaController('utility/captcha',
+     *                                $this->module));
      */
     public function verifyCaptcha(string $code, Controller $controller)
     {
@@ -1733,9 +2001,13 @@ class Util extends Component
 
     /**
      * 获取图形验证码
+     *
      * @param Controller $controller
+     *
      * @return string
-     * @throws InvalidConfigException 控制器中的使用示例 getCaptcha(new \backend\controllers\utility\CaptchaController('utility/captcha', $this->module));
+     * @throws InvalidConfigException 控制器中的使用示例 getCaptcha(new
+     *                                \backend\controllers\utility\CaptchaController('utility/captcha',
+     *                                $this->module));
      */
     public function getCaptcha(Controller $controller)
     {
@@ -1750,10 +2022,11 @@ class Util extends Component
     /**
      * 测试代码运行时长
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param int $tag
+     *
      * @return float
      * @lasttime: 2022/9/6 11:37 AM
      */
@@ -1771,11 +2044,12 @@ class Util extends Component
     /**
      * 四舍五入金额
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param mixed $money 金额
-     * @param int $decimals 小数位数
+     * @param mixed $money    金额
+     * @param int   $decimals 小数位数
+     *
      * @return float
      * @lasttime: 2022/9/19 2:48 PM
      */
