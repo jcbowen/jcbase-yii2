@@ -1649,9 +1649,8 @@ class Util extends Component
                 break;
         }
 
-        // 将数据转换为数组，并统计数据数量
-        $data  = (array)$data;
-        $count = count($data);
+        // 强制data只能为array
+        $data = (array)$data;
 
         // 获取响应代码和信息，并规范化数据
         $errCode = (int)$this->getResponseCode($errCode);
@@ -1678,7 +1677,7 @@ class Util extends Component
                 $result['data']['count'] ??
                 $result['data']['total'] ??
                 $result['data']['totalCount'] ??
-                $count
+                count($result['data']['list'])
             );
 
             $result['data']['count'] = $count;
@@ -1686,7 +1685,7 @@ class Util extends Component
             $count = (int)($result['count'] ??
                 $result['total'] ??
                 $result['totalCount'] ??
-                $count);
+                count($data));
 
             $result['count'] = $count;
         }
