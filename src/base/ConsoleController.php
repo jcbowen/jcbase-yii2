@@ -21,12 +21,17 @@ class ConsoleController extends Controller
     use BaseControllerTrait;
     use ModelHelper;
 
+    /** @var array 命令行参数 */
+    protected $CommandLineParams;
+
     /**
      * {@inheritdoc}
      */
     public function init()
     {
         global $_B;
+
+        $this->CommandLineParams = $this->getCommandLineParams();
 
         parent::init();
 
@@ -43,7 +48,7 @@ class ConsoleController extends Controller
      *
      * @return array
      */
-    public function getParams(): array
+    public function getCommandLineParams(): array
     {
         $rawParams = [];
         if (isset($_SERVER['argv'])) {
