@@ -35,6 +35,11 @@ trait CurdActionTrait
      */
     public $modelClass;
 
+    // ---------- 字段名定义 ----------/
+
+    /** @var string 数据表删除时间字段 */
+    public $field_deleted_at = 'deleted_at';
+
     //---------- 以下赋值于checkInit之后 ----------/
 
     /** @var string 数据表名称 */
@@ -63,7 +68,7 @@ trait CurdActionTrait
     /**
      * 调用前需进行的初始化检查
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @lasttime: 2021/5/9 2:43 下午
@@ -87,7 +92,7 @@ trait CurdActionTrait
     /**
      * 获取列表数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return Response|string
      * @lasttime: 2022/3/13 9:55 上午
@@ -120,8 +125,8 @@ trait CurdActionTrait
             return $this->resultError($result);
 
         // 仅在存在deleted_at字段时才进行软删除过滤
-        if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
-            $row = $row->andWhere([($this->modelQueryAlias ?: $this->modelTableName) . '.deleted_at' => $this->noTime]);
+        if (empty($showDeleted) && array_key_exists($this->field_deleted_at, $this->modelAttributes))
+            $row = $row->andWhere([($this->modelQueryAlias ?: $this->modelTableName) . ".$this->field_deleted_at" => $this->noTime]);
 
         if (!empty($where)) $row = $row->andWhere($where);
         $row = $row->andFilterWhere($filterWhere);
@@ -143,7 +148,7 @@ trait CurdActionTrait
     /**
      * 查询列表条件
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return array|string
      * @lasttime: 2022/3/13 10:53 上午
@@ -156,7 +161,7 @@ trait CurdActionTrait
     /**
      * 获取列表查询过滤条件
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return array
      * @lasttime: 2022/3/13 10:52 上午
@@ -169,9 +174,11 @@ trait CurdActionTrait
     /**
      * 获取列表查询的链式查询
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param ActiveQuery $row
+     *
      * @return ActiveQuery|array|Response|void
      * @lasttime: 2022/3/18 11:11 下午
      */
@@ -183,7 +190,7 @@ trait CurdActionTrait
     /**
      * 设置查询列表返回的字段
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return string|array
      * @lasttime: 2022/3/13 10:51 上午
@@ -196,7 +203,7 @@ trait CurdActionTrait
     /**
      * 获取列表排序
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return string|array
      * @lasttime: 2022/3/13 10:51 上午
@@ -209,7 +216,7 @@ trait CurdActionTrait
     /**
      * 查询数据列表时是否调用asArray()
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return bool
@@ -223,9 +230,11 @@ trait CurdActionTrait
     /**
      * 遍历列表数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param $item
+     *
      * @return mixed
      * @lasttime: 2022/3/13 10:50 上午
      */
@@ -245,12 +254,14 @@ trait CurdActionTrait
     /**
      * 查询列表返回数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param $total
      * @param $page
      * @param $pageSize
      * @param $list
+     *
      * @return Response|string
      * @lasttime: 2022/3/13 10:34 上午
      */
@@ -271,7 +282,7 @@ trait CurdActionTrait
     /**
      * 根据时间分页的列表查询(最大输出1000条数据)
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
      * @lasttime: 2022/3/19 10:39 上午
@@ -304,8 +315,8 @@ trait CurdActionTrait
             return static::resultError($result);
 
         // 仅在存在deleted_at字段时才进行软删除过滤
-        if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
-            $row->andWhere([($this->modelQueryAlias ?: $this->modelTableName) . '.deleted_at' => $this->noTime]);
+        if (empty($showDeleted) && array_key_exists($this->field_deleted_at, $this->modelAttributes))
+            $row->andWhere([($this->modelQueryAlias ?: $this->modelTableName) . ".$this->field_deleted_at" => $this->noTime]);
 
         if (!empty($where)) $row->andWhere($where);
         $row->andFilterWhere($filterWhere);
@@ -328,7 +339,7 @@ trait CurdActionTrait
     /**
      * 根据时间分页的列表查询条件
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return array|string
      * @lasttime: 2022/3/13 10:53 上午
@@ -341,7 +352,7 @@ trait CurdActionTrait
     /**
      * 根据时间分页的列表查询过滤条件
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return array|string
      * @lasttime: 2022/3/13 10:52 上午
@@ -383,9 +394,11 @@ trait CurdActionTrait
     /**
      * 根据时间分页的列表查询的链式查询
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param ActiveQuery $row
+     *
      * @return ActiveQuery|array|Response|void
      * @lasttime: 2022/3/18 11:11 下午
      */
@@ -397,7 +410,7 @@ trait CurdActionTrait
     /**
      * 设置根据时间分页的列表查询返回的字段
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return string|array
      * @lasttime: 2022/3/13 10:51 上午
@@ -410,7 +423,7 @@ trait CurdActionTrait
     /**
      * 获取根据时间分页的列表查询排序
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return string|array
      * @lasttime: 2022/3/13 10:51 上午
@@ -431,7 +444,7 @@ trait CurdActionTrait
     /**
      * 根据时间分页的列表查询时是否调用asArray()
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return bool
@@ -445,11 +458,13 @@ trait CurdActionTrait
     /**
      * 遍历根据时间分页的列表查询数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param $item
      * @param $minTime string 最小的创建时间
      * @param $maxTime string 最大的创建时间
+     *
      * @return mixed
      * @lasttime: 2022/3/13 10:50 上午
      */
@@ -472,13 +487,14 @@ trait CurdActionTrait
     /**
      * 根据时间分页的列表查询返回数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $list
      * @param $pageSize
      * @param $minTime
      * @param $maxTime
+     *
      * @return string|Response
      * @lasttime: 2022/10/13 17:58
      */
@@ -494,7 +510,7 @@ trait CurdActionTrait
     /**
      * 批处理列表查询数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return Response|string
      * @lasttime: 2022/3/13 9:55 上午
@@ -526,8 +542,8 @@ trait CurdActionTrait
             return static::resultError($result);
 
         // 仅在存在deleted_at字段时才进行软删除过滤
-        if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
-            $row = $row->andWhere([($this->modelQueryAlias ?: $this->modelTableName) . '.deleted_at' => $this->noTime]);
+        if (empty($showDeleted) && array_key_exists($this->field_deleted_at, $this->modelAttributes))
+            $row = $row->andWhere([($this->modelQueryAlias ?: $this->modelTableName) . ".$this->field_deleted_at" => $this->noTime]);
 
         if (!empty($where)) $row = $row->andWhere($where);
         $row = $row->andFilterWhere($filterWhere);
@@ -558,7 +574,7 @@ trait CurdActionTrait
     /**
      * 批处理列表查询条件
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return array|string
      * @lasttime: 2022/3/13 10:53 上午
@@ -571,7 +587,7 @@ trait CurdActionTrait
     /**
      * 批处理列表查询过滤条件
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return array
      * @lasttime: 2022/3/13 10:52 上午
@@ -584,9 +600,11 @@ trait CurdActionTrait
     /**
      * 批处理列表查询链式查询
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param ActiveQuery $row
+     *
      * @return mixed
      * @lasttime: 2022/3/18 11:11 下午
      */
@@ -598,7 +616,7 @@ trait CurdActionTrait
     /**
      * 批处理列表查询返回的字段
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return string|array
      * @lasttime: 2022/3/13 10:51 上午
@@ -611,7 +629,7 @@ trait CurdActionTrait
     /**
      * 批处理列表查询排序
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return string|array
      * @lasttime: 2022/3/13 10:51 上午
@@ -624,7 +642,7 @@ trait CurdActionTrait
     /**
      * 批处理列表查询时是否调用asArray()
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return bool
@@ -638,9 +656,11 @@ trait CurdActionTrait
     /**
      * 批处理列表查询数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param $item
+     *
      * @return mixed
      * @lasttime: 2022/3/13 10:50 上午
      */
@@ -660,10 +680,12 @@ trait CurdActionTrait
     /**
      * 批处理列表查询返回数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param $total
      * @param $list
+     *
      * @return Response|string
      * @lasttime: 2022/3/13 10:34 上午
      */
@@ -679,7 +701,7 @@ trait CurdActionTrait
     /**
      * 查询数据详情
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return Response|string
      * @lasttime: 2022/3/13 3:26 下午
@@ -706,8 +728,8 @@ trait CurdActionTrait
             return static::resultError($result);
 
         // 仅在存在deleted_at字段时才进行软删除过滤
-        if (empty($showDeleted) && array_key_exists('deleted_at', $this->modelAttributes))
-            $row = $row->andWhere([($this->modelQueryAlias ?: $this->modelTableName) . '.deleted_at' => $this->noTime]);
+        if (empty($showDeleted) && array_key_exists($this->field_deleted_at, $this->modelAttributes))
+            $row = $row->andWhere([($this->modelQueryAlias ?: $this->modelTableName) . ".$this->field_deleted_at" => $this->noTime]);
 
         if ($this->detailAsArray())
             $row = $row->asArray();
@@ -723,7 +745,7 @@ trait CurdActionTrait
     /**
      * 获取数据详情的返回字段
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return string|array
      * @lasttime: 2022/3/21 8:50 下午
@@ -736,9 +758,11 @@ trait CurdActionTrait
     /**
      * 查询数据详情的链式查询
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param ActiveQuery $row
+     *
      * @return ActiveQuery|array|Response|void
      * @lasttime: 2022/3/21 11:11 下午
      */
@@ -750,9 +774,11 @@ trait CurdActionTrait
     /**
      * 查询数据详情的条件
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array $data 通过$_GPC接收的数据
+     *
      * @return string|array|Response
      * @lasttime: 2022/3/13 3:25 下午
      */
@@ -770,7 +796,7 @@ trait CurdActionTrait
     /**
      * 查询数据详情时是否调用asArray()
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @return bool
      * @lasttime 2022/9/21 09:58
@@ -783,9 +809,11 @@ trait CurdActionTrait
     /**
      * 查询数据详情的数据过滤
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array|ActiveRecord $detail
+     *
      * @return mixed
      * @lasttime: 2022/3/13 3:30 下午
      */
@@ -805,10 +833,11 @@ trait CurdActionTrait
     /**
      * 查询数据详情的返回数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $detail
+     *
      * @return string|Response
      * @lasttime: 2022/12/15 14:03
      */
@@ -822,7 +851,7 @@ trait CurdActionTrait
     /**
      * 新增数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
      * @lasttime: 2022/3/13 10:33 下午
@@ -889,7 +918,7 @@ trait CurdActionTrait
     /**
      * 创建接口接收数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return array|Response
      * @lasttime: 2022/3/13 3:43 下午
@@ -902,9 +931,11 @@ trait CurdActionTrait
     /**
      * 新增数据前调用
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array $data
+     *
      * @return array|bool
      * @lasttime: 2022/3/13 10:01 下午
      */
@@ -919,10 +950,12 @@ trait CurdActionTrait
     /**
      * 新增数据后
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string|int $id
-     * @param array $data
+     * @param array      $data
+     *
      * @return string|int
      * @lasttime: 2022/3/13 10:02 下午
      */
@@ -937,10 +970,11 @@ trait CurdActionTrait
     /**
      * 新增数据成功后的返回数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $id
+     *
      * @return string|Response
      * @lasttime: 2023/3/19 8:00 PM
      */
@@ -954,9 +988,11 @@ trait CurdActionTrait
     /**
      * 更新数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array|null $data
+     *
      * @return string|Response
      * @lasttime: 2022/3/13 10:20 下午
      */
@@ -1022,9 +1058,11 @@ trait CurdActionTrait
     /**
      * 更新数据的查询条件
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array $data 通过$_GPC接收的数据
+     *
      * @return string|array|Response
      * @lasttime: 2022/3/13 10:09 下午
      */
@@ -1042,7 +1080,7 @@ trait CurdActionTrait
     /**
      * 更新的数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return array|Response
      * @lasttime: 2022/3/13 10:06 下午
@@ -1055,10 +1093,12 @@ trait CurdActionTrait
     /**
      * 更新数据前调用
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
-     * @param $model
+     *
+     * @param       $model
      * @param array $data
+     *
      * @return array|bool
      * @lasttime: 2022/3/13 10:09 下午
      */
@@ -1073,10 +1113,12 @@ trait CurdActionTrait
     /**
      * 更新数据后调用
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param int|string $id
-     * @param array $data
+     * @param array      $data
+     *
      * @return array|bool
      * @lasttime: 2022/3/13 10:09 下午
      */
@@ -1091,10 +1133,11 @@ trait CurdActionTrait
     /**
      * 更新数据成功后的返回数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $id
+     *
      * @return string|Response
      * @lasttime: 2023/3/19 8:05 PM
      */
@@ -1108,7 +1151,7 @@ trait CurdActionTrait
     /**
      * 设置某个字段的值
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
      * @lasttime: 2022/3/13 10:31 下午
@@ -1193,7 +1236,7 @@ trait CurdActionTrait
     /**
      * 获取设置某个字段的值的数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return array|Response
@@ -1207,9 +1250,11 @@ trait CurdActionTrait
     /**
      * 设置某个字段时，检查传入的字段是否有效
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string $field
+     *
      * @return array|bool
      * @lasttime: 2022/9/10 08:32
      */
@@ -1225,9 +1270,11 @@ trait CurdActionTrait
     /**
      * setValue查询条件
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param int $id
+     *
      * @return array|string
      * @lasttime 2022/9/30 09:21
      */
@@ -1235,8 +1282,8 @@ trait CurdActionTrait
     {
         $where   = ['and'];
         $where[] = [$this->pkId => $id];
-        if (array_key_exists('deleted_at', $this->modelAttributes))
-            $where[] = ['deleted_at' => $this->noTime];
+        if (array_key_exists($this->field_deleted_at, $this->modelAttributes))
+            $where[] = [$this->field_deleted_at => $this->noTime];
 
         return $where;
     }
@@ -1244,9 +1291,11 @@ trait CurdActionTrait
     /**
      * 获取setValue查询结果
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param ActiveRecord $record
+     *
      * @return ActiveRecord|Response
      * @lasttime 2022/11/17 16:09
      */
@@ -1258,12 +1307,13 @@ trait CurdActionTrait
     /**
      * 获取setValue修改的数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param string $field
-     * @param mixed $value
+     * @param string       $field
+     * @param mixed        $value
      * @param ActiveRecord $model
+     *
      * @return array
      * @lasttime: 2022/12/28 4:48 PM
      */
@@ -1275,12 +1325,13 @@ trait CurdActionTrait
     /**
      * 设置某个字段的值后执行
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param int $id
-     * @param string $field
+     * @param int         $id
+     * @param string      $field
      * @param string|null $value
+     *
      * @return bool|array
      * @lasttime: 2022/12/26 3:20 PM
      */
@@ -1292,12 +1343,13 @@ trait CurdActionTrait
     /**
      * 设置某个字段的值返回数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $value
      * @param $field
      * @param $id
+     *
      * @return string|Response
      * @lasttime: 2023/3/19 8:10 PM
      */
@@ -1311,7 +1363,7 @@ trait CurdActionTrait
     /**
      * 新增/更新数据(接口合并)
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
      * @lasttime: 2022/3/13 10:31 下午
@@ -1330,11 +1382,12 @@ trait CurdActionTrait
     /**
      * 新增/更新前调用(接口合并)
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param array $data
-     * @param $model
+     * @param       $model
+     *
      * @return bool|array
      * @lasttime: 2022/10/10 15:04
      */
@@ -1346,11 +1399,12 @@ trait CurdActionTrait
     /**
      * 新增/更新后调用(接口合并)
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param int|null $id
+     * @param int|null   $id
      * @param array|null $data
+     *
      * @return bool|array
      * @lasttime: 2022/10/10 15:05
      */
@@ -1362,10 +1416,11 @@ trait CurdActionTrait
     /**
      * 新增/更新返回数据(接口合并)
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $id
+     *
      * @return string|Response
      * @lasttime: 2023/3/19 8:14 PM
      */
@@ -1377,7 +1432,7 @@ trait CurdActionTrait
     /**
      * 获取新增/更新数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return array|Response
      * @lasttime: 2022/3/13 10:05 下午
@@ -1415,7 +1470,7 @@ trait CurdActionTrait
         $delArr = call_user_func($this->modelClass . '::find')
             ->select($fields)
             ->where([
-                $this->modelTableName . '.deleted_at' => $this->noTime,
+                $this->modelTableName . ".$this->field_deleted_at" => $this->noTime,
             ])
             ->andWhere($where)
             ->asArray()
@@ -1465,7 +1520,7 @@ trait CurdActionTrait
     /**
      * 设置删除数据的select字段（重写方法时，务必查询主键！）
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return array|string
@@ -1479,7 +1534,7 @@ trait CurdActionTrait
     /**
      * 删除查询条件
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return array|string
@@ -1493,10 +1548,12 @@ trait CurdActionTrait
     /**
      * 删除前数据调用
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array $delArr 所有要被删除的数据
      * @param array $delIds 所有要被删除的数据的ids
+     *
      * @return array|bool
      * @lasttime: 2021/5/9 3:04 下午
      */
@@ -1508,24 +1565,28 @@ trait CurdActionTrait
     /**
      * 删除时需要更新的属性值
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array $delArr 要被删除的数据
+     *
      * @return array|string
      * @lasttime 2022/9/21 15:15
      */
     public function getDeleteCondition(array $delArr)
     {
-        return ['deleted_at' => $this->operateTime];
+        return [$this->field_deleted_at => $this->operateTime];
     }
 
     /**
      * 删除后调用
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
-     * @param array $ids 被删除的数据id
+     *
+     * @param array $ids    被删除的数据id
      * @param array $delArr 被删除的数据
+     *
      * @return array|bool
      * @lasttime: 2021/5/9 3:04 下午
      */
@@ -1537,11 +1598,12 @@ trait CurdActionTrait
     /**
      * 删除返回
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param array $delIds
      * @param array $delArr
+     *
      * @return string|Response
      * @lasttime: 2023/3/19 10:33 PM
      */
@@ -1555,7 +1617,7 @@ trait CurdActionTrait
     /**
      * 恢复删除的数据
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
      * @lasttime 2022/9/21 14:52
@@ -1583,7 +1645,7 @@ trait CurdActionTrait
 
         $items   = call_user_func($this->modelClass . '::find')
             ->select($fields)
-            ->where(['<>', $this->modelTableName . '.deleted_at', $this->noTime])
+            ->where(['<>', $this->modelTableName . ".$this->field_deleted_at", $this->noTime])
             ->andWhere($where)
             ->asArray()
             ->all();
@@ -1629,7 +1691,7 @@ trait CurdActionTrait
     /**
      * 设置恢复数据的select字段（重写方法时，务必查询主键！）
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @return array|string
      * @lasttime 2022/9/21 14:58
@@ -1642,9 +1704,11 @@ trait CurdActionTrait
     /**
      * 恢复查询条件
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param $ids
+     *
      * @return array|string
      * @lasttime 2022/9/21 15:00
      */
@@ -1656,10 +1720,12 @@ trait CurdActionTrait
     /**
      * 恢复前数据调用
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array $items
      * @param array $itemIds
+     *
      * @return array|bool
      * @lasttime 2022/9/21 15:06
      */
@@ -1671,24 +1737,28 @@ trait CurdActionTrait
     /**
      * 恢复时需要更新的属性值
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array $items 需要恢复的数据
+     *
      * @return array|string
      * @lasttime 2022/9/21 15:19
      */
     public function getRestoreCondition(array $items)
     {
-        return ['deleted_at' => $this->noTime];
+        return [$this->field_deleted_at => $this->noTime];
     }
 
     /**
      * 恢复后调用
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
-     * @param array $ids 被恢复的id
+     *
+     * @param array $ids   被恢复的id
      * @param array $items 被恢复的数据
+     *
      * @return array|bool
      * @lasttime 2022/9/21 15:06
      */
@@ -1700,11 +1770,12 @@ trait CurdActionTrait
     /**
      * 恢复成功返回
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param array $restoreIds
      * @param array $restoreArr
+     *
      * @return string|Response
      * @lasttime: 2023/3/19 10:48 PM
      */
@@ -1718,7 +1789,7 @@ trait CurdActionTrait
     /**
      * 真实删除数据
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @return string|Response
      * @lasttime 2022/9/21 14:52
@@ -1787,7 +1858,7 @@ trait CurdActionTrait
     /**
      * 设置被永久删除数据的查询返回字段（重写方法时，务必查询主键！）
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @return array|string
      * @lasttime 2022/9/21 14:58
@@ -1800,9 +1871,11 @@ trait CurdActionTrait
     /**
      * 永久删除查询条件
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param $ids
+     *
      * @return array|string
      * @lasttime 2022/9/21 15:00
      */
@@ -1814,10 +1887,12 @@ trait CurdActionTrait
     /**
      * 永久删除前数据调用
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array $items
      * @param array $itemIds
+     *
      * @return array|bool
      * @lasttime 2022/9/21 15:06
      */
@@ -1829,10 +1904,12 @@ trait CurdActionTrait
     /**
      * 永久删除后调用
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
-     * @param array $ids 永久删除的id
+     *
+     * @param array $ids   永久删除的id
      * @param array $items 永久删除的数据
+     *
      * @return array|bool
      * @lasttime 2022/9/21 15:06
      */
@@ -1844,11 +1921,12 @@ trait CurdActionTrait
     /**
      * 永久删除成功返回
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param array $removeIds
      * @param array $removeArr
+     *
      * @return string|Response
      * @lasttime: 2023/3/19 11:10 PM
      */
@@ -1862,10 +1940,11 @@ trait CurdActionTrait
     /**
      * 将error数组转换Response输出
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param mixed $error
+     *
      * @return string|Response
      * @lasttime: 2023/1/13 1:35 PM
      */
@@ -1877,14 +1956,15 @@ trait CurdActionTrait
     /**
      * 输出json结构数据到Response中
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string|integer $errCode
-     * @param string $errmsg
-     * @param mixed $data
-     * @param array $params
-     * @param string $returnType
+     * @param string         $errmsg
+     * @param mixed          $data
+     * @param array          $params
+     * @param string         $returnType
+     *
      * @return string|Response
      * @lasttime: 2022/8/28 23:17
      */
@@ -1896,13 +1976,14 @@ trait CurdActionTrait
     /**
      * 输出json字符串
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string|integer $errCode
-     * @param string $errmsg
-     * @param mixed $data
-     * @param array $params
+     * @param string         $errmsg
+     * @param mixed          $data
+     * @param array          $params
+     *
      * @return string|Response
      * @lasttime: 2023/1/13 1:33 PM
      */
@@ -1914,12 +1995,13 @@ trait CurdActionTrait
     /**
      * 检查查询语句中是否包含指定字段
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param array|string $select Check the SELECT part of the query.
-     * @param string $field 检查的字段名
-     * @param string $useAlias 本次查询的用处别名
+     * @param array|string $select   Check the SELECT part of the query.
+     * @param string       $field    检查的字段名
+     * @param string       $useAlias 本次查询的用处别名
+     *
      * @lasttime: 2023/3/19 11:01 PM
      */
     public static function checkFieldExistInSelect($select, string $field, string $useAlias = '')
