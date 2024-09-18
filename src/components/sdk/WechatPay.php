@@ -699,7 +699,7 @@ class WechatPay extends Component
         $total_num    = 0;
         foreach ($list as $item) {
             if (!$item instanceof TransferDetailInput)
-                throw new Exception('转账明细必须是WechatPayTransferItem实例');
+                throw new InvalidArgumentException('转账明细必须是WechatPayTransferItem实例');
             $total_num++;
             $itemData = $item->toArray();
             if ($itemData['transfer_amount'] >= 2000 * 100 && empty($itemData['user_name'])) {
