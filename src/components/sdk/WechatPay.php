@@ -4,7 +4,7 @@ namespace Jcbowen\JcbaseYii2\components\sdk;
 
 use Exception;
 use Jcbowen\JcbaseYii2\components\ErrCode;
-use Jcbowen\JcbaseYii2\components\sdk\helper\WechatPay\TransferBatchesListStruct;
+use Jcbowen\JcbaseYii2\components\sdk\helper\WechatPay\TransferDetailInput;
 use Jcbowen\JcbaseYii2\components\Util;
 use WeChatPay\Builder;
 use WeChatPay\BuilderChainable;
@@ -113,6 +113,12 @@ class WechatPay extends Component
      */
     public $debug = false;
 
+    /** @var string 平台证书序列号(Wechatpay-Serial)，在build中生成 */
+    public $platformCertificateSerial;
+
+    /** @var string 平台公钥实例，在build中生成 */
+    public $platformPublicKeyInstance;
+
     /**
      * 构建APIv3客户端实例
      *
@@ -141,11 +147,11 @@ class WechatPay extends Component
         $merchantPrivateKeyInstance = Rsa::from($merchantPrivateKeyFilePath);
 
         // 从本地文件中加载「微信支付平台证书」，用来验证微信支付应答的签名
-        $platformCertificateFilePath = 'file://' . Yii::getAlias($this->certPath) . $this->merchantId . '/cert.pem';
-        $platformPublicKeyInstance   = Rsa::from($platformCertificateFilePath, Rsa::KEY_TYPE_PUBLIC);
+        $platformCertificateFilePath     = 'file://' . Yii::getAlias($this->certPath) . $this->merchantId . '/cert.pem';
+        $this->platformPublicKeyInstance = Rsa::from($platformCertificateFilePath, Rsa::KEY_TYPE_PUBLIC);
 
         // 从「微信支付平台证书」中获取「证书序列号」
-        $platformCertificateSerial = PemUtil::parseCertificateSerialNo($platformCertificateFilePath);
+        $this->platformCertificateSerial = PemUtil::parseCertificateSerialNo($platformCertificateFilePath);
 
         // 构造一个 APIv3 客户端实例
         $this->instance = Builder::factory([
@@ -153,7 +159,7 @@ class WechatPay extends Component
             'serial'     => $this->merchantCertificateSerial, // 「商户API证书」的「证书序列号」
             'privateKey' => $merchantPrivateKeyInstance,
             'certs'      => [
-                $platformCertificateSerial => $platformPublicKeyInstance,
+                $this->platformCertificateSerial => $this->platformPublicKeyInstance,
             ],
         ]);
 
@@ -687,19 +693,20 @@ class WechatPay extends Component
      */
     public function TransferBatches(array $list, string $transfer_scene_id = '')
     {
-        $check = $this->checkAuthCodeError();
-        if (Util::isError($check))
-            return $check;
-
         $total_amount = 0;
         $listArr      = [];
         $batchNo      = $this->getOutTradeNo(true, 'tb');
         $total_num    = 0;
         foreach ($list as $item) {
-            if (!$item instanceof TransferBatchesListStruct)
+            if (!$item instanceof TransferDetailInput)
                 throw new Exception('转账明细必须是WechatPayTransferItem实例');
             $total_num++;
-            $itemData                  = $item->toArray();
+            $itemData = $item->toArray();
+            if ($itemData['transfer_amount'] >= 2000 * 100 && empty($itemData['user_name'])) {
+                throw new InvalidArgumentException("转账金额大于2000元时，必须传入收款用户姓名");
+            }
+            if (!empty($itemData['user_name']))
+                $itemData['user_name'] = $this->encryptText($itemData['user_name']);
             $itemData['out_detail_no'] = $batchNo . $total_num;
             $total_amount              += $itemData['transfer_amount'];
             $listArr[]                 = $itemData;
@@ -723,8 +730,11 @@ class WechatPay extends Component
 
         try {
             $resp = $this->instance->chain('v3/transfer/batches')->post([
-                'debug' => $this->debug,
-                'json'  => $jsonData,
+                'debug'   => $this->debug,
+                'json'    => $jsonData,
+                'headers' => [
+                    'Wechatpay-Serial' => $this->platformCertificateSerial,
+                ]
             ]);
         } catch (Exception $e) {
             return Util::error($e->getCode(), $e->getMessage());
@@ -930,16 +940,13 @@ class WechatPay extends Component
         $inWechatpayNonce     = $_SERVER['HTTP_WECHATPAY_NONCE'];
         $inBody               = file_get_contents('php://input');
 
-        // 根据通知的平台证书序列号，查询本地平台证书文件，
-        $platformPublicKeyInstance = Rsa::from('file://' . Yii::getAlias($this->certPath) . $this->merchantId . '/cert.pem', Rsa::KEY_TYPE_PUBLIC);
-
         // 检查通知时间偏移量，允许5分钟之内的偏移
         $timeOffsetStatus = 300 >= abs(Formatter::timestamp() - (int)$inWechatpayTimestamp);
         $verifiedStatus   = Rsa::verify(
         // 构造验签名串
             Formatter::joinedByLineFeed($inWechatpayTimestamp, $inWechatpayNonce, $inBody),
             $inWechatpaySignature,
-            $platformPublicKeyInstance
+            $this->platformPublicKeyInstance
         );
         if (!$timeOffsetStatus || !$verifiedStatus)
             throw new ErrorException('签名验证失败');
@@ -958,6 +965,21 @@ class WechatPay extends Component
         $inBodyResource = AesGcm::decrypt($ciphertext, $this->apiV3Key, $nonce, $aad);
         // 把解密后的文本转换为PHP Array数组
         return (array)json_decode($inBodyResource, true);
+    }
+
+    /**
+     * 加密文本
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $text
+     *
+     * @return string
+     */
+    public function encryptText(string $text): string
+    {
+        return Rsa::encrypt($text, $this->platformPublicKeyInstance);
     }
 
     /**

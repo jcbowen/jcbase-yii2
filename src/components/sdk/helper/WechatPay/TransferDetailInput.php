@@ -7,7 +7,7 @@ use Jcbowen\JcbaseYii2\base\ComponentArrayAccess;
 /**
  * 批量转账列表
  */
-class TransferBatchesListStruct extends ComponentArrayAccess
+class TransferDetailInput extends ComponentArrayAccess
 {
     /**
      * @var string 【商家明细单号】 商户系统内部区分转账批次单下不同转账明细单的唯一标识，要求此参数只能由数字、大小写字母组成
@@ -37,4 +37,21 @@ class TransferBatchesListStruct extends ComponentArrayAccess
      * 若商户传入收款用户姓名，微信支付会校验用户openID与姓名是否一致，并提供电子回单
      */
     public $user_name;
+    
+    /**
+     * {@inheritdoc}
+     */
+    public function toArray(array $fields = [], array $expand = [], $recursive = true)
+    {
+        $arr = parent::toArray($fields, $expand, $recursive);
+
+        // 金额只能是整数
+        $arr['transfer_amount'] = (int)$arr['transfer_amount'];
+
+        // 忽略不需要的字段
+        if ($arr['transfer_amount'] < 30 || empty($arr['user_name']))
+            unset($arr['user_name']);
+
+        return $arr;
+    }
 }
