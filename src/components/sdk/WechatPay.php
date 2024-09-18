@@ -688,10 +688,10 @@ class WechatPay extends Component
      * @param string $transfer_scene_id 【转账场景ID】 该批次转账使用的转账场景，如不填写则使用商家的默认场景，如无默认场景可为空，可前往“商家转账到零钱-前往功能”中申请。
      *                                  如：1001-现金营销
      *
-     * @return array|true
+     * @return array
      * @throws Exception
      */
-    public function TransferBatches(array $list, string $transfer_scene_id = '')
+    public function TransferBatches(array $list, string $transfer_scene_id = ''): array
     {
         $total_amount = 0;
         $listArr      = [];
