@@ -3,6 +3,7 @@
 namespace Jcbowen\JcbaseYii2\components\sdk;
 
 use Exception;
+use GuzzleHttp\Exception\RequestException;
 use Jcbowen\JcbaseYii2\components\ErrCode;
 use Jcbowen\JcbaseYii2\components\sdk\helper\WechatPay\TransferDetailInput;
 use Jcbowen\JcbaseYii2\components\Util;
@@ -506,7 +507,7 @@ class WechatPay extends Component
      *
      * @author   Bowen
      * @email bowen@jiuchet.com
-     * @return array|bool|mixed
+     * @return array|bool
      * @lasttime 2022/11/10 01:29
      */
     public function JSAPI()
@@ -536,7 +537,7 @@ class WechatPay extends Component
                 'json'  => $jsonData,
             ]);
 
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
+        } catch (RequestException $e) {
             // 检查异常是否有响应
             if ($e->hasResponse()) {
                 return $this->returnResp($e->getResponse());
@@ -617,7 +618,7 @@ class WechatPay extends Component
      * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @return array|mixed|true
+     * @return array|true
      * @lasttime: 2023/3/10 12:15
      */
     public function APP()
@@ -643,7 +644,7 @@ class WechatPay extends Component
                 'debug' => $this->debug,
                 'json'  => $jsonData,
             ]);
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
+        } catch (RequestException $e) {
             // 检查异常是否有响应
             if ($e->hasResponse()) {
                 return $this->returnResp($e->getResponse());
@@ -662,7 +663,7 @@ class WechatPay extends Component
      *
      * @author   Bowen
      * @email bowen@jiuchet.com
-     * @return array|bool|mixed
+     * @return array|bool
      * @lasttime 2024/5/25 10:33:23
      */
     public function CODE()
@@ -689,7 +690,7 @@ class WechatPay extends Component
                 'debug' => $this->debug,
                 'json'  => $jsonData,
             ]);
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
+        } catch (RequestException $e) {
             // 检查异常是否有响应
             if ($e->hasResponse()) {
                 return $this->returnResp($e->getResponse());
@@ -758,7 +759,7 @@ class WechatPay extends Component
                     'Wechatpay-Serial' => $this->platformCertificateSerial,
                 ]
             ]);
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
+        } catch (RequestException $e) {
             // 检查异常是否有响应
             if ($e->hasResponse()) {
                 return $this->returnResp($e->getResponse());
@@ -781,10 +782,10 @@ class WechatPay extends Component
      *
      * @param string|null $transactionId 微信支付系统生成的订单号 示例值：1217752501201407033233368018
      *
-     * @return array|mixed
+     * @return array
      * @lasttime 2022/11/10 01:47
      */
-    public function query(string $transactionId = null)
+    public function query(string $transactionId = null): array
     {
         if (empty($transactionId) && empty($this->outTradeNo))
             return Util::error(ErrCode::PARAMETER_ERROR, 'transactionId和outTradeNo不能同时为空');
@@ -798,7 +799,7 @@ class WechatPay extends Component
             $resp = $this->instance->chain($path)->get([
                 'debug' => $this->debug,
             ]);
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
+        } catch (RequestException $e) {
             // 检查异常是否有响应
             if ($e->hasResponse()) {
                 return $this->returnResp($e->getResponse());
@@ -820,10 +821,10 @@ class WechatPay extends Component
      *
      * @param $outRefundNo
      *
-     * @return array|mixed
+     * @return array
      * @lasttime 2022/11/11 17:11
      */
-    public function queryRefund($outRefundNo)
+    public function queryRefund($outRefundNo): array
     {
         if (empty($outRefundNo))
             return Util::error(ErrCode::PARAMETER_ERROR, 'outRefundNo不能为空');
@@ -833,7 +834,7 @@ class WechatPay extends Component
                 ->get([
                     'debug' => $this->debug,
                 ]);
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
+        } catch (RequestException $e) {
             // 检查异常是否有响应
             if ($e->hasResponse()) {
                 return $this->returnResp($e->getResponse());
@@ -852,10 +853,10 @@ class WechatPay extends Component
      *
      * @author   Bowen
      * @email bowen@jiuchet.com
-     * @return array|mixed
+     * @return array
      * @lasttime 2022/11/10 01:59
      */
-    public function close()
+    public function close(): array
     {
         if (empty($this->outTradeNo))
             return Util::error(ErrCode::PARAMETER_ERROR, 'outTradeNo不能为空');
@@ -867,7 +868,7 @@ class WechatPay extends Component
                     'mchid' => $this->merchantId,
                 ],
             ]);
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
+        } catch (RequestException $e) {
             // 检查异常是否有响应
             if ($e->hasResponse()) {
                 return $this->returnResp($e->getResponse());
@@ -893,10 +894,10 @@ class WechatPay extends Component
      * @param string|null $refundReason  退款原因
      * @param string|null $transactionId 微信支付系统生成的订单号 示例值：1217752501201407033233368018
      *
-     * @return array|mixed
+     * @return array
      * @lasttime 2022/11/10 02:12
      */
-    public function refund(int $refundAmount, int $totalAmount, ?string $outRefundNo = null, ?string $refundReason = '', string $transactionId = null)
+    public function refund(int $refundAmount, int $totalAmount, ?string $outRefundNo = null, ?string $refundReason = '', string $transactionId = null): array
     {
         if (empty($transactionId) && empty($this->outTradeNo))
             return Util::error(ErrCode::PARAMETER_ERROR, 'transactionId和outTradeNo不能同时为空');
@@ -932,7 +933,7 @@ class WechatPay extends Component
                 'debug' => $this->debug,
                 'json'  => $jsonData,
             ]);
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
+        } catch (RequestException $e) {
             // 检查异常是否有响应
             if ($e->hasResponse()) {
                 return $this->returnResp($e->getResponse());
@@ -957,10 +958,10 @@ class WechatPay extends Component
      *
      * @param $outRefundNo
      *
-     * @return array|mixed
+     * @return array
      * @lasttime: 2024/5/25 11:27
      */
-    public function reverse($outRefundNo = null)
+    public function reverse($outRefundNo = null): array
     {
         $outRefundNo = $outRefundNo ?? $this->outTradeNo;
         $jsonData    = [
@@ -974,7 +975,7 @@ class WechatPay extends Component
                 ->post([
                     'json' => $jsonData,
                 ]);
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
+        } catch (RequestException $e) {
             // 检查异常是否有响应
             if ($e->hasResponse()) {
                 return $this->returnResp($e->getResponse());
@@ -992,15 +993,15 @@ class WechatPay extends Component
      *
      * @author   Bowen
      * @email bowen@jiuchet.com
-     * @return array|void
+     * @return array
      * @lasttime 2022/11/10 11:06
      * @throws ErrorException
      */
-    public function dealNotify()
+    public function dealNotify(): array
     {
+        // $inWechatpaySerial    = $_SERVER['HTTP_WECHATPAY_SERIAL'];
         $inWechatpaySignature = $_SERVER['HTTP_WECHATPAY_SIGNATURE'];
         $inWechatpayTimestamp = $_SERVER['HTTP_WECHATPAY_TIMESTAMP'];
-        $inWechatpaySerial    = $_SERVER['HTTP_WECHATPAY_SERIAL'];
         $inWechatpayNonce     = $_SERVER['HTTP_WECHATPAY_NONCE'];
         $inBody               = file_get_contents('php://input');
 
