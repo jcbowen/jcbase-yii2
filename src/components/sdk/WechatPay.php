@@ -535,6 +535,14 @@ class WechatPay extends Component
                 'debug' => $this->debug,
                 'json'  => $jsonData,
             ]);
+
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            // 检查异常是否有响应
+            if ($e->hasResponse()) {
+                return $this->returnResp($e->getResponse());
+            }
+            // 如果没有响应，则返回异常的代码和消息
+            return Util::error($e->getCode(), $e->getMessage());
         } catch (Exception $e) {
             return Util::error($e->getCode(), $e->getMessage());
         }
@@ -635,6 +643,13 @@ class WechatPay extends Component
                 'debug' => $this->debug,
                 'json'  => $jsonData,
             ]);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            // 检查异常是否有响应
+            if ($e->hasResponse()) {
+                return $this->returnResp($e->getResponse());
+            }
+            // 如果没有响应，则返回异常的代码和消息
+            return Util::error($e->getCode(), $e->getMessage());
         } catch (Exception $e) {
             return Util::error($e->getCode(), $e->getMessage());
         }
@@ -674,6 +689,13 @@ class WechatPay extends Component
                 'debug' => $this->debug,
                 'json'  => $jsonData,
             ]);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            // 检查异常是否有响应
+            if ($e->hasResponse()) {
+                return $this->returnResp($e->getResponse());
+            }
+            // 如果没有响应，则返回异常的代码和消息
+            return Util::error($e->getCode(), $e->getMessage());
         } catch (Exception $e) {
             return Util::error($e->getCode(), $e->getMessage());
         }
@@ -736,6 +758,13 @@ class WechatPay extends Component
                     'Wechatpay-Serial' => $this->platformCertificateSerial,
                 ]
             ]);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            // 检查异常是否有响应
+            if ($e->hasResponse()) {
+                return $this->returnResp($e->getResponse());
+            }
+            // 如果没有响应，则返回异常的代码和消息
+            return Util::error($e->getCode(), $e->getMessage());
         } catch (Exception $e) {
             return Util::error($e->getCode(), $e->getMessage());
         }
@@ -769,6 +798,13 @@ class WechatPay extends Component
             $resp = $this->instance->chain($path)->get([
                 'debug' => $this->debug,
             ]);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            // 检查异常是否有响应
+            if ($e->hasResponse()) {
+                return $this->returnResp($e->getResponse());
+            }
+            // 如果没有响应，则返回异常的代码和消息
+            return Util::error($e->getCode(), $e->getMessage());
         } catch (Exception $e) {
             return Util::error($e->getCode(), $e->getMessage());
         }
@@ -797,6 +833,13 @@ class WechatPay extends Component
                 ->get([
                     'debug' => $this->debug,
                 ]);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            // 检查异常是否有响应
+            if ($e->hasResponse()) {
+                return $this->returnResp($e->getResponse());
+            }
+            // 如果没有响应，则返回异常的代码和消息
+            return Util::error($e->getCode(), $e->getMessage());
         } catch (Exception $e) {
             return Util::error($e->getCode(), $e->getMessage());
         }
@@ -824,6 +867,13 @@ class WechatPay extends Component
                     'mchid' => $this->merchantId,
                 ],
             ]);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            // 检查异常是否有响应
+            if ($e->hasResponse()) {
+                return $this->returnResp($e->getResponse());
+            }
+            // 如果没有响应，则返回异常的代码和消息
+            return Util::error($e->getCode(), $e->getMessage());
         } catch (Exception $e) {
             return Util::error($e->getCode(), $e->getMessage());
         }
@@ -882,6 +932,13 @@ class WechatPay extends Component
                 'debug' => $this->debug,
                 'json'  => $jsonData,
             ]);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            // 检查异常是否有响应
+            if ($e->hasResponse()) {
+                return $this->returnResp($e->getResponse());
+            }
+            // 如果没有响应，则返回异常的代码和消息
+            return Util::error($e->getCode(), $e->getMessage());
         } catch (Exception $e) {
             return Util::error($e->getCode(), $e->getMessage());
         }
@@ -906,17 +963,24 @@ class WechatPay extends Component
     public function reverse($outRefundNo = null)
     {
         $outRefundNo = $outRefundNo ?? $this->outTradeNo;
-        try {
-            $jsonData = [
-                'appid' => $this->appId,
-                'mchid' => $this->merchantId,
-            ];
+        $jsonData    = [
+            'appid' => $this->appId,
+            'mchid' => $this->merchantId,
+        ];
 
+        try {
             $resp = $this->instance
                 ->chain("v3/pay/transactions/out-trade-no/$outRefundNo/reverse")
                 ->post([
                     'json' => $jsonData,
                 ]);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            // 检查异常是否有响应
+            if ($e->hasResponse()) {
+                return $this->returnResp($e->getResponse());
+            }
+            // 如果没有响应，则返回异常的代码和消息
+            return Util::error($e->getCode(), $e->getMessage());
         } catch (Exception $e) {
             return Util::error($e->getCode(), $e->getMessage());
         }
@@ -999,14 +1063,18 @@ class WechatPay extends Component
      */
     private function returnResp($resp, array $params = []): array
     {
-        // $statusCode = $resp->getStatusCode();
-        $body  = $resp->getBody();
-        $body2 = @json_decode($body, true);
-        $body  = $body2 ?? $body;
+        $statusCode = $resp->getStatusCode();
+        $body       = $resp->getBody();
+        $body2      = @json_decode($body, true);
+        $body       = $body2 ?? $body;
         if (isset($body['prepay_id']))
             $this->prepayId = $body['prepay_id'];
+
+        $message = $statusCode == '200' ? 'success' : 'error';
+        $message = $body['message'] ?? $message;
+
         // 其他情况
-        return Util::error($resp->getStatusCode(), 'success', $body, $params);
+        return Util::error($statusCode, $message, $body, $params);
     }
 
     /**
