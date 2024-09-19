@@ -964,7 +964,11 @@ class WechatPay extends Component
         // 加密文本消息解密
         $inBodyResource = AesGcm::decrypt($ciphertext, $this->apiV3Key, $nonce, $aad);
         // 把解密后的文本转换为PHP Array数组
-        return (array)json_decode($inBodyResource, true);
+        $arrResource = (array)json_decode($inBodyResource, true);
+
+        Yii::debug($arrResource, __METHOD__);
+
+        return $arrResource;
     }
 
     /**

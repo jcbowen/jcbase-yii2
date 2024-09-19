@@ -13,7 +13,7 @@ use yii\helpers\ArrayHelper;
  * Class PaymentNotifyData
  * 支付平台异步通知数据解释器
  *
- * @author Bowen
+ * @author  Bowen
  * @email bowen@jiuchet.com
  * @lasttime: 2023/4/19 9:06 AM
  * @package frontend\components
@@ -137,6 +137,75 @@ class PaymentNotifyData extends ComponentArrayAccess
      */
     public $userReceivedAccount;
 
+    // ----- 商家批量转账回调 ----- /
+    /**
+     * @var string 【商家批次单号】 商户系统内部的商家批次单号，在商户系统内部唯一
+     *             - 微信必填，来自于商家转账到零钱的结果回调，目前只接入了微信
+     */
+    public $outBatchNo;
+
+    /**
+     * @var string 【微信批次单号】 微信批次单号，微信商家转账系统返回的唯一标识
+     *             - 微信必填，来自于商家转账到零钱的结果回调，目前只接入了微信
+     */
+    public $batchId;
+
+    /**
+     * @var string 【批次状态】
+     *             - WAIT_PAY: 待付款确认。需要付款出资商户在商家助手小程序或服务商助手小程序进行付款确认
+     *             -
+     *             ACCEPTED:已受理。批次已受理成功，若发起批量转账的30分钟后，转账批次单仍处于该状态，可能原因是商户账户余额不足等。商户可查询账户资金流水，若该笔转账批次单的扣款已经发生，则表示批次已经进入转账中，请再次查单确认
+     *             - PROCESSING:转账中。已开始处理批次内的转账明细单
+     *             - FINISHED:已完成。批次内的所有转账明细单都已处理完成
+     *             - CLOSED:已关闭。可查询具体的批次关闭原因确认
+     *             - 微信必填，来自于商家转账到零钱的结果回调，目前只接入了微信
+     */
+    public $batchStatus;
+
+    /**
+     * @var integer 【批次总笔数】转账总笔数。
+     *              - 微信必填，来自于商家转账到零钱的结果回调，目前只接入了微信
+     */
+    public $totalNum;
+
+    /**
+     * @var integer 【批次总金额】转账总金额，单位为“分”。
+     *              - 微信必填，来自于商家转账到零钱的结果回调，目前只接入了微信
+     */
+    public $totalAmount;
+
+    /**
+     * @var string 【批次关闭原因】如果批次单状态为“CLOSED”（已关闭），则有关闭原因
+     *             可选取值：
+     *             OVERDUE_CLOSE：系统超时关闭，可能原因账户余额不足或其他错误
+     *             TRANSFER_SCENE_INVALID：付款确认时，转账场景已不可用，系统做关单处理
+     *             - 微信必填，来自于商家转账到零钱的结果回调，目前只接入了微信
+     */
+    public $closeReason;
+
+    /**
+     * @var integer 【转账成功金额】
+     *                     转账成功的金额，单位为“分”。当批次状态为“PROCESSING”（转账中）时，转账成功金额随时可能变化
+     *                     - 微信必填，来自于商家转账到零钱的结果回调，目前只接入了微信
+     */
+    public $successAmount;
+
+    /**
+     * @var integer 【转账成功笔数】
+     * 转账成功的笔数。当批次状态为“PROCESSING”（转账中）时，转账成功笔数随时可能变化
+     */
+    public $successNum;
+
+    /**
+     * @var integer 【转账失败金额】转账失败的金额，单位为“分”
+     */
+    public $failAmount;
+
+    /**
+     * @var integer 【转账失败笔数】转账失败的笔数
+     */
+    public $failNum;
+
     /**
      * {@inheritDoc}
      */
@@ -149,10 +218,11 @@ class PaymentNotifyData extends ComponentArrayAccess
     /**
      * 解析支付平台回调数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param array|null $decryptData 解密后的数据，如果为空则使用$this->decryptData
+     *
      * @return PaymentNotifyData
      * @throws InvalidArgumentException
      * @lasttime: 2023/4/19 3:24 PM
@@ -172,6 +242,7 @@ class PaymentNotifyData extends ComponentArrayAccess
         } else {
             Yii::error(ArrayHelper::toArray($this), 'invalidPaymentPlatform');
             throw new InvalidArgumentException('无法识别的支付平台');
+            return $this;
         }
 
         // 解析数据
@@ -188,10 +259,11 @@ class PaymentNotifyData extends ComponentArrayAccess
      * 解密支付平台回调数据
      * 暂不支持自动解密，所以需要通过传递回调函数的方式进行处理
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $decryptCallback
+     *
      * @return $this
      * @lasttime: 2023/4/19 3:31 PM
      */
@@ -225,10 +297,11 @@ class PaymentNotifyData extends ComponentArrayAccess
     /**
      * 解析支付宝回调数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param array $decryptData 解密后的数据
+     *
      * @lasttime: 2023/4/19 3:52 PM
      */
     private function parseAlipay(array $decryptData = [])
@@ -263,10 +336,11 @@ class PaymentNotifyData extends ComponentArrayAccess
     /**
      * 解析微信回调数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param array $decryptData 解密后的数据
+     *
      * @lasttime: 2023/4/19 4:36 PM
      */
     private function parseWechatPay(array $decryptData = [])
@@ -290,6 +364,9 @@ class PaymentNotifyData extends ComponentArrayAccess
                 $this->eventType = 'pay';
             } elseif ($this->rawData['resource']['original_type'] === 'refund') {
                 $this->eventType = 'refund';
+            } elseif ($this->rawData['resource']['original_type'] === 'mch_payment') {
+                // 商家转账到零钱
+                $this->eventType = 'transfer_batches';
             } else {
                 Yii::error(ArrayHelper::toArray($this), 'invalidWechatPaymentStatus');
                 throw new InvalidArgumentException('暂不支持的微信支付状态');
@@ -314,8 +391,18 @@ class PaymentNotifyData extends ComponentArrayAccess
             $this->amountRefund        = $decryptData['amount']['refund'];
             $this->amountRefundReal    = $decryptData['amount']['payer_refund'];
             $this->userReceivedAccount = $decryptData['user_received_account'];
-        } else {
+        } elseif ($this->eventType === 'pay') {
             $this->amountCurrency = $decryptData['amount']['currency'];
+        } elseif ($this->eventType === 'transfer_batches') {
+            $this->outBatchNo    = $decryptData['out_batch_no'];
+            $this->batchId       = $decryptData['batch_id'];
+            $this->batchStatus   = $decryptData['batch_status'];
+            $this->totalNum      = $decryptData['total_num'];
+            $this->totalAmount   = $decryptData['total_amount'];
+            $this->closeReason   = $decryptData['close_reason'] ?? '';
+            $this->successAmount = $decryptData['success_amount'] ?? 0;
+            $this->successNum    = $decryptData['success_num'] ?? 0;
+            $this->failNum       = $decryptData['fail_amount'] ?? 0;
         }
     }
 }
