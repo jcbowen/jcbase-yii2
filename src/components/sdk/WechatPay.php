@@ -740,7 +740,7 @@ class WechatPay extends Component
             return Util::error($e->getCode(), $e->getMessage());
         }
 
-        return $this->returnResp($resp);
+        return $this->returnResp($resp, ['transfer_detail_list' => $listArr]);
     }
 
     /**
@@ -991,21 +991,22 @@ class WechatPay extends Component
      * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param $resp
+     * @param       $resp
+     * @param array $params 需要传递附加参数
      *
      * @return array
      * @lasttime: 2024/5/29 下午1:35
      */
-    private function returnResp($resp): array
+    private function returnResp($resp, array $params = []): array
     {
-        $statusCode = $resp->getStatusCode();
-        $body       = $resp->getBody();
-        $body2      = @json_decode($body, true);
-        $body       = $body2 ?? $body;
+        // $statusCode = $resp->getStatusCode();
+        $body  = $resp->getBody();
+        $body2 = @json_decode($body, true);
+        $body  = $body2 ?? $body;
         if (isset($body['prepay_id']))
             $this->prepayId = $body['prepay_id'];
         // 其他情况
-        return Util::error($resp->getStatusCode(), 'success', $body);
+        return Util::error($resp->getStatusCode(), 'success', $body, $params);
     }
 
     /**
