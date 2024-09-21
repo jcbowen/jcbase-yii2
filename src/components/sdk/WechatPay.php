@@ -5,6 +5,7 @@ namespace Jcbowen\JcbaseYii2\components\sdk;
 use Exception;
 use GuzzleHttp\Exception\RequestException;
 use Jcbowen\JcbaseYii2\components\ErrCode;
+use Jcbowen\JcbaseYii2\components\Safe;
 use Jcbowen\JcbaseYii2\components\sdk\helper\WechatPay\TransferDetailInput;
 use Jcbowen\JcbaseYii2\components\Util;
 use WeChatPay\Builder;
@@ -120,6 +121,8 @@ class WechatPay extends Component
     /** @var string 平台公钥实例，在build中生成 */
     public $platformPublicKeyInstance;
 
+    public $merchantPrivateKeyInstance;
+
     /**
      * 构建APIv3客户端实例
      *
@@ -144,8 +147,8 @@ class WechatPay extends Component
         if (!file_exists($merchantPrivateKeyFilePath))
             throw new InvalidArgumentException('商户API私钥文件不存在');
 
-        $merchantPrivateKeyFilePath = 'file://' . $merchantPrivateKeyFilePath;
-        $merchantPrivateKeyInstance = Rsa::from($merchantPrivateKeyFilePath);
+        $merchantPrivateKeyFilePath       = 'file://' . $merchantPrivateKeyFilePath;
+        $this->merchantPrivateKeyInstance = Rsa::from($merchantPrivateKeyFilePath);
 
         // 从本地文件中加载「微信支付平台证书」，用来验证微信支付应答的签名
         $platformCertificateFilePath     = 'file://' . Yii::getAlias($this->certPath) . $this->merchantId . '/cert.pem';
@@ -158,7 +161,7 @@ class WechatPay extends Component
         $this->instance = Builder::factory([
             'mchid'      => $this->merchantId, // 商户号
             'serial'     => $this->merchantCertificateSerial, // 「商户API证书」的「证书序列号」
-            'privateKey' => $merchantPrivateKeyInstance,
+            'privateKey' => $this->merchantPrivateKeyInstance,
             'certs'      => [
                 $this->platformCertificateSerial => $this->platformPublicKeyInstance,
             ],
@@ -774,6 +777,84 @@ class WechatPay extends Component
     }
 
     /**
+     * 通过商家批次单号查询批次单
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param bool   $need_query_detail 【是否查询转账明细单】
+     *                                  true-是；false-否，默认否。商户可选择是否查询指定状态的转账明细单，当转账批次单状态为“FINISHED”（已完成）时，才会返回满足条件的转账明细单
+     * @param int    $offset            【请求资源起始位置】 该次请求资源（转账明细单）的起始位置，从0开始，默认值为0
+     * @param int    $limit             【最大资源条数】 该次请求可返回的最大资源（转账明细单）条数，最小20条，最大100条，不传则默认20条。不足20条按实际条数返回
+     * @param string $detail_status     【明细状态】 WAIT_PAY: 待确认。待商户确认, 符合免密条件时, 系统会自动扭转为转账中
+     *                                  - ALL:全部。需要同时查询转账成功、失败和待确认的明细单
+     *                                  - SUCCESS:转账成功
+     *                                  - FAIL:转账失败。需要确认失败原因后，再决定是否重新发起对该笔明细单的转账（并非整个转账批次单）
+     *                                  当need_query_detail为true时该字段必填
+     *
+     * @return array
+     */
+    public function TransferBatchesQuery(bool $need_query_detail = true, int $offset = 0, int $limit = 20, string $detail_status = 'ALL'): array
+    {
+        $detail_status = Safe::gpcBelong($detail_status, ['ALL', 'SUCCESS', 'FAIL'], 'ALL');
+        $jsonData      = [
+
+            'need_query_detail' => $need_query_detail,
+            'offset'            => max($offset, 0),
+            'limit'             => max(min($limit, 100), 20),
+            'detail_status'     => $detail_status,
+        ];
+
+        try {
+            $resp = $this->instance->chain('/v3/transfer/batches/out-batch-no/' . $this->getOutTradeNo())->get([
+                'debug' => $this->debug,
+                'query' => $jsonData,
+            ]);
+        } catch (RequestException $e) {
+            // 检查异常是否有响应
+            if ($e->hasResponse())
+                return $this->returnResp($e->getResponse());
+
+            // 如果没有响应，则返回异常的代码和消息
+            return Util::error($e->getCode(), $e->getMessage());
+        } catch (Exception $e) {
+            return Util::error($e->getCode(), $e->getMessage());
+        }
+
+        return $this->returnResp($resp);
+    }
+
+    /**
+     * 通过商家明细单号查询明细单
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $out_detail_no 【商家批次单号】 商户系统内部的商家批次单号，在商户系统内部唯一
+     *
+     * @return array
+     */
+    public function TransferBatchesQueryDetails(string $out_detail_no): array
+    {
+        try {
+            $resp = $this->instance->chain('/v3/transfer/batches/out-batch-no/' . $this->getOutTradeNo() . "/details/out-detail-no/$out_detail_no")->get([
+                'debug' => $this->debug,
+            ]);
+        } catch (RequestException $e) {
+            // 检查异常是否有响应
+            if ($e->hasResponse())
+                return $this->returnResp($e->getResponse());
+
+            // 如果没有响应，则返回异常的代码和消息
+            return Util::error($e->getCode(), $e->getMessage());
+        } catch (Exception $e) {
+            return Util::error($e->getCode(), $e->getMessage());
+        }
+
+        return $this->returnResp($resp);
+    }
+
+    /**
      * 订单查询
      * 默认通过商户订单号查询，如果传入了微信支付订单号，则以微信支付订单号查询
      *
@@ -1049,6 +1130,21 @@ class WechatPay extends Component
     public function encryptText(string $text): string
     {
         return Rsa::encrypt($text, $this->platformPublicKeyInstance);
+    }
+
+    /**
+     * 解密文本
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $encryptedText
+     *
+     * @return string
+     */
+    public function decryptText(string $encryptedText): string
+    {
+        return Rsa::decrypt($encryptedText, $this->merchantPrivateKeyInstance);
     }
 
     /**
