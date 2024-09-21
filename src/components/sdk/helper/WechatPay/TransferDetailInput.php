@@ -5,7 +5,11 @@ namespace Jcbowen\JcbaseYii2\components\sdk\helper\WechatPay;
 use Jcbowen\JcbaseYii2\base\ComponentArrayAccess;
 
 /**
- * 批量转账列表
+ * 批量转账明细属性
+ *
+ * @author  Bowen
+ * @email bowen@jiuchet.com
+ * @package Jcbowen\JcbaseYii2\components\sdk\helper\WechatPay
  */
 class TransferDetailInput extends ComponentArrayAccess
 {
@@ -37,7 +41,7 @@ class TransferDetailInput extends ComponentArrayAccess
      * 若商户传入收款用户姓名，微信支付会校验用户openID与姓名是否一致，并提供电子回单
      */
     public $user_name;
-    
+
     /**
      * {@inheritdoc}
      */
