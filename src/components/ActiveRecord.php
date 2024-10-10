@@ -11,7 +11,7 @@ use yii\db\Exception;
 /**
  * Class ActiveRecord
  *
- * @author Bowen
+ * @author  Bowen
  * @email bowen@jiuchet.com
  * @lasttime: 2022/7/18 9:19 AM
  * @package Jcbowen\JcbaseYii2\components
@@ -27,7 +27,7 @@ class ActiveRecord extends \yii\db\ActiveRecord
     /**
      * 注册事件: 新增,更新,删除时清理清理缓存
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @lasttime: 2022/1/5 3:20 下午
@@ -48,7 +48,7 @@ class ActiveRecord extends \yii\db\ActiveRecord
     /**
      * 对find方法进行缓存支持
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return ActiveQuery
      * @lasttime: 2022/1/5 3:20 下午
@@ -68,15 +68,16 @@ class ActiveRecord extends \yii\db\ActiveRecord
     /**
      * 分页查询
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param array $options
-     *          - page 页码，默认1
-     *          - page_size 分页大小，默认10
-     *          - asArray 是否传递asArray给query
+     * @param array         $options
+     *                                - page 页码，默认1
+     *                                - page_size 分页大小，默认10
+     *                                - asArray 是否传递asArray给query
      * @param callable|null $getQuery query回调
      * @param callable|null $listEach 列表循环回调
+     *
      * @return array
      * @lasttime: 2024/4/17 11:17 AM
      */
@@ -138,14 +139,15 @@ class ActiveRecord extends \yii\db\ActiveRecord
     /**
      * 批量插入数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param array $data 需要插入的数据
-     *           - 每个元素都应当是key=>value结构
-     *           - 需要保证第一个元素的字段完整
-     *           - 非第一个元素无论是乱序还是缺字段都可以完成插入
-     *           - 如：[['username' => '张三', 'age' => '28'], ['username' => '李四']]
+     *                    - 每个元素都应当是key=>value结构
+     *                    - 需要保证第一个元素的字段完整
+     *                    - 非第一个元素无论是乱序还是缺字段都可以完成插入
+     *                    - 如：[['username' => '张三', 'age' => '28'], ['username' => '李四']]
+     *
      * @return int
      * @throws Exception
      * @lasttime: 2024/4/10 11:21 AM
@@ -153,6 +155,9 @@ class ActiveRecord extends \yii\db\ActiveRecord
     public function batchInsert(array $data = []): int
     {
         if (empty($data)) return 0;
+
+        // 实例化字段过滤类
+        $fieldFilter = new FieldFilter($this);
 
         // 取数组的第一个元素作为插入字段
         $columns = array_keys($data[0]);
@@ -171,14 +176,12 @@ class ActiveRecord extends \yii\db\ActiveRecord
             // 根据字段名整理数据
             $fields = [];
             foreach ($columns as $itemKey) {
-                $fields[$itemKey] = $item[$itemKey];
+                // 自动处理字段结构
+                $fields[$itemKey] = $fieldFilter->en($itemKey, $item[$itemKey]);
             }
 
             // 非有效数据直接跳过
             if (empty($fields)) continue;
-
-            // 自动处理字段结构
-            $fields = $this->filterFields($fields);
 
             // 自动补充创建时间以及更新时间
             if ($this->hasAttribute('created_at') && empty($fields['created_at'])) {
@@ -210,7 +213,7 @@ class ActiveRecord extends \yii\db\ActiveRecord
     /**
      * 清理缓存
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return false|int
@@ -255,7 +258,7 @@ class ActiveRecord extends \yii\db\ActiveRecord
      * 过滤返回字段
      *
      * @lasttime: 2022/3/13 10:37 下午
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      */
     public function fields()
@@ -270,9 +273,11 @@ class ActiveRecord extends \yii\db\ActiveRecord
     /**
      * 根据返回字段类型处理数据
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param $fields
+     *
      * @return mixed
      * @lasttime: 2022/3/13 10:38 下午
      */
