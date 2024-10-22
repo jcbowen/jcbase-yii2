@@ -16,12 +16,12 @@ if (Agent::DEVICE_MOBILE == $_B['os']) {
 }
 
 // 连接方式
-$_B['sitescheme'] = 'http://';
+$_B['siteScheme'] = 'http://';
 $_B['isHttps']    = false;
 if (Util::isSecureConnection()) {
     $_SERVER['HTTPS'] = 1;
     $_B['isHttps']    = true;
-    $_B['sitescheme'] = 'https://';
+    $_B['siteScheme'] = 'https://';
 }
 
 // 初始化$_GPC
@@ -46,17 +46,18 @@ if (!function_exists('allowCrossDomain')) {
     /**
      * 设置允许跨域的域名
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param string $domain 域名
-     * @param array $params 自定义跨域参数
-     *                      - methods
-     *                      - headers
+     * @param string|null $domain 域名
+     * @param array       $params 自定义跨域参数
+     *                            - methods
+     *                            - headers
+     *
      * @return bool
      * @lasttime: 2021/12/26 10:30 下午
      */
-    function allowCrossDomain(string $domain = '', array $params = []): bool
+    function allowCrossDomain(?string $domain = '', array $params = []): bool
     {
         global $_B;
 
