@@ -106,7 +106,7 @@ class AliPay extends Component
     /**
      * 构建支付宝支付实例
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
      * @return $this
      * @lasttime 2022/11/10 01:12
@@ -117,7 +117,7 @@ class AliPay extends Component
         $this->rsaPrivateKeyFile      = Yii::getAlias(Yii::$app->params['alipay']['rsaPrivateKeyFile'] ?? $this->certPath . "$this->appId/rsa_private_key.txt");
         $this->alipayRsaPublicKeyFile = Yii::getAlias(Yii::$app->params['alipay']['alipayRsaPublicKeyFile'] ?? $this->certPath . "$this->appId/alipay_rsa_public_key.txt");
         if (!file_exists($this->rsaPrivateKeyFile))
-            throw new InvalidArgumentException('商户API私钥文件不存在');
+            throw new InvalidArgumentException("商户API私钥文件不存在:$this->rsaPrivateKeyFile");
 
         $this->notifyUrl = $this->notifyUrl ?: Yii::$app->params['alipay']['notifyUrl'];
 
@@ -144,9 +144,11 @@ class AliPay extends Component
     /**
      * 设置订单总金额
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param float|int $total 订单总金额(如果传入的是整数，则单位为分；如果传入的是浮点数，则单位为元；推荐使用浮点数)
+     *
      * @return $this
      * @lasttime 2022/11/10 01:15
      */
@@ -164,9 +166,11 @@ class AliPay extends Component
     /**
      * 商品描述
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string|null $subject 订单标题。注意：不可使用特殊字符，如 /，=，& 等。
+     *
      * @return $this
      * @lasttime 2022/11/10 01:18
      */
@@ -179,9 +183,11 @@ class AliPay extends Component
     /**
      * 设置商户系统内部订单号
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string|null $outTradeNo
+     *
      * @return $this
      * @lasttime 2022/11/10 01:25
      */
@@ -194,9 +200,11 @@ class AliPay extends Component
     /**
      * 设置支付成功回调地址
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param string $notifyUrl
+     *
      * @return $this
      * @lasttime 2022/11/10 01:25
      */
@@ -209,9 +217,11 @@ class AliPay extends Component
     /**
      * 批量设置支付信息（通过上面的方法）
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array $data
+     *
      * @return $this
      * @lasttime 2022/11/10 01:27
      */
@@ -228,9 +238,11 @@ class AliPay extends Component
     /**
      * 批量设置支付信息（通过property）
      *
-     * @author Bowen
+     * @author   Bowen
      * @email bowen@jiuchet.com
+     *
      * @param array $data
+     *
      * @return $this
      * @lasttime 2022/11/10 01:27
      */
@@ -247,7 +259,7 @@ class AliPay extends Component
     /**
      * 检查交易参数是否有误
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return array|true
@@ -267,7 +279,7 @@ class AliPay extends Component
     /**
      * app下单
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return string|array
@@ -296,10 +308,11 @@ class AliPay extends Component
     /**
      * 进行支付下单
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string $payProduct
+     *
      * @return string|array
      * @lasttime: 2023/4/17 1:13 PM
      */
@@ -312,10 +325,11 @@ class AliPay extends Component
     /**
      * 查询订单
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string $trade_no 支付宝订单号，如果为空，则通过商户订单号查询
+     *
      * @return array
      * @throws Exception
      * @lasttime: 2023/4/17 1:27 PM
@@ -354,10 +368,11 @@ class AliPay extends Component
     /**
      * 关闭订单
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string $trade_no 支付宝订单号，如果为空，则通过商户订单号查询
+     *
      * @return array
      * @throws Exception
      * @lasttime: 2023/4/17 1:31 PM
@@ -396,14 +411,15 @@ class AliPay extends Component
     /**
      * 申请退款
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param float $refundAmount 退款金额（单位元）。需要退款的金额，该金额不能大于订单金额，单位为元，支持两位小数。注：如果正向交易使用了营销，该退款金额包含营销金额，支付宝会按业务规则分配营销和买家自有资金分别退多少，默认优先退买家的自有资金。如交易总金额100元，用户支付时使用了80元自有资金和20元无资金流的营销券，商家实际收款80元。如果首次请求退款60元，则60元全部从商家收款资金扣除退回给用户自有资产；如果再请求退款40元，则从商家收款资金扣除20元退回用户资产以及把20元的营销券退回给用户（券是否可再使用取决于券的规则配置）。
-     * @param float $totalAmount 订单总金额（单位元）
+     * @param float       $refundAmount 退款金额（单位元）。需要退款的金额，该金额不能大于订单金额，单位为元，支持两位小数。注：如果正向交易使用了营销，该退款金额包含营销金额，支付宝会按业务规则分配营销和买家自有资金分别退多少，默认优先退买家的自有资金。如交易总金额100元，用户支付时使用了80元自有资金和20元无资金流的营销券，商家实际收款80元。如果首次请求退款60元，则60元全部从商家收款资金扣除退回给用户自有资产；如果再请求退款40元，则从商家收款资金扣除20元退回用户资产以及把20元的营销券退回给用户（券是否可再使用取决于券的规则配置）。
+     * @param float       $totalAmount  订单总金额（单位元）
      * @param string|null $refundReason 退款原因说明。商家自定义，将在会在商户和用户的pc退款账单详情中展示
      * @param string|null $outRequestNo 退款请求号。标识一次退款请求，需要保证在交易号下唯一，如需部分退款，则此参数必传。注：针对同一次退款请求，如果调用接口失败或异常了，重试时需要保证退款请求号不能变更，防止该笔交易重复退款。支付宝会保证同样的退款请求号多次请求只会退一次。
-     * @param string $trade_no 支付宝交易号。和商户订单号 out_trade_no 不能同时为空。
+     * @param string      $trade_no     支付宝交易号。和商户订单号 out_trade_no 不能同时为空。
+     *
      * @return array
      * @throws Exception
      * @lasttime: 2023/4/17 1:58 PM
@@ -458,11 +474,12 @@ class AliPay extends Component
     /**
      * 退款查询
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string $outRequestNo 退款请求号。请求退款接口时，传入的退款请求号，如果在退款请求时未传入，则该值为创建交易时的商户订单号。
-     * @param string $trade_no 支付宝交易号。和商户订单号 out_trade_no 不能同时为空。
+     * @param string $trade_no     支付宝交易号。和商户订单号 out_trade_no 不能同时为空。
+     *
      * @return array
      * @throws Exception
      * @lasttime: 2023/4/17 4:12 PM

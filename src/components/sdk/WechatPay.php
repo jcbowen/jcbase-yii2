@@ -145,7 +145,7 @@ class WechatPay extends Component
         // 从本地文件中加载「商户API私钥」，「商户API私钥」会用来生成请求的签名
         $merchantPrivateKeyFilePath = Yii::getAlias($this->certPath) . $this->merchantId . '/apiclient_key.pem';
         if (!file_exists($merchantPrivateKeyFilePath))
-            throw new InvalidArgumentException('商户API私钥文件不存在');
+            throw new InvalidArgumentException("商户API私钥文件不存在：$merchantPrivateKeyFilePath");
 
         $merchantPrivateKeyFilePath       = 'file://' . $merchantPrivateKeyFilePath;
         $this->merchantPrivateKeyInstance = Rsa::from($merchantPrivateKeyFilePath);
