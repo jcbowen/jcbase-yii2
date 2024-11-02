@@ -5,6 +5,7 @@ namespace Jcbowen\JcbaseYii2\components;
 use Yii;
 use yii\base\InvalidArgumentException;
 use yii\db\ActiveRecord;
+use yii\db\Exception;
 
 trait ModelHelper
 {
@@ -18,13 +19,15 @@ trait ModelHelper
     /**
      * 通用save方法，方便输出报错
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param ActiveRecord $model
-     * @param array $data
-     * @param string $formName
+     * @param array        $data
+     * @param string       $formName
+     *
      * @return array|bool
+     * @throws Exception
      * @lasttime: 2022/12/28 10:29 AM
      */
     public function toSave(ActiveRecord $model, array $data = [], string $formName = '')
@@ -51,10 +54,11 @@ trait ModelHelper
     /**
      * 新增/更新过滤数据(强制数据转换为数组格式)
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $data
+     *
      * @return array
      * @throws InvalidArgumentException
      * @lasttime: 2022/8/28 23:03
@@ -106,10 +110,11 @@ trait ModelHelper
     /**
      * 判断字段是否存在
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string $field
+     *
      * @return bool
      * @lasttime: 2022/8/28 23:03
      * @throws InvalidArgumentException
@@ -123,7 +128,7 @@ trait ModelHelper
     /**
      * 获取模型字段
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @return array
      * @throws InvalidArgumentException
@@ -137,7 +142,7 @@ trait ModelHelper
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      * @throws InvalidArgumentException
      *
