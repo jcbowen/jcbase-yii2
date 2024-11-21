@@ -451,7 +451,7 @@ class File extends Model
                 'filesize'   => $this->storageUnitConversion($row['size']) ?? '0',
                 'width'      => $row['width'] ?? '0',
                 'height'     => $row['height'] ?? '0',
-                'group_id'   => $row['group_id'] ?? '0',
+                'group_id'   => $row['group_id'] ?? '-1',
                 'state'      => 'SUCCESS'
             ];
         }
