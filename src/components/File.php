@@ -4,6 +4,7 @@ namespace Jcbowen\JcbaseYii2\components;
 
 use Jcbowen\JcbaseYii2\components\jobs\FileRemoteUpload;
 use Jcbowen\JcbaseYii2\config\struct\FileStruct;
+use OSS\Http\RequestCore_Exception;
 use Yii;
 use yii\base\Exception;
 use yii\base\Model;
@@ -140,10 +141,11 @@ class File extends Model
     /**
      * 根据文件流字段名获取实例
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string $name
+     *
      * @return File|null
      * @lasttime: 2023/2/12 4:57 PM
      */
@@ -166,10 +168,11 @@ class File extends Model
     /**
      * 根据base64字符串获取实例
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string $base64
+     *
      * @return File
      * @lasttime: 2023/2/12 4:57 PM
      */
@@ -198,7 +201,7 @@ class File extends Model
     /**
      * 初始化上传文件
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return array
@@ -256,7 +259,9 @@ class File extends Model
 
     /**
      * 获取上传文件扩展名
+     *
      * @param string $name
+     *
      * @return string
      */
     public function getExtension(string $name = ''): string
@@ -292,7 +297,9 @@ class File extends Model
 
     /**
      * 储存单位换算
+     *
      * @param $fileSize
+     *
      * @return string
      */
     public function storageUnitConversion($fileSize): string
@@ -308,20 +315,23 @@ class File extends Model
     /**
      * 文件上传
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param string $type 文件类型['image', 'thumb', 'voice', 'video', 'audio', 'office', 'zip']
-     * @param string $name 指定文件名
-     * @param bool $compress 是否压缩
+     * @param string $type     文件类型['image', 'thumb', 'voice', 'video', 'audio', 'office', 'zip']
+     * @param string $name     指定文件名
+     * @param bool   $compress 是否压缩
+     *
      * @return array|null
+     * @throws RequestCore_Exception
+     * @throws \yii\db\Exception
      * @lasttime: 2023/2/12 11:53 AM
      */
     public function file_upload(string $type = 'image', string $name = '', bool $compress = false): ?array
     {
         global $_GPC;
         if (empty($this->size))
-            return Util::error(ErrCode::PARAMETER_EMPTY, '没有上传内容');
+            return Util::error(ErrCode::PARAMETER_ERROR, '没有上传内容');
 
         $group_id = intval($_GPC['group_id']);
         $group_id = $group_id === 0 ? '-1' : $group_id;
@@ -627,7 +637,11 @@ class File extends Model
 
         $info['url'] = Util::toMedia($path);
 
-        $attach_id         = $this->saveDb($info);
+        $attach_id = $this->saveDb($info);
+        if (Util::isError($attach_id)) {
+            return $attach_id;
+        }
+
         $info['attach_id'] = $attach_id;
 
         return $info;
@@ -637,12 +651,14 @@ class File extends Model
      * 将文件上传到远程附件中
      * 目前仅支持腾讯云cos/阿里云oss
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param $filename
+     * @param      $filename
      * @param bool $auto_delete_local
+     *
      * @return array|bool
+     * @throws RequestCore_Exception
      * @lasttime: 2022/8/18 2:58 PM
      */
     public function file_remote_upload($filename, bool $auto_delete_local = true)
@@ -694,11 +710,13 @@ class File extends Model
     /**
      * 删除附件
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $filePath
+     *
      * @return array|bool
+     * @throws RequestCore_Exception
      * @lasttime: 2023/2/12 23:21
      */
     public function file_delete($filePath)
@@ -728,7 +746,6 @@ class File extends Model
         // 删除远程附件
         $result = $this->file_remote_delete($filePath);
         if (Util::isError($result)) {
-            $delFileState = false;
             return $result;
         }
 
@@ -760,11 +777,13 @@ class File extends Model
     /**
      * 删除远程附件
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string $filePath 附件相对路径
+     *
      * @return array|bool
+     * @throws RequestCore_Exception
      * @lasttime: 2023/2/12 22:50
      */
     public function file_remote_delete(string $filePath)
@@ -815,11 +834,13 @@ class File extends Model
     /**
      * 保存附件记录到数据库
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param $data
+     *
      * @return array|string
+     * @throws \yii\db\Exception
      * @lasttime: 2023/7/22 14:48
      */
     public function saveDb($data)
@@ -878,9 +899,11 @@ class File extends Model
 
     /**
      * 附件进行缩略
-     * @param $srcFile
+     *
+     * @param        $srcFile
      * @param string $desFile
-     * @param int $width
+     * @param int    $width
+     *
      * @return array|bool|string|string[]
      * @throws Exception
      */
@@ -920,9 +943,11 @@ class File extends Model
 
     /**
      * 根据全局设置进行图片压缩
+     *
      * @param $src
      * @param $to_path
      * @param $ext
+     *
      * @return string|mixed
      */
     public function file_image_quality($src, $to_path, $ext)
@@ -949,7 +974,7 @@ class File extends Model
     {
         $url = trim($url);
         if (empty($url)) {
-            return Util::error(ErrCode::PARAMETER_EMPTY, '文件地址不存在');
+            return Util::error(ErrCode::PARAMETER_ERROR, '文件地址不存在');
         }
         $resp = Communication::get($url);
 
@@ -1010,7 +1035,9 @@ class File extends Model
 
     /**
      * 媒体文件类型
+     *
      * @param $url
+     *
      * @return bool|string[]
      */
     public function file_media_content_type($url)
@@ -1074,9 +1101,11 @@ class File extends Model
     /**
      * 检查文件是否为图片
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param $url
+     *
      * @return bool
      * @lasttime: 2022/3/19 7:02 下午
      */
@@ -1113,7 +1142,8 @@ class File extends Model
      * 也可以用作普通的文件移动方法
      *
      * @param string $aimUrl 文件所在目录
-     * @param string $dest 回收站目录（没有则直接删除）
+     * @param string $dest   回收站目录（没有则直接删除）
+     *
      * @return array|bool
      * @throws Exception
      */
