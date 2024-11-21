@@ -639,6 +639,8 @@ class File extends Model
 
         $attach_id = $this->saveDb($info);
         if (Util::isError($attach_id)) {
+            // 数据表插入失败的时候删除文件
+            @FileHelper::unlink($fullName);
             return $attach_id;
         }
 
