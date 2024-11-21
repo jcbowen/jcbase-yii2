@@ -5,7 +5,7 @@ namespace Jcbowen\JcbaseYii2\components;
 /**
  * Class ErrCode
  *
- * @author Bowen
+ * @author  Bowen
  * @email bowen@jiuchet.com
  * @lasttime: 2022/7/18 9:35 AM
  * @package Jcbowen\JcbaseYii2\components
@@ -49,10 +49,7 @@ class ErrCode
     const LOGIN_INVALID = 9002004;
     /** @var int 无效的token */
     const INVALID_TOKEN = 9002028;
-    /**
-     * @var int 无权访问
-     * @deprecated 请使用 NO_PERMISSION_EDIT
-     */
+    /** @var int 权限不足 */
     const NO_PERMISSION = 9002011;
     /** @var int 无权访问 */
     const NO_PERMISSION_VISIT = 9002005;
