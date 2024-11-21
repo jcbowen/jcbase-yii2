@@ -438,20 +438,20 @@ class File extends Model
             $row->save();
 
             return [
-                'attach_id'  => $row['id'],
-                'name'       => $row['filename'],
-                'type'       => $row['type'],
-                'data_type'  => $this->type,
-                'ext'        => $ext,
-                'filename'   => $row['filename'],
-                'attachment' => $row['attachment'],
-                'url'        => Util::toMedia($row['attachment']),
-                'is_image'   => $row['type'] == FileStruct::ATTACH_TYPE_IMAGE ? 1 : 0,
-                'size'       => $row['size'],
-                'filesize'   => $this->storageUnitConversion($row['size']),
-                'width'      => $row['width'],
-                'height'     => $row['height'],
-                'group_id'   => $row['group_id'],
+                'attach_id'  => $row['id'] ?? '0',
+                'name'       => $row['filename'] ?? '',
+                'type'       => $row['type'] ?? '',
+                'data_type'  => $this->type ?? '',
+                'ext'        => $ext ?? '',
+                'filename'   => $row['filename'] ?? '',
+                'attachment' => $row['attachment'] ?? '',
+                'url'        => Util::toMedia($row['attachment']) ?? '',
+                'is_image'   => $row['type'] == FileStruct::ATTACH_TYPE_IMAGE ? '1' : '0',
+                'size'       => $row['size'] ?? 0,
+                'filesize'   => $this->storageUnitConversion($row['size']) ?? '0',
+                'width'      => $row['width'] ?? '0',
+                'height'     => $row['height'] ?? '0',
+                'group_id'   => $row['group_id'] ?? '0',
                 'state'      => 'SUCCESS'
             ];
         }
