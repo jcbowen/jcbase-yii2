@@ -8,7 +8,7 @@ use Jcbowen\JcbaseYii2\base\ComponentArrayAccess;
  * Class FileStruct
  * 文件组件配置结构
  *
- * @author Bowen
+ * @author  Bowen
  * @email bowen@jiuchet.com
  * @lasttime: 2023/4/27 8:52 AM
  * @package Jcbowen\JcbaseYii2\config\struct
@@ -16,12 +16,12 @@ use Jcbowen\JcbaseYii2\base\ComponentArrayAccess;
 class FileStruct extends ComponentArrayAccess
 {
     /** @var int 附件类型 */
-    const ATTACH_TYPE_IMAGE  = 1;
-    const ATTACH_TYPE_VOICE  = 2;
-    const ATTACH_TYPE_VIDEO  = 3;
-    const ATTACH_TYPE_NEWS   = 4;
-    const ATTACH_TYPE_OFFICE = 5;
-    const ATTACH_TYPE_ZIP    = 6;
+    const ATTACH_TYPE_IMAGE  = '1';
+    const ATTACH_TYPE_VOICE  = '2';
+    const ATTACH_TYPE_VIDEO  = '3';
+    const ATTACH_TYPE_NEWS   = '4';
+    const ATTACH_TYPE_OFFICE = '5';
+    const ATTACH_TYPE_ZIP    = '6';
 
     /** @var string 本地存储附件根目录 */
     public $root = '@webroot';
