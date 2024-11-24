@@ -77,9 +77,9 @@ const CLIENT_LIST                  = [
 ];
 
 // 空日期字符串（一般用于日期字段表示为空）
-const NO_DATE = '0000-00-00';
+defined("NO_DATE") or define("NO_DATE", '0000-00-00');
 // 空时间字符串（一般用于时间字段表示为空，如：deleted_at为NO_TIME，就代表没有删除）
-const NO_TIME = '0000-00-00 00:00:00';
+defined("NO_TIME") or define("NO_TIME", '0000-00-00 00:00:00');
 
 define('MAGIC_QUOTES_GPC', (bool)ini_set("magic_quotes_runtime", 0));
 
