@@ -11,6 +11,8 @@ use yii\web\Response;
 use yii\helpers\ArrayHelper;
 use RuntimeException;
 
+defined('NO_TIME') || define('NO_TIME', '0000-00-00 00:00:00');
+
 /**
  * Trait CurdActionTrait
  * 增删改查操作
@@ -55,7 +57,7 @@ trait CurdActionTrait
     public $operateTime;
 
     /** @var string 空时间字符 */
-    public $noTime = '0000-00-00 00:00:00';
+    public $noTime = NO_TIME;
 
     /** @var string 数据表查询别名 */
     public $modelQueryAlias;
