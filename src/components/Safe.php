@@ -5,7 +5,7 @@ namespace Jcbowen\JcbaseYii2\components;
 /**
  * Class Safe
  *
- * @author Bowen
+ * @author  Bowen
  * @email bowen@jiuchet.com
  * @lasttime: 2022/7/18 9:37 AM
  * @package Jcbowen\JcbaseYii2\components
@@ -14,11 +14,12 @@ class Safe
 {
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param int $default
-     * @param $value
+     * @param     $value
+     *
      * @return float|int
      * @lasttime: 2021/12/19 11:51 下午
      */
@@ -38,12 +39,14 @@ class Safe
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
+     *
      * @param mixed $value
-     * @param array $allow 允许的值
+     * @param array $allow   允许的值
      * @param mixed $default 默认值
-     * @param bool $strict 是否严格模式
+     * @param bool  $strict  是否严格模式
+     *
      * @return mixed|string
      * @lasttime: 2021/12/19 11:49 下午
      */
@@ -84,6 +87,8 @@ class Safe
                 $row = self::gpcInt($row);
             } elseif (is_array($row)) {
                 $row = self::gpcArray($row, $default);
+            } elseif (is_bool($row)) {
+                continue;
             } else {
                 $row = self::gpcString($row);
             }
