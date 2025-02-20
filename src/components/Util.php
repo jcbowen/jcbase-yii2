@@ -1445,6 +1445,60 @@ class Util extends Component
     }
 
     /**
+     * 对ID进行AES加密
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param int    $id
+     * @param string $key
+     * @param string $iv
+     *
+     * @return string
+     */
+    public static function encryptId(int $id, string $key = 'jcbase.aes_key__', string $iv = 'jcbase.aes_iv___'): string
+    {
+        // 使用AES-256-CBC加密
+        $encrypted = openssl_encrypt(strval($id), 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+
+        // 对加密结果进行Base64编码
+        $base64 = base64_encode($encrypted);
+
+        // 替换Base64中的特殊字符
+        return str_replace(['+', '/', '='], ['-', '_', ''], $base64);
+    }
+
+    /**
+     * 解密encryptId计算出来的密文
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $encrypted
+     * @param string $key
+     * @param string $iv
+     *
+     * @return int
+     */
+    public static function decryptId(string $encrypted, string $key = 'jcbase.aes_key__', string $iv = 'jcbase.aes_iv___'): int
+    {
+        // 将密文中的字符替换回Base64字符
+        $base64 = str_replace(['-', '_'], ['+', '/'], $encrypted);
+
+        // 补齐Base64长度（填充等号）
+        $padding = strlen($base64) % 4;
+        if ($padding > 0) {
+            $base64 .= str_repeat('=', 4 - $padding);
+        }
+
+        // 解码Base64
+        $encryptedData = base64_decode($base64);
+
+        // 使用AES-256-CBC解密
+        return (int)openssl_decrypt($encryptedData, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+    }
+
+    /**
      * 获取redis
      *
      * @author     Bowen
