@@ -549,6 +549,27 @@ class Util extends Component
     }
 
     /**
+     * 判断是否为严格数组(即非前端意义上的对象)
+     */
+    public static function isStrictArray($var): bool
+    {
+        // 首先检查变量是否是数组
+        if (!is_array($var)) {
+            return false;
+        }
+
+        // 遍历数组，检查每个键是否等于其索引值
+        $index = 0;
+        foreach ($var as $key => $value) {
+            if ($key !== $index++) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * 取出数组中指定部分
      *
      * @author  Bowen
