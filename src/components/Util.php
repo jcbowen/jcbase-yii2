@@ -550,8 +550,16 @@ class Util extends Component
 
     /**
      * 判断是否为严格数组(即非前端意义上的对象)
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param mixed $var    需要判定的变量
+     * @param bool  $simple 是否只判断简单类型值的数组
+     *
+     * @return bool
      */
-    public static function isStrictArray($var): bool
+    public static function isStrictArray($var, bool $simple = false): bool
     {
         // 首先检查变量是否是数组
         if (!is_array($var)) {
@@ -561,7 +569,15 @@ class Util extends Component
         // 遍历数组，检查每个键是否等于其索引值
         $index = 0;
         foreach ($var as $key => $value) {
-            if ($key !== $index++) {
+            if (
+                $key !== $index++ ||
+                (
+                    $simple &&
+                    !is_string($value) &&
+                    !is_numeric($value) &&
+                    !is_bool($value)
+                )
+            ) {
                 return false;
             }
         }
