@@ -888,7 +888,8 @@ class Util extends Component
     }
 
     /**
-     * 递归合并数组，与yii2的ArrayHelper::merge()不同的是，如果遇到int类型的key，会将后面的值覆盖前面的值
+     * 递归合并数组
+     * 与yii2的ArrayHelper::merge()不同的是，如果遇到int类型的key，会将后面的值覆盖前面的值
      *
      * @author  Bowen
      * @email bowen@jiuchet.com
@@ -917,6 +918,51 @@ class Util extends Component
                     }
                 } elseif (is_array($v) && isset($res[$k]) && is_array($res[$k])) {
                     $res[$k] = self::merge($res[$k], $v);
+                } else {
+                    $res[$k] = $v;
+                }
+            }
+        }
+
+        return $res;
+    }
+
+    /**
+     * 递归合并数组
+     * 与yii2的ArrayHelper::merge()不同的是，如果遇到两个严格数组，将会去重合并
+     *
+     * @author Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param $a
+     * @param $b
+     *
+     * @return array|mixed|null
+     */
+    public static function ArrayMerge($a, $b)
+    {
+        $args = func_get_args();
+        $res  = array_shift($args);
+        while (!empty($args)) {
+            $next = array_shift($args);
+            if (static::isStrictArray($next, true) && static::isStrictArray($res, true)) {
+                return array_unique(array_merge($res, $next));
+            }
+            foreach ($next as $k => $v) {
+                if ($v instanceof UnsetArrayValue) {
+                    unset($res[$k]);
+                } elseif ($v instanceof ReplaceArrayValue) {
+                    $res[$k] = $v->value;
+                } else if (static::isStrictArray($v, true) && static::isStrictArray($res[$k], true)) {
+                    $res[$k] = array_unique(array_merge($res[$k], $v));
+                } elseif (is_int($k)) {
+                    if (array_key_exists($k, $res)) {
+                        $res[] = $v;
+                    } else {
+                        $res[$k] = $v;
+                    }
+                } elseif (is_array($v) && isset($res[$k]) && is_array($res[$k])) {
+                    $res[$k] = static::merge($res[$k], $v);
                 } else {
                     $res[$k] = $v;
                 }
