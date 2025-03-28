@@ -147,6 +147,7 @@ class WebController extends Controller
      * @param string $msg    提示信息
      * @param array  $params 额外参数
      * @param string $returnType
+     * @param bool   $addSecurityHeaders
      *
      * @return string|Response
      * @lasttime: 2023/5/27 4:47 PM

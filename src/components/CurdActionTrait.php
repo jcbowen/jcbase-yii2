@@ -17,7 +17,7 @@ defined('NO_TIME') || define('NO_TIME', '0000-00-00 00:00:00');
  * Trait CurdActionTrait
  * 增删改查操作
  *
- * @method string|Response result($errCode = ErrCode::UNKNOWN, string $errmsg = '', $data = [], array $params = [], string $returnType = 'response') 输出json结构数据到Response中
+ * @method string|Response result($errCode = ErrCode::UNKNOWN, string $errmsg = '', $data = [], array $params = [], string $returnType = 'response', bool $addSecurityHeaders = true) 输出json结构数据到Response中
  * @method string|Response result_r($errCode = '0', string $errmsg = '', $data = [], array $params = []) 输出json字符串
  * @method string|Response resultError($error = []) 将error数组转换Response输出
  *
@@ -1966,6 +1966,7 @@ trait CurdActionTrait
      * @param mixed          $data
      * @param array          $params
      * @param string         $returnType
+     * @param bool           $addSecurityHeaders
      *
      * @return string|Response
      * @lasttime: 2022/8/28 23:17
