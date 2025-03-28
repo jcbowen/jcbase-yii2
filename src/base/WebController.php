@@ -17,7 +17,7 @@ use yii\web\Response;
 /**
  * Class WebController
  *
- * @author Bowen
+ * @author  Bowen
  * @email bowen@jiuchet.com
  * @lasttime: 2021/12/18 1:15 上午
  * @package Jcbowen\JcbaseYii2\base
@@ -71,12 +71,13 @@ class WebController extends Controller
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param string $msg 提示信息
+     * @param string $msg      提示信息
      * @param string $redirect 跳转地址 refresh:刷新当前页，referer:返回上一页，其他:跳转到指定地址
-     * @param string $type 提示类型 success:成功，error:失败，info:提示，warning:警告，ajax:ajax请求，sql:sql错误
+     * @param string $type     提示类型 success:成功，error:失败，info:提示，warning:警告，ajax:ajax请求，sql:sql错误
+     *
      * @return string|Response
      * @throws Exception
      * @lasttime: 2023/2/1 4:04 PM
@@ -139,22 +140,23 @@ class WebController extends Controller
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param mixed $data 正确数据（当传入字符串，且msg参数为空时，可以作为提示信息）
-     * @param string $msg 提示信息
-     * @param array $params 额外参数
+     * @param mixed  $data   正确数据（当传入字符串，且msg参数为空时，可以作为提示信息）
+     * @param string $msg    提示信息
+     * @param array  $params 额外参数
      * @param string $returnType
+     *
      * @return string|Response
      * @lasttime: 2023/5/27 4:47 PM
      */
-    public function success($data = [], string $msg = '', array $params = [], string $returnType = 'response')
+    public function success($data = [], string $msg = '', array $params = [], string $returnType = 'response', bool $addSecurityHeaders = true)
     {
         if (is_string($data) && empty($msg)) {
             $msg  = $data;
             $data = [];
         }
-        return (new Util)->result(ErrCode::SUCCESS, $msg ?: 'ok', $data, $params, $returnType);
+        return (new Util)->result(ErrCode::SUCCESS, $msg ?: 'ok', $data, $params, $returnType, $addSecurityHeaders);
     }
 }

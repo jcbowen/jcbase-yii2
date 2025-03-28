@@ -1970,9 +1970,9 @@ trait CurdActionTrait
      * @return string|Response
      * @lasttime: 2022/8/28 23:17
      */
-    public static function result($errCode = ErrCode::UNKNOWN, string $errmsg = '', $data = [], array $params = [], string $returnType = 'response')
+    public static function result($errCode = ErrCode::UNKNOWN, string $errmsg = '', $data = [], array $params = [], string $returnType = 'response', bool $addSecurityHeaders = true)
     {
-        return (new Util)->result($errCode, $errmsg, $data, $params, $returnType);
+        return (new Util)->result($errCode, $errmsg, $data, $params, $returnType, $addSecurityHeaders);
     }
 
     /**
