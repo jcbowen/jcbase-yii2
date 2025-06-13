@@ -3,6 +3,7 @@
 namespace Jcbowen\JcbaseYii2\components;
 
 use Jcbowen\JcbaseYii2\components\sdk\SmsYunTongXun;
+use Jcbowen\JcbaseYii2\components\sdk\SmsTencent;
 use stdClass;
 use Yii;
 
@@ -11,7 +12,7 @@ use Yii;
  *
  * @author Bowen
  * @email bowen@jiuchet.com
- * @lasttime: 2022/9/14 9:11 AM
+ * @lasttime: 2024/3/21 10:30 AM
  * @package Jcbowen\JcbaseYii2\components
  */
 class Sms
@@ -38,14 +39,20 @@ class Sms
      * @param array $content
      * @param string $templateId
      * @return array|stdClass|string
-     * @lasttime: 2022/10/15 11:31
+     * @lasttime: 2024/3/21 10:30 AM
      */
-    public function send(string $mobile,array $content, string $templateId)
+    public function send(string $mobile, array $content, string $templateId)
     {
         switch ($this->type) {
             case 'YunTongXun':
                 $sms = new SmsYunTongXun();
                 foreach (Yii::$app->params['SmsConfig']['YunTongXun'] as $key => $value) {
+                    $sms->$key = $value;
+                }
+                return $sms->send($mobile, $content, $templateId);
+            case 'Tencent':
+                $sms = new SmsTencent();
+                foreach (Yii::$app->params['SmsConfig']['Tencent'] as $key => $value) {
                     $sms->$key = $value;
                 }
                 return $sms->send($mobile, $content, $templateId);
