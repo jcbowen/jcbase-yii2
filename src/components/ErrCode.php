@@ -90,6 +90,12 @@ class ErrCode
     const UNAUTHORIZED = 9002019;
     /** @var int 无效的授权信息 */
     const INVALID_AUTHORIZATION_INFORMATION = 9002020;
+    /** @var int 访问被拒绝 */
+    const ACCESS_DENIED = 9002040;
+    /** @var int 认证失败 */
+    const AUTH_FAILED = 9002041;
+    /** @var int 超过访问限制 */
+    const RATE_LIMIT_EXCEEDED = 9002042;
     /** @var int 服务到期 */
     const EXPIRATION_SERVICE = 9002021;
     /** @var int 大更新到期 */
@@ -128,7 +134,6 @@ class ErrCode
     const NO_SET_PASSWORD = 9002035;
     /** @var int 没有设置支付密码 */
     const NO_SET_PAY_PASSWORD = 9002036;
-
     /** @var int 数据存储错误 */
     const STORAGE_ERROR = 9003001;
     /** @var int 数据库错误 */
