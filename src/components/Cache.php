@@ -6,7 +6,7 @@ namespace Jcbowen\JcbaseYii2\components;
  * Class Cache
  * 目前仅支持redis缓存
  *
- * @author Bowen
+ * @author  Bowen
  * @email bowen@jiuchet.com
  * @lasttime: 2022/7/18 9:29 AM
  * @package Jcbowen\JcbaseYii2\components
@@ -43,7 +43,7 @@ class Cache extends \yii\base\Component
     /**
      * 获取redis实例
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @return Redis
@@ -62,10 +62,11 @@ class Cache extends \yii\base\Component
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string $key
+     *
      * @return mixed
      * @lasttime: 2023/10/9 2:52 PM
      */
@@ -78,12 +79,13 @@ class Cache extends \yii\base\Component
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
-     * @param string $key
-     * @param array|string $value
+     * @param string          $key
+     * @param array|string    $value
      * @param int|string|null $expire
+     *
      * @return mixed
      * @lasttime: 2023/10/9 2:53 PM
      */
@@ -97,10 +99,11 @@ class Cache extends \yii\base\Component
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string $key
+     *
      * @return mixed
      * @lasttime: 2022/10/5 21:26
      */
@@ -114,10 +117,11 @@ class Cache extends \yii\base\Component
     /**
      * 判断缓存是否存在
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string $key
+     *
      * @return mixed
      * @lasttime: 2022/10/6 20:51
      */
@@ -130,16 +134,17 @@ class Cache extends \yii\base\Component
 
     /**
      *
-     * @author Bowen
+     * @author  Bowen
      * @email bowen@jiuchet.com
      *
      * @param string $key
+     *
      * @return string
      * @lasttime: 2022/10/5 21:27
      */
     public static function keygen(string $key = ''): string
     {
-        return 'jcbase_' . md5(static::$prefix . '_' . $key);
+        return 'jcbase_' . static::$prefix . '_' . md5($key);
     }
 
     // ----- 动态调用 ----- /
