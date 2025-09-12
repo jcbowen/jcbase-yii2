@@ -2194,6 +2194,33 @@ class Util extends Component
         return round(floatval($money), $decimals);
     }
 
+    /**
+     * 检查字符串是否为有效的 Base64 编码
+     *
+     * @author  Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $str 要检查的字符串
+     *
+     * @return bool 如果是有效的 Base64 编码返回 true，否则返回 false
+     * @lasttime: 2025/9/12 10:54 AM
+     */
+    public static function is_base64(string $str): bool
+    {
+        // 检查字符串是否只包含base64字符
+        if (!preg_match('/^[A-Za-z0-9+\/]*={0,2}$/', $str)) {
+            return false;
+        }
+
+        // 尝试解码，如果解码后的内容再编码后与原字符串相同，说明是base64编码的
+        $decoded = base64_decode($str, true);
+        if ($decoded === false) {
+            return false;
+        }
+
+        return base64_encode($decoded) === $str;
+    }
+
     // ----- 弃用方法 ----- //
 
     /**
