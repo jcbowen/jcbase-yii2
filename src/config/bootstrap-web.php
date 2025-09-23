@@ -86,7 +86,8 @@ if (!function_exists('allowCrossDomain')) {
                 'Referer',
                 'User-Agent',
                 'JcClient',
-                'EnvVersion',
+                'EnvVersion', // 后期需移除
+                'X-Environment',
                 'release',
                 'releaseCode',
             ]),
