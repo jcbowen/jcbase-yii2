@@ -90,6 +90,7 @@ if (!function_exists('allowCrossDomain')) {
                 'X-Environment',
                 'release',
                 'releaseCode',
+                'X-ResourceVersion',
             ]),
         ];
 
