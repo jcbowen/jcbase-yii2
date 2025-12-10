@@ -11,7 +11,6 @@ use yii\web\UrlRuleInterface;
  * Class urlManager
  * @author Bowen
  * @email bowen@jiuchet.com
- * @lastTime 2021/12/17 11:26 下午
  * @package common\components
  */
 class UrlManager extends BaseObject implements UrlRuleInterface
@@ -43,10 +42,11 @@ class UrlManager extends BaseObject implements UrlRuleInterface
 
             if (!$pass) {
                 if (empty(Yii::$app->request->headers->get('JcClient'))) {
+                    $defaultRoute = self::getDefaultRoute();
                     if (!YII_DEBUG)
-                        return ['index/index', $_GPC];
+                        return [$defaultRoute . '/' . $defaultRoute, $_GPC];
                     elseif (empty($_GPC['JcClient']))
-                        return ['index/index', $_GPC];
+                        return [$defaultRoute . '/' . $defaultRoute, $_GPC];
 
                 }
             }
@@ -71,7 +71,7 @@ class UrlManager extends BaseObject implements UrlRuleInterface
             return [$route, $_GPC];
         }
 
-        // 将index作为控制器名
+        // 将defaultRoute作为控制器名
         $backup_pathInfo = $pathInfo;
         $controller      = $this->makeController($path, 'index', $pathInfo);
         if (method_exists($controller, $method)) {
@@ -80,10 +80,11 @@ class UrlManager extends BaseObject implements UrlRuleInterface
         }
         $pathInfo = $backup_pathInfo; // 匹配失败，恢复pathInfo
 
-        // 将最后一个目录作为控制器名，index作为action
+        // 将最后一个目录作为控制器名，defaultRoute作为action
         $backup_pathInfo = $pathInfo;
         $controller      = $this->makeController($path, 'suffix', $pathInfo);
-        if (method_exists($controller, 'actionIndex')) {
+        $defaultAction   = $this->makeAction('');
+        if (method_exists($controller, $defaultAction)) {
             $route = $pathInfo;
             return [$route, $_GPC];
         }
@@ -118,22 +119,22 @@ class UrlManager extends BaseObject implements UrlRuleInterface
             Yii::$app->controllerNamespace :
             Yii::$app->getModule($this->moduleName)->controllerNamespace;
 
-        // 将index作为控制器名
+        // 将defaultRoute作为控制器名
         if ($type == 'index') {
             $controller     = rtrim($nameSpace . '\\' . $path, '\\') . '\\' . ucfirst($defaultRoute) . 'Controller';
             $pathInfo_arr   = explode('/', $pathInfo);
             $action         = array_splice($pathInfo_arr, -1)[0];
-            $pathInfo_arr[] = 'index';
+            $pathInfo_arr[] = $defaultRoute;
             $pathInfo_arr[] = $action;
             $pathInfo       = implode('/', $pathInfo_arr);
             return $controller;
-        } elseif ($type == 'suffix') { // 将最后一个目录作为控制器名，index作为action
+        } elseif ($type == 'suffix') { // 将最后一个目录作为控制器名，defaultRoute作为action
             $pathInfo_arr = explode('/', $pathInfo);
             // 获取最后一个目录
             $controller_name = array_pop($pathInfo_arr);
             $controller      = rtrim($nameSpace . '\\' . $path, '\\') . '\\' . ucfirst($controller_name) . 'Controller';
             $pathInfo_arr[]  = $controller_name; // 还原pathInfo_arr
-            $pathInfo_arr[]  = 'index'; // 补充action
+            $pathInfo_arr[]  = $defaultRoute; // 补充action
             $pathInfo        = implode('/', $pathInfo_arr);
             return $controller;
         }
