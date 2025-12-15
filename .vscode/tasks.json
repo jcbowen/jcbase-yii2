@@ -1,0 +1,16 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "composer install",
+      "type": "shell",
+      "command": "composer install --ignore-platform-req=ext-imagick",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "detail": "安装项目依赖，忽略 imagick 扩展要求"
+    }
+  ]
+}
