@@ -1076,6 +1076,8 @@ trait CurdActionTrait
 
         $where   = ['and'];
         $where[] = [$this->pkId => $id];
+        if (array_key_exists($this->field_deleted_at, $this->modelAttributes))
+            $where[] = [$this->field_deleted_at => $this->noTime];
         return $where;
     }
 
