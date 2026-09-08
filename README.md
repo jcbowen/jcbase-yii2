@@ -15,7 +15,7 @@ yii2基础扩展库，提供一些常用公共方法、基础控制器、常用�
 * 错误码定义类
 * 验证码显示、扩展
 * AES加解密
-* SM4加解密
+* SM4加解密（国密，OpenSSL 不支持时自动降级到纯 PHP 实现）
 * 基础工具包
 * CRUD类封装
 * 默认附件表数据模型
@@ -304,7 +304,41 @@ $encrypted = AES::encrypt($text, $key, $iv);
 $decrypted = AES::decrypt($encrypted, $key, $iv);
 ```
 
-#### 5. Redis操作使用
+#### 5. SM4加解密使用
+
+SM4 为国密算法，OpenSSL 要 1.1.1 及以上才支持；CentOS 7 默认的 OpenSSL 1.0.2 没有该算法。
+组件会自动探测环境：支持时走 OpenSSL，不支持时自动降级到内置的纯 PHP 实现，两条路径的密文完全互通。
+
+```php
+<?php
+
+use Jcbowen\JcbaseYii2\components\SM4;
+
+// 加密
+$encrypted = (new SM4([
+    'text'     => '需要加密的内容',
+    'key'      => 'jcbase.sm4_key__', // 密钥，必须16字节
+    'iv'       => 'jcbase.sm4_iv___', // 初始化向量，必须16字节（ECB模式不需要）
+    'mode'     => 'CBC',              // 加密模式，CBC / ECB
+    'encoding' => 'Std',              // 输出编码，Std / Raw / RawURL / Hex
+]))->encrypt();
+
+// 解密
+$decrypted = (new SM4([
+    'text'     => $encrypted,
+    'key'      => 'jcbase.sm4_key__',
+    'iv'       => 'jcbase.sm4_iv___',
+]))->decrypt();
+
+// 部署到新服务器后建议先跑一次环境自检，不通过会抛异常
+print_r(SM4::selfTest());
+// ['driver' => 'pure-php', 'opensslSm4' => false, 'vector' => true, ...]
+```
+
+> 注意：旧版本存在「手动 PKCS7 填充 + OpenSSL 默认再填一次」的双重填充缺陷，现已修复为标准单次 PKCS7 填充。
+> 旧版本产生的历史密文与本版本不兼容，需先解密后重新加密迁移。
+
+#### 6. Redis操作使用
 
 ```php
 <?php
@@ -328,7 +362,7 @@ $redis->hset('hash', 'field', 'value');
 $hashValue = $redis->hget('hash', 'field');
 ```
 
-#### 6. Excel处理使用
+#### 7. Excel处理使用
 
 ```php
 <?php
