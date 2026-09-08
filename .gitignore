@@ -1,5 +1,6 @@
 .idea
 .DS_Store
+.workbuddy
 
 composer.lock
 composer.phar
