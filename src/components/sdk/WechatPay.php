@@ -205,37 +205,45 @@ class WechatPay extends Component
         $this->notifyUrl                 = $config['notifyUrl'] ?? $this->notifyUrl;
 
         // 平台密钥模式、微信支付公钥ID、自定义证书文件名（均为可选配置，未配置时使用属性默认值）
-        if (!empty($config['platformKeyMode']))
+        if (!empty($config['platformKeyMode'])) {
             $this->platformKeyMode = $config['platformKeyMode'];
-        if (!empty($config['platformPublicKeyId']))
+        }
+        if (!empty($config['platformPublicKeyId'])) {
             $this->platformPublicKeyId = $config['platformPublicKeyId'];
-        if (!empty($config['platformPublicKeyFile']))
+        }
+        if (!empty($config['platformPublicKeyFile'])) {
             $this->platformPublicKeyFile = $config['platformPublicKeyFile'];
-        if (!empty($config['platformCertificateFile']))
+        }
+        if (!empty($config['platformCertificateFile'])) {
             $this->platformCertificateFile = $config['platformCertificateFile'];
+        }
 
         // 从本地文件中加载「商户API私钥」，「商户API私钥」会用来生成请求的签名
         $merchantPrivateKeyFilePath = Yii::getAlias($this->certPath) . $this->merchantId . '/apiclient_key.pem';
-        if (!file_exists($merchantPrivateKeyFilePath))
+        if (!file_exists($merchantPrivateKeyFilePath)) {
             throw new InvalidArgumentException("商户API私钥文件不存在：$merchantPrivateKeyFilePath");
+        }
 
         $merchantPrivateKeyFilePath       = 'file://' . $merchantPrivateKeyFilePath;
         $this->merchantPrivateKeyInstance = Rsa::from($merchantPrivateKeyFilePath);
 
         // 加载「微信支付平台证书」与「微信支付公钥」，两者可并存
         $this->platformPublicKeys = [];
-        if ($this->platformKeyMode !== self::PLATFORM_KEY_MODE_PUBLIC_KEY)
+        if ($this->platformKeyMode !== self::PLATFORM_KEY_MODE_PUBLIC_KEY) {
             $this->loadPlatformCertificate();
-        if ($this->platformKeyMode !== self::PLATFORM_KEY_MODE_CERTIFICATE)
+        }
+        if ($this->platformKeyMode !== self::PLATFORM_KEY_MODE_CERTIFICATE) {
             $this->loadPlatformPublicKey();
+        }
 
-        if (empty($this->platformPublicKeys))
+        if (empty($this->platformPublicKeys)) {
             throw new InvalidArgumentException(
                 '未找到可用的「微信支付平台证书」或「微信支付公钥」，请检查证书目录：'
                 . Yii::getAlias($this->certPath) . $this->merchantId . '/'
                 . (empty($this->platformPublicKeyId) && $this->platformKeyMode !== self::PLATFORM_KEY_MODE_CERTIFICATE
                     ? '（若使用「微信支付公钥」，还需配置 platformPublicKeyId）' : '')
             );
+        }
 
         // 确定当前主用的平台密钥：优先使用「微信支付公钥」（官方推荐，无有效期），否则回退到「平台证书」
         if (!empty($this->platformPublicKeyId) && isset($this->platformPublicKeys[$this->platformPublicKeyId])) {
@@ -282,8 +290,9 @@ class WechatPay extends Component
     private function loadPlatformCertificate(): bool
     {
         $filePath = $this->locateKeyFile($this->platformCertificateFile);
-        if (empty($filePath))
+        if (empty($filePath)) {
             return false;
+        }
 
         try {
             $certPath                  = 'file://' . $filePath;
@@ -312,8 +321,9 @@ class WechatPay extends Component
     private function loadPlatformPublicKey(): bool
     {
         $filePath = $this->locateKeyFile($this->platformPublicKeyFile);
-        if (empty($filePath))
+        if (empty($filePath)) {
             return false;
+        }
 
         if (empty($this->platformPublicKeyId)) {
             Yii::warning(
@@ -348,22 +358,25 @@ class WechatPay extends Component
      */
     private function locateKeyFile($file): string
     {
-        if (empty($file))
+        if (empty($file)) {
             return '';
+        }
 
         // 绝对路径或Yii别名
         if (is_string($file)) {
             $resolved = Yii::getAlias($file);
-            if (file_exists($resolved))
+            if (file_exists($resolved)) {
                 return $resolved;
+            }
         }
 
         // 相对证书目录（certPath/商户号/）的文件名
         $basePath = Yii::getAlias($this->certPath) . $this->merchantId . '/';
         foreach ((array)$file as $name) {
             $path = $basePath . $name;
-            if (file_exists($path))
+            if (file_exists($path)) {
                 return $path;
+            }
         }
 
         return '';
@@ -385,8 +398,9 @@ class WechatPay extends Component
      */
     public function getPlatformPublicKey(string $serial = '')
     {
-        if (!empty($serial) && isset($this->platformPublicKeys[$serial]))
+        if (!empty($serial) && isset($this->platformPublicKeys[$serial])) {
             return $this->platformPublicKeys[$serial];
+        }
 
         return $this->platformPublicKeyInstance;
     }
@@ -481,8 +495,9 @@ class WechatPay extends Component
     public function payer($data = []): WechatPay
     {
         // 如果为字符串，就代表传的是openid（兼容旧版用法）
-        if (is_string($data))
+        if (is_string($data)) {
             $data = ['openid' => $data];
+        }
 
         $this->payer = [
             'openid'    => $data['openid'] ?? '',
@@ -490,9 +505,11 @@ class WechatPay extends Component
         ];
 
         // 为空的直接移除
-        foreach ($this->payer as $key => $value)
-            if (empty($value))
+        foreach ($this->payer as $key => $value) {
+            if (empty($value)) {
                 unset($this->payer[$key]);
+            }
+        }
 
         return $this;
     }
@@ -551,9 +568,11 @@ class WechatPay extends Component
         $this->storeInfo($data['store_info'] ?? []);
 
         // 为空的直接移除
-        foreach ($this->sceneInfo as $key => $value)
-            if (empty($value))
+        foreach ($this->sceneInfo as $key => $value) {
+            if (empty($value)) {
                 unset($this->sceneInfo[$key]);
+            }
+        }
 
         return $this;
     }
@@ -579,13 +598,16 @@ class WechatPay extends Component
         ];
 
         // 为空的直接移除
-        foreach ($this->sceneInfo['store_info'] as $key => $value)
-            if (empty($value))
+        foreach ($this->sceneInfo['store_info'] as $key => $value) {
+            if (empty($value)) {
                 unset($this->sceneInfo['store_info'][$key]);
+            }
+        }
 
         // 如果没有传门店信息，这里默认设置一个
-        if (empty($this->sceneInfo['store_info']))
+        if (empty($this->sceneInfo['store_info'])) {
             $this->sceneInfo['store_info']['out_id'] = 'jc001';
+        }
 
         return $this;
     }
@@ -660,17 +682,21 @@ class WechatPay extends Component
      */
     public function checkTransactionsError()
     {
-        if ($this->amount['total'] <= 0)
+        if ($this->amount['total'] <= 0) {
             $this->errors[] = '金额必须大于0';
+        }
 
-        if (Util::strExists($this->amount['total'], '.'))
+        if (Util::strExists($this->amount['total'], '.')) {
             $this->errors[] = '订单金额(单位分)必须为整数';
+        }
 
-        if (empty($this->notifyUrl))
+        if (empty($this->notifyUrl)) {
             $this->errors[] = '回调地址不能为空';
+        }
 
-        if (!empty($this->errors))
+        if (!empty($this->errors)) {
             return Util::error(ErrCode::PARAMETER_ERROR, 'errors', $this->errors);
+        }
 
         return true;
     }
@@ -686,11 +712,13 @@ class WechatPay extends Component
      */
     public function checkJsApiError()
     {
-        if (empty($this->payer['openid']))
+        if (empty($this->payer['openid'])) {
             $this->errors[] = '支付者openid不能为空';
+        }
 
-        if (empty($this->payer['auth_code']))
+        if (empty($this->payer['auth_code'])) {
             unset($this->payer['auth_code']);
+        }
 
         return $this->checkTransactionsError();
     }
@@ -706,11 +734,13 @@ class WechatPay extends Component
      */
     public function checkAuthCodeError()
     {
-        if (empty($this->payer['auth_code']))
+        if (empty($this->payer['auth_code'])) {
             $this->errors[] = '授权码不能为空';
+        }
 
-        if (empty($this->payer['openid']))
+        if (empty($this->payer['openid'])) {
             unset($this->payer['openid']);
+        }
 
         $this->sceneInfo($this->sceneInfo);
 
@@ -777,8 +807,9 @@ class WechatPay extends Component
      */
     public function getSignParams(): array
     {
-        if (empty($this->prepayId))
+        if (empty($this->prepayId)) {
             return Util::error(ErrCode::PARAMETER_ERROR, 'prepayId不能为空');
+        }
 
         // 优先复用build时已加载的商户私钥实例，避免重复读取文件
         $merchantPrivateKeyInstance = $this->merchantPrivateKeyInstance;
@@ -843,8 +874,9 @@ class WechatPay extends Component
     public function APP()
     {
         $check = $this->checkTransactionsError();
-        if (Util::isError($check))
+        if (Util::isError($check)) {
             return $check;
+        }
 
         $jsonData = [
             'mchid'        => $this->merchantId,
@@ -855,8 +887,9 @@ class WechatPay extends Component
             'amount'       => $this->amount,
         ];
 
-        if (!empty($this->attach))
+        if (!empty($this->attach)) {
             $jsonData['attach'] = $this->attach;
+        }
 
         try {
             $resp = $this->instance->chain('v3/pay/transactions/app')->post([
@@ -888,8 +921,9 @@ class WechatPay extends Component
     public function CODE()
     {
         $check = $this->checkAuthCodeError();
-        if (Util::isError($check))
+        if (Util::isError($check)) {
             return $check;
+        }
 
         $jsonData = [
             'appid'        => $this->appId,
@@ -901,8 +935,9 @@ class WechatPay extends Component
             'scene_info'   => $this->sceneInfo,
         ];
 
-        if (!empty($this->attach))
+        if (!empty($this->attach)) {
             $jsonData['attach'] = $this->attach;
+        }
 
         try {
             $resp = $this->instance->chain('v3/pay/transactions/codepay')->post([
@@ -940,15 +975,17 @@ class WechatPay extends Component
         $batchNo      = $this->getOutTradeNo(true, 'tb');
         $total_num    = 0;
         foreach ($list as $item) {
-            if (!$item instanceof TransferDetailInput)
+            if (!$item instanceof TransferDetailInput) {
                 throw new InvalidArgumentException('转账明细必须是WechatPayTransferItem实例');
+            }
             $total_num++;
             $itemData = $item->toArray();
             if ($itemData['transfer_amount'] >= 2000 * 100 && empty($itemData['user_name'])) {
                 throw new InvalidArgumentException("转账金额大于2000元时，必须传入收款用户姓名");
             }
-            if (!empty($itemData['user_name']))
+            if (!empty($itemData['user_name'])) {
                 $itemData['user_name'] = $this->encryptText($itemData['user_name']);
+            }
             $itemData['out_detail_no'] = $batchNo . $total_num;
             $total_amount              += $itemData['transfer_amount'];
             $listArr[]                 = $itemData;
@@ -964,11 +1001,13 @@ class WechatPay extends Component
             'transfer_detail_list' => $listArr,
             'notify_url'           => $this->notifyUrl,
         ];
-        if (!empty($transfer_scene_id))
+        if (!empty($transfer_scene_id)) {
             $jsonData['transfer_scene_id'] = $transfer_scene_id;
+        }
 
-        if (!empty($this->attach))
+        if (!empty($this->attach)) {
             $jsonData['attach'] = $this->attach;
+        }
 
         try {
             $resp = $this->instance->chain('v3/transfer/batches')->post([
@@ -1028,8 +1067,9 @@ class WechatPay extends Component
             ]);
         } catch (RequestException $e) {
             // 检查异常是否有响应
-            if ($e->hasResponse())
+            if ($e->hasResponse()) {
                 return $this->returnResp($e->getResponse());
+            }
 
             // 如果没有响应，则返回异常的代码和消息
             return Util::error($e->getCode(), $e->getMessage());
@@ -1058,8 +1098,9 @@ class WechatPay extends Component
             ]);
         } catch (RequestException $e) {
             // 检查异常是否有响应
-            if ($e->hasResponse())
+            if ($e->hasResponse()) {
                 return $this->returnResp($e->getResponse());
+            }
 
             // 如果没有响应，则返回异常的代码和消息
             return Util::error($e->getCode(), $e->getMessage());
@@ -1084,13 +1125,15 @@ class WechatPay extends Component
      */
     public function query(string $transactionId = null): array
     {
-        if (empty($transactionId) && empty($this->outTradeNo))
+        if (empty($transactionId) && empty($this->outTradeNo)) {
             return Util::error(ErrCode::PARAMETER_ERROR, 'transactionId和outTradeNo不能同时为空');
+        }
 
-        if (!empty($transactionId))
+        if (!empty($transactionId)) {
             $path = 'v3/pay/transactions/id/' . $transactionId . '?mchid=' . $this->merchantId;
-        else
+        } else {
             $path = 'v3/pay/transactions/out-trade-no/' . $this->outTradeNo . '?mchid=' . $this->merchantId;
+        }
 
         try {
             $resp = $this->instance->chain($path)->get([
@@ -1123,8 +1166,9 @@ class WechatPay extends Component
      */
     public function queryRefund($outRefundNo): array
     {
-        if (empty($outRefundNo))
+        if (empty($outRefundNo)) {
             return Util::error(ErrCode::PARAMETER_ERROR, 'outRefundNo不能为空');
+        }
 
         try {
             $resp = $this->instance->chain('v3/refund/domestic/refunds/' . $outRefundNo)
@@ -1155,8 +1199,9 @@ class WechatPay extends Component
      */
     public function close(): array
     {
-        if (empty($this->outTradeNo))
+        if (empty($this->outTradeNo)) {
             return Util::error(ErrCode::PARAMETER_ERROR, 'outTradeNo不能为空');
+        }
 
         try {
             $resp = $this->instance->chain('v3/pay/transactions/out-trade-no/' . $this->outTradeNo . '/close')->post([
@@ -1196,15 +1241,19 @@ class WechatPay extends Component
      */
     public function refund(int $refundAmount, int $totalAmount, ?string $outRefundNo = null, ?string $refundReason = '', string $transactionId = null): array
     {
-        if (empty($transactionId) && empty($this->outTradeNo))
+        if (empty($transactionId) && empty($this->outTradeNo)) {
             return Util::error(ErrCode::PARAMETER_ERROR, 'transactionId和outTradeNo不能同时为空');
-        if (empty($refundAmount))
+        }
+        if (empty($refundAmount)) {
             return Util::error(ErrCode::PARAMETER_ERROR, 'refundAmount不能为空');
+        }
         $outRefundNo = $outRefundNo ?? 'jc' . date('YmdHis') . '000' . Util::random(4, true);
-        if (empty($totalAmount))
+        if (empty($totalAmount)) {
             return Util::error(ErrCode::PARAMETER_ERROR, 'totalAmount不能为空');
-        if (empty($this->notifyUrl))
+        }
+        if (empty($this->notifyUrl)) {
             return Util::error(ErrCode::PARAMETER_ERROR, 'notifyUrl不能为空');
+        }
 
         $jsonData = [
             'out_refund_no' => $outRefundNo,
@@ -1217,13 +1266,15 @@ class WechatPay extends Component
             ],
         ];
 
-        if (!empty($transactionId))
+        if (!empty($transactionId)) {
             $jsonData['transaction_id'] = $transactionId;
-        else
+        } else {
             $jsonData['out_trade_no'] = $this->outTradeNo;
+        }
 
-        if (!empty($refundReason))
+        if (!empty($refundReason)) {
             $jsonData['reason'] = $refundReason;
+        }
 
         try {
             $resp = $this->instance->chain('v3/refund/domestic/refunds')->post([
@@ -1311,8 +1362,9 @@ class WechatPay extends Component
             // 按本次回调声明的 Wechatpay-Serial 选取「平台证书」或「微信支付公钥」
             $this->getPlatformPublicKey($inWechatpaySerial)
         );
-        if (!$timeOffsetStatus || !$verifiedStatus)
+        if (!$timeOffsetStatus || !$verifiedStatus) {
             throw new ErrorException('签名验证失败');
+        }
 
         // 转换通知的JSON文本消息为PHP Array数组
         $inBodyArray = (array)json_decode($inBody, true);
@@ -1381,8 +1433,9 @@ class WechatPay extends Component
         $body       = $resp->getBody();
         $body2      = @json_decode($body, true);
         $body       = $body2 ?? $body;
-        if (isset($body['prepay_id']))
+        if (isset($body['prepay_id'])) {
             $this->prepayId = $body['prepay_id'];
+        }
 
         $message = $statusCode == '200' ? 'success' : 'error';
         $message = $body['message'] ?? $message;
