@@ -22,6 +22,21 @@ use yii\base\InvalidArgumentException;
 class WechatPay extends Component
 {
     /**
+     * 平台密钥模式：自动探测。
+     * 配置了「微信支付公钥」就用公钥，配置了「平台证书」就用平台证书，两者都配置则同时注册，
+     * 由应答/回调头中的 Wechatpay-Serial 决定实际使用哪一个验签（兼容官方切换灰度期）。
+     */
+    const PLATFORM_KEY_MODE_AUTO = 'auto';
+    /**
+     * 平台密钥模式：仅使用「微信支付平台证书」
+     */
+    const PLATFORM_KEY_MODE_CERTIFICATE = 'certificate';
+    /**
+     * 平台密钥模式：仅使用「微信支付公钥」
+     */
+    const PLATFORM_KEY_MODE_PUBLIC_KEY = 'publicKey';
+
+    /**
      * @var string v3 API密钥
      */
     public $apiV3Key;
@@ -115,10 +130,55 @@ class WechatPay extends Component
      */
     public $debug = false;
 
-    /** @var string 平台证书序列号(Wechatpay-Serial)，在build中生成 */
+    /**
+     * @var string 平台密钥模式，可选值见 PLATFORM_KEY_MODE_* 常量，默认 auto
+     *      - auto：自动探测，配置了什么就用什么（推荐，可兼容平台证书与微信支付公钥并存的切换期）
+     *      - certificate：仅使用「微信支付平台证书」
+     *      - publicKey：仅使用「微信支付公钥」
+     *      也可通过 params 中的 platformKeyMode 配置。
+     */
+    public $platformKeyMode = self::PLATFORM_KEY_MODE_AUTO;
+
+    /**
+     * @var string 微信支付公钥ID，形如 PUB_KEY_ID_01142321349124100000000000********
+     *      在 商户平台 -> 账户中心 -> API安全 查看。
+     *      与「平台证书序列号」不同，公钥ID无法从公钥文件中解析，必须显式配置。
+     *      也可通过 params 中的 platformPublicKeyId 配置。
+     */
+    public $platformPublicKeyId;
+
+    /**
+     * @var string|array 「微信支付公钥」文件名（相对 certPath/商户号/ 目录），支持传入数组按顺序探测
+     *      也可通过 params 中的 platformPublicKeyFile 配置（可传绝对路径或Yii别名）。
+     */
+    public $platformPublicKeyFile = ['pub_key.pem', 'wxp_pub.pem', 'publickey.pem', 'public_key.pem'];
+
+    /**
+     * @var string|array 「微信支付平台证书」文件名（相对 certPath/商户号/ 目录），支持传入数组按顺序探测
+     *      也可通过 params 中的 platformCertificateFile 配置（可传绝对路径或Yii别名）。
+     */
+    public $platformCertificateFile = 'cert.pem';
+
+    /** @var string 「微信支付平台证书」文件路径，在build中解析 */
+    public $platformCertificateFilePath;
+
+    /** @var string 「微信支付公钥」文件路径，在build中解析 */
+    public $platformPublicKeyFilePath;
+
+    /**
+     * @var array 已加载的平台验签公钥集合，格式为 [平台证书序列号|微信支付公钥ID => 公钥实例]
+     *      该集合会直接作为 SDK 的 certs 传入，同时用于按 Wechatpay-Serial 匹配回调验签的公钥。
+     */
+    public $platformPublicKeys = [];
+
+    /**
+     * @var string 当前主用的平台标识(Wechatpay-Serial)，在build中生成
+     *      可能是「平台证书序列号」，也可能是「微信支付公钥ID」，取决于当前生效的模式。
+     *      （保持原有属性名以确保向后兼容）
+     */
     public $platformCertificateSerial;
 
-    /** @var string 平台公钥实例，在build中生成 */
+    /** @var string 当前主用的平台公钥实例，在build中生成 */
     public $platformPublicKeyInstance;
 
     public $merchantPrivateKeyInstance;
@@ -136,11 +196,23 @@ class WechatPay extends Component
      */
     public function build(string $type = 'WeChatMiniProgram'): WechatPay
     {
-        $this->merchantId                = Yii::$app->params[$type . "Config"]['mchId'];
-        $this->appId                     = Yii::$app->params[$type . "Config"]['app_id'];
-        $this->merchantCertificateSerial = Yii::$app->params[$type . "Config"]['merchantCertificateSerial'];
-        $this->apiV3Key                  = Yii::$app->params[$type . "Config"]['apiKey'];
-        $this->notifyUrl                 = Yii::$app->params[$type . "Config"]['notifyUrl'];
+        $config = Yii::$app->params[$type . "Config"] ?? [];
+
+        $this->merchantId                = $config['mchId'] ?? $this->merchantId;
+        $this->appId                     = $config['app_id'] ?? $this->appId;
+        $this->merchantCertificateSerial = $config['merchantCertificateSerial'] ?? $this->merchantCertificateSerial;
+        $this->apiV3Key                  = $config['apiKey'] ?? $this->apiV3Key;
+        $this->notifyUrl                 = $config['notifyUrl'] ?? $this->notifyUrl;
+
+        // 平台密钥模式、微信支付公钥ID、自定义证书文件名（均为可选配置，未配置时使用属性默认值）
+        if (!empty($config['platformKeyMode']))
+            $this->platformKeyMode = $config['platformKeyMode'];
+        if (!empty($config['platformPublicKeyId']))
+            $this->platformPublicKeyId = $config['platformPublicKeyId'];
+        if (!empty($config['platformPublicKeyFile']))
+            $this->platformPublicKeyFile = $config['platformPublicKeyFile'];
+        if (!empty($config['platformCertificateFile']))
+            $this->platformCertificateFile = $config['platformCertificateFile'];
 
         // 从本地文件中加载「商户API私钥」，「商户API私钥」会用来生成请求的签名
         $merchantPrivateKeyFilePath = Yii::getAlias($this->certPath) . $this->merchantId . '/apiclient_key.pem';
@@ -150,21 +222,38 @@ class WechatPay extends Component
         $merchantPrivateKeyFilePath       = 'file://' . $merchantPrivateKeyFilePath;
         $this->merchantPrivateKeyInstance = Rsa::from($merchantPrivateKeyFilePath);
 
-        // 从本地文件中加载「微信支付平台证书」，用来验证微信支付应答的签名
-        $platformCertificateFilePath     = 'file://' . Yii::getAlias($this->certPath) . $this->merchantId . '/cert.pem';
-        $this->platformPublicKeyInstance = Rsa::from($platformCertificateFilePath, Rsa::KEY_TYPE_PUBLIC);
+        // 加载「微信支付平台证书」与「微信支付公钥」，两者可并存
+        $this->platformPublicKeys = [];
+        if ($this->platformKeyMode !== self::PLATFORM_KEY_MODE_PUBLIC_KEY)
+            $this->loadPlatformCertificate();
+        if ($this->platformKeyMode !== self::PLATFORM_KEY_MODE_CERTIFICATE)
+            $this->loadPlatformPublicKey();
 
-        // 从「微信支付平台证书」中获取「证书序列号」
-        $this->platformCertificateSerial = PemUtil::parseCertificateSerialNo($platformCertificateFilePath);
+        if (empty($this->platformPublicKeys))
+            throw new InvalidArgumentException(
+                '未找到可用的「微信支付平台证书」或「微信支付公钥」，请检查证书目录：'
+                . Yii::getAlias($this->certPath) . $this->merchantId . '/'
+                . (empty($this->platformPublicKeyId) && $this->platformKeyMode !== self::PLATFORM_KEY_MODE_CERTIFICATE
+                    ? '（若使用「微信支付公钥」，还需配置 platformPublicKeyId）' : '')
+            );
+
+        // 确定当前主用的平台密钥：优先使用「微信支付公钥」（官方推荐，无有效期），否则回退到「平台证书」
+        if (!empty($this->platformPublicKeyId) && isset($this->platformPublicKeys[$this->platformPublicKeyId])) {
+            $this->platformCertificateSerial = $this->platformPublicKeyId;
+            $this->platformPublicKeyInstance = $this->platformPublicKeys[$this->platformPublicKeyId];
+        } else {
+            $serials                         = array_keys($this->platformPublicKeys);
+            $this->platformCertificateSerial = (string)reset($serials);
+            $this->platformPublicKeyInstance = reset($this->platformPublicKeys);
+        }
 
         // 构造一个 APIv3 客户端实例
         $this->instance = Builder::factory([
             'mchid'      => $this->merchantId, // 商户号
             'serial'     => $this->merchantCertificateSerial, // 「商户API证书」的「证书序列号」
             'privateKey' => $this->merchantPrivateKeyInstance,
-            'certs'      => [
-                $this->platformCertificateSerial => $this->platformPublicKeyInstance,
-            ],
+            // 「平台证书序列号」或「微信支付公钥ID」 => 平台公钥实例，支持多个并存
+            'certs'      => $this->platformPublicKeys,
         ]);
 
         switch ($type) {
@@ -177,6 +266,129 @@ class WechatPay extends Component
         }
 
         return $this;
+    }
+
+    /**
+     * 加载「微信支付平台证书」
+     *
+     * 平台证书为X.509证书，其「证书序列号」可直接从文件中解析，无需额外配置。
+     *
+     * @author  Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return bool 是否加载成功
+     * @lasttime: 2026/9/10 22:10
+     */
+    private function loadPlatformCertificate(): bool
+    {
+        $filePath = $this->locateKeyFile($this->platformCertificateFile);
+        if (empty($filePath))
+            return false;
+
+        try {
+            $certPath                  = 'file://' . $filePath;
+            $serial                    = PemUtil::parseCertificateSerialNo($certPath);
+            $this->platformPublicKeys[$serial] = Rsa::from($certPath, Rsa::KEY_TYPE_PUBLIC);
+            $this->platformCertificateFilePath = $filePath;
+            return true;
+        } catch (\Exception $e) {
+            Yii::warning('加载「微信支付平台证书」失败：' . $e->getMessage(), __METHOD__);
+            return false;
+        }
+    }
+
+    /**
+     * 加载「微信支付公钥」
+     *
+     * 公钥ID无法从公钥文件中解析，必须由商户在 params 中配置 platformPublicKeyId。
+     * 若检测到公钥文件但未配置公钥ID，则忽略公钥（保持与旧版一致的行为，避免静默出错）。
+     *
+     * @author  Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @return bool 是否加载成功
+     * @lasttime: 2026/9/10 22:10
+     */
+    private function loadPlatformPublicKey(): bool
+    {
+        $filePath = $this->locateKeyFile($this->platformPublicKeyFile);
+        if (empty($filePath))
+            return false;
+
+        if (empty($this->platformPublicKeyId)) {
+            Yii::warning(
+                '检测到「微信支付公钥」文件但缺少 platformPublicKeyId 配置，已忽略公钥模式：' . $filePath,
+                __METHOD__
+            );
+            return false;
+        }
+
+        try {
+            $this->platformPublicKeys[$this->platformPublicKeyId] = Rsa::from('file://' . $filePath, Rsa::KEY_TYPE_PUBLIC);
+            $this->platformPublicKeyFilePath                      = $filePath;
+            return true;
+        } catch (\Exception $e) {
+            Yii::warning('加载「微信支付公钥」失败：' . $e->getMessage(), __METHOD__);
+            return false;
+        }
+    }
+
+    /**
+     * 定位密钥文件
+     *
+     * 传入值可以是绝对路径、Yii别名，也可以是相对「certPath/商户号/」目录的文件名（或文件名数组，按顺序探测）。
+     *
+     * @author  Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string|array $file
+     *
+     * @return string 命中文件的绝对路径，未找到时返回空字符串
+     * @lasttime: 2026/9/10 22:10
+     */
+    private function locateKeyFile($file): string
+    {
+        if (empty($file))
+            return '';
+
+        // 绝对路径或Yii别名
+        if (is_string($file)) {
+            $resolved = Yii::getAlias($file);
+            if (file_exists($resolved))
+                return $resolved;
+        }
+
+        // 相对证书目录（certPath/商户号/）的文件名
+        $basePath = Yii::getAlias($this->certPath) . $this->merchantId . '/';
+        foreach ((array)$file as $name) {
+            $path = $basePath . $name;
+            if (file_exists($path))
+                return $path;
+        }
+
+        return '';
+    }
+
+    /**
+     * 按平台标识(Wechatpay-Serial)获取对应的验签公钥
+     *
+     * 「平台证书」与「微信支付公钥」并存时，微信会在应答/回调头中通过 Wechatpay-Serial
+     * 告知本次签名使用的到底是哪一个，必须据此选取对应的公钥，否则切换期会验签失败。
+     *
+     * @author  Bowen
+     * @email bowen@jiuchet.com
+     *
+     * @param string $serial 平台证书序列号或微信支付公钥ID
+     *
+     * @return mixed 公钥实例，未匹配时返回当前主用公钥
+     * @lasttime: 2026/9/10 22:10
+     */
+    public function getPlatformPublicKey(string $serial = '')
+    {
+        if (!empty($serial) && isset($this->platformPublicKeys[$serial]))
+            return $this->platformPublicKeys[$serial];
+
+        return $this->platformPublicKeyInstance;
     }
 
     /**
@@ -568,8 +780,12 @@ class WechatPay extends Component
         if (empty($this->prepayId))
             return Util::error(ErrCode::PARAMETER_ERROR, 'prepayId不能为空');
 
-        $merchantPrivateKeyFilePath = 'file://' . Yii::getAlias($this->certPath) . $this->merchantId . '/apiclient_key.pem';
-        $merchantPrivateKeyInstance = Rsa::from($merchantPrivateKeyFilePath);
+        // 优先复用build时已加载的商户私钥实例，避免重复读取文件
+        $merchantPrivateKeyInstance = $this->merchantPrivateKeyInstance;
+        if (empty($merchantPrivateKeyInstance)) {
+            $merchantPrivateKeyFilePath = 'file://' . Yii::getAlias($this->certPath) . $this->merchantId . '/apiclient_key.pem';
+            $merchantPrivateKeyInstance = Rsa::from($merchantPrivateKeyFilePath);
+        }
 
         if ($this->payType == 'APP') {
             // 适用于常规app
@@ -1080,10 +1296,10 @@ class WechatPay extends Component
      */
     public function dealNotify(): array
     {
-        // $inWechatpaySerial    = $_SERVER['HTTP_WECHATPAY_SERIAL'];
-        $inWechatpaySignature = $_SERVER['HTTP_WECHATPAY_SIGNATURE'];
-        $inWechatpayTimestamp = $_SERVER['HTTP_WECHATPAY_TIMESTAMP'];
-        $inWechatpayNonce     = $_SERVER['HTTP_WECHATPAY_NONCE'];
+        $inWechatpaySerial    = $_SERVER['HTTP_WECHATPAY_SERIAL'] ?? '';
+        $inWechatpaySignature = $_SERVER['HTTP_WECHATPAY_SIGNATURE'] ?? '';
+        $inWechatpayTimestamp = $_SERVER['HTTP_WECHATPAY_TIMESTAMP'] ?? '';
+        $inWechatpayNonce     = $_SERVER['HTTP_WECHATPAY_NONCE'] ?? '';
         $inBody               = file_get_contents('php://input');
 
         // 检查通知时间偏移量，允许5分钟之内的偏移
@@ -1092,7 +1308,8 @@ class WechatPay extends Component
         // 构造验签名串
             Formatter::joinedByLineFeed($inWechatpayTimestamp, $inWechatpayNonce, $inBody),
             $inWechatpaySignature,
-            $this->platformPublicKeyInstance
+            // 按本次回调声明的 Wechatpay-Serial 选取「平台证书」或「微信支付公钥」
+            $this->getPlatformPublicKey($inWechatpaySerial)
         );
         if (!$timeOffsetStatus || !$verifiedStatus)
             throw new ErrorException('签名验证失败');

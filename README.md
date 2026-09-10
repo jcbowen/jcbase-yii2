@@ -183,6 +183,12 @@ return [
         'merchantCertificateSerial' => '', // 微信商户证书序列号
         'apiKey'                  => '', // 微信支付API v3密钥
         'notifyUrl'               => '', // 微信支付回调地址
+
+        // 以下为「微信支付公钥」相关配置，均为可选项，不配置则按原有「平台证书」方式运行
+        'platformPublicKeyId'     => '', // 微信支付公钥ID，形如 PUB_KEY_ID_xxx，在商户平台->API安全查看
+        'platformKeyMode'         => 'auto', // 平台密钥模式：auto(自动探测,推荐)/certificate(仅平台证书)/publicKey(仅微信支付公钥)
+        // 'platformPublicKeyFile'   => 'pub_key.pem', // 可选，公钥文件名或绝对路径
+        // 'platformCertificateFile' => 'cert.pem', // 可选，平台证书文件名或绝对路径
     ],
     
     // 支付宝配置
