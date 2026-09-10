@@ -181,6 +181,11 @@ class WechatPay extends Component
     /** @var string 当前主用的平台公钥实例，在build中生成 */
     public $platformPublicKeyInstance;
 
+    /**
+     * @var array 平台密钥加载过程中的错误信息，用于在最终无可用密钥时给出排障详情
+     */
+    private $platformKeyLoadErrors = [];
+
     public $merchantPrivateKeyInstance;
 
     /**
@@ -228,7 +233,8 @@ class WechatPay extends Component
         $this->merchantPrivateKeyInstance = Rsa::from($merchantPrivateKeyFilePath);
 
         // 加载「微信支付平台证书」与「微信支付公钥」，两者可并存
-        $this->platformPublicKeys = [];
+        $this->platformPublicKeys     = [];
+        $this->platformKeyLoadErrors  = [];
         if ($this->platformKeyMode !== self::PLATFORM_KEY_MODE_PUBLIC_KEY) {
             $this->loadPlatformCertificate();
         }
@@ -237,12 +243,14 @@ class WechatPay extends Component
         }
 
         if (empty($this->platformPublicKeys)) {
-            throw new InvalidArgumentException(
-                '未找到可用的「微信支付平台证书」或「微信支付公钥」，请检查证书目录：'
+            $message = '未找到可用的「微信支付平台证书」或「微信支付公钥」，请检查证书目录：'
                 . Yii::getAlias($this->certPath) . $this->merchantId . '/'
                 . (empty($this->platformPublicKeyId) && $this->platformKeyMode !== self::PLATFORM_KEY_MODE_CERTIFICATE
-                    ? '（若使用「微信支付公钥」，还需配置 platformPublicKeyId）' : '')
-            );
+                    ? '（若使用「微信支付公钥」，还需配置 platformPublicKeyId）' : '');
+            if (!empty($this->platformKeyLoadErrors)) {
+                $message .= PHP_EOL . '加载失败详情：' . PHP_EOL . implode(PHP_EOL, $this->platformKeyLoadErrors);
+            }
+            throw new InvalidArgumentException($message);
         }
 
         // 确定当前主用的平台密钥：优先使用「微信支付公钥」（官方推荐，无有效期），否则回退到「平台证书」
@@ -301,7 +309,8 @@ class WechatPay extends Component
             $this->platformCertificateFilePath = $filePath;
             return true;
         } catch (\Exception $e) {
-            Yii::warning('加载「微信支付平台证书」失败：' . $e->getMessage(), __METHOD__);
+            $this->platformKeyLoadErrors[] = '加载「微信支付平台证书」失败：' . $e->getMessage();
+            Yii::warning(end($this->platformKeyLoadErrors), __METHOD__);
             return false;
         }
     }
@@ -326,10 +335,8 @@ class WechatPay extends Component
         }
 
         if (empty($this->platformPublicKeyId)) {
-            Yii::warning(
-                '检测到「微信支付公钥」文件但缺少 platformPublicKeyId 配置，已忽略公钥模式：' . $filePath,
-                __METHOD__
-            );
+            $this->platformKeyLoadErrors[] = '检测到「微信支付公钥」文件但缺少 platformPublicKeyId 配置，已忽略公钥模式：' . $filePath;
+            Yii::warning(end($this->platformKeyLoadErrors), __METHOD__);
             return false;
         }
 
@@ -338,7 +345,8 @@ class WechatPay extends Component
             $this->platformPublicKeyFilePath                      = $filePath;
             return true;
         } catch (\Exception $e) {
-            Yii::warning('加载「微信支付公钥」失败：' . $e->getMessage(), __METHOD__);
+            $this->platformKeyLoadErrors[] = '加载「微信支付公钥」失败：' . $e->getMessage();
+            Yii::warning(end($this->platformKeyLoadErrors), __METHOD__);
             return false;
         }
     }
