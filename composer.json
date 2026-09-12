@@ -58,6 +58,12 @@
     },
     "allow-plugins": {
       "yiisoft/yii2-composer": true
+    },
+    "policy": {
+      "advisories": {
+        "block": false,
+        "audit": "fail"
+      }
     }
   },
   "repositories": [
